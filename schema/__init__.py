@@ -408,7 +408,6 @@ class World(object):
         ent = self._get_nearby_ent(target_ent_name)
 
         if not ent:
-            # TODO: Check the world
             return
 
         if ent.id == self.player.id:

@@ -6,6 +6,7 @@ class Component(object):
     def tick(self):
         pass
 
+
 class Positionable(Component):
     def __init__(self, ent, x, y):
         super(Positionable, self).__init__(ent)
@@ -21,6 +22,7 @@ class Positionable(Component):
     def __str__(self):
         return 'at position {}'.format(str(self.position))
 
+
 class Massive(Component):
     def __init__(self, ent, mass):
         super(Massive, self).__init__(ent)
@@ -28,6 +30,7 @@ class Massive(Component):
 
     def __str__(self):
         return 'with mass {} kg'.format(self.mass)
+
 
 class Damageable(Component):
     class DamageType(object):
@@ -140,6 +143,7 @@ class Container(Component):
             self._contents_mass(), self.max_mass
         )
 
+
 class Storable(Component):
     def __init__(self, ent):
         super(Storable, self).__init__(ent)
@@ -147,6 +151,7 @@ class Storable(Component):
 
     def __str__(self):
         return 'stored in entity #{}'.format(self.container.id) if self.container else 'not stored'
+
 
 class Flammable(Component):
     def __init__(self, ent):
@@ -159,6 +164,7 @@ class Flammable(Component):
 
     def __str__(self):
         return 'burning' if self.burning else 'flammable'
+
 
 class Soakable(Component):
     def __init__(self, ent):
