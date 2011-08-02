@@ -126,6 +126,9 @@ class World(object):
         self.output = deque()
         self.entities = []
 
+        self.player = None
+
+        # TODO: Don't create player here
         # TODO: Load all of this from a file
 
         self.player = Entity('self', 'Yep, that\'s you.')
@@ -138,55 +141,7 @@ class World(object):
         self.player.is_now(Voluminous, 8000)
         self.player.is_now(Container, 5000, 20)
 
-        self.hat = Entity('fancy hat', 'It\'s really quite ornate.')
-        self.hat.is_now(Positionable, 0, 0)
-        self.hat.is_now(Massive, 0.1)
-        self.hat.is_now(Damageable, 10)
-        self.hat.is_now(Flammable)
-        self.hat.is_now(Soakable)
-        self.hat.is_now(Storable)
-        self.hat.is_now(Voluminous, 1000)
-
-        self.ugly_hat = Entity('ugly hat', 'A really ugly hat. Dang.')
-        self.ugly_hat.is_now(Positionable, 0, 1)
-        self.ugly_hat.is_now(Massive, 0.1)
-        self.ugly_hat.is_now(Damageable, 10)
-        self.ugly_hat.is_now(Flammable)
-        self.ugly_hat.is_now(Soakable)
-        self.ugly_hat.is_now(Storable)
-        self.ugly_hat.is_now(Voluminous, 1000)
-
-        self.sphere = Entity('sphere', 'A weighted metal sphere of some sort.')
-        self.sphere.is_now(Positionable, 0, 3)
-        self.sphere.is_now(Massive, 9)
-        self.sphere.is_now(Damageable, 500)
-        self.sphere.is_now(Storable)
-        self.sphere.is_now(Voluminous, 4000)
-
-        self.crate = Entity('large crate')
-        self.crate.is_now(Positionable, 3, 5)
-        self.crate.is_now(Massive, 77)
-        self.crate.is_now(Damageable, 40)
-        self.crate.is_now(Flammable)
-        self.crate.is_now(Voluminous, 500000)
-        self.crate.is_now(Container, 499000)
-
-        self.backpack = Entity('backpack')
-        self.backpack.is_now(Positionable, 1, -1)
-        self.backpack.is_now(Massive, 0.5)
-        self.backpack.is_now(Damageable, 40)
-        self.backpack.is_now(Flammable)
-        self.backpack.is_now(Soakable)
-        self.backpack.is_now(Storable)
-        self.backpack.is_now(Voluminous, 5000)
-        self.backpack.is_now(Container, 5000)
-
         self.entities.append(self.player)
-        self.entities.append(self.hat)
-        self.entities.append(self.ugly_hat)
-        self.entities.append(self.crate)
-        self.entities.append(self.backpack)
-        self.entities.append(self.sphere)
 
         self.clock.register(self.tick)
 
