@@ -65,10 +65,14 @@ class Damageable(Component):
 
         return old_hp - self.hp
 
+    def alive(self):
+        return self.hp > self.min
+
     def __str__(self):
         damageable_str = 'damageable ({}/{}) '.format(self.hp, self.max)
         scale_str = ' '.join('[{}:{:0.2f}]'.format(k[:2], v) for k, v in self.scale.iteritems())
         return damageable_str + scale_str
+
 
 class Voluminous(Component):
     def __init__(self, ent, volume):
