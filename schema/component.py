@@ -60,7 +60,7 @@ class Damageable(Component):
         self.hp = min(self.max, max(self.min, self.hp - converted_damage))
 
         if self.hp == self.min and self.ent.is_(Container):
-            for item in self.ent[Container].contents.values():
+            for item in self.ent[Container].contents:
                 self.ent[Container].remove(item)
 
         return old_hp - self.hp
@@ -91,13 +91,13 @@ class Container(Component):
         super(Container, self).__init__(ent)
         self.max_volume = max_volume
         self.max_mass = max_mass
-        self.contents = {}
+        self.contents = []
 
     def _contents_volume(self):
-        return sum(ent[Voluminous].volume for ent in self.contents.itervalues())
+        return sum((ent[Voluminous].volume if ent.is_(Voluminous) else 0) for ent in self.contents)
 
     def _contents_mass(self):
-        return sum(ent[Massive].mass for ent in self.contents.itervalues())
+        return sum((ent[Massive].mass if ent.is_(Massive) else 0) for ent in self.contents)
 
     def store(self, ent):
         if ent.is_(Voluminous) and ent[Voluminous].volume + self._contents_volume() > self.max_volume:
@@ -112,21 +112,21 @@ class Container(Component):
         if ent[Storable].container is not None:
             return Container.Result.ALREADY_STORED
 
-        self.contents[ent.id] = ent
+        self.contents.append(ent)
         ent[Storable].container = self.ent
 
         if ent.is_(Positionable):
             ent.is_no_longer(Positionable)
 
-        if self.ent.is_(Massive):
+        if ent.is_(Massive) and self.ent.is_(Massive):
             self.ent[Massive].mass += ent[Massive].mass
 
         return Container.Result.OK
 
     def remove(self, ent):
         if ent.is_(Storable) and ent[Storable].container is not None and \
-        ent[Storable].container.id == self.ent.id:
-            del self.contents[ent.id]
+        ent[Storable].container.id == self.ent.id and ent in self.contents:
+            self.contents.remove(ent)
             ent[Storable].container = None
 
             if self.ent.is_(Massive):

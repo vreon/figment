@@ -161,7 +161,7 @@ class World(object):
     def _get_nearby_ent(self, args, check_inventory=True):
         ent_set = self._ents_near(self.player)
         if check_inventory and self.player.is_(Container):
-            ent_set = self.player[Container].contents.values() + ent_set
+            ent_set = self.player[Container].contents + ent_set
         return self._get_ent_from_set(ent_set, args, area='nearby')
 
     def _get_ent_from_set(self, ent_set, args, area='in that area'):
@@ -260,7 +260,7 @@ class World(object):
 
             self.render('Contents:')
             if ent[Container].contents:
-                for item in ent[Container].contents.itervalues():
+                for item in ent[Container].contents:
                     self.render('    ' + item.name)
             else:
                 self.render('    nothing')
@@ -324,7 +324,7 @@ class World(object):
             return
 
         ent = self._get_ent_from_set(
-            container_ent[Container].contents.itervalues(),
+            container_ent[Container].contents,
             target_ent_name,
             area='in the {}'.format(container_ent.name)
         )
@@ -360,7 +360,7 @@ class World(object):
             self.render('You can\'t carry items at the moment, so there\'s nothing to drop.')
             return
 
-        inventory = self.player[Container].contents.values()
+        inventory = self.player[Container].contents
         ent = self._get_ent_from_set(inventory, args, 'in your inventory')
 
         if not ent:
