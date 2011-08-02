@@ -414,6 +414,10 @@ class World(object):
             self.render('You can\'t put yourself in that (because it\'s not implemented yet).')
             return
 
+        if ent.id == container_ent.id:
+            self.render('You can\'t store something in itself.')
+            return
+
         self.player[Container].remove(ent)
         if self._try_to_store(ent, container_ent):
             self.render('You put the {} in the {}.'.format(ent.name, container_ent.name))
