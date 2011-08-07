@@ -12,8 +12,8 @@ class Clock(object):
     A simple rate-limiting object that ensures a function will be called at
     most every tick_length seconds.
     """
-    def __init__(self, length=None, func=None):
-        self.tick_length = length if length > 0 else 1
+    def __init__(self, length=1, func=None):
+        self.tick_length = length
         self.last_tick_time = 0
         self.funcs = []
         self.ticks = 0
