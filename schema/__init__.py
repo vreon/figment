@@ -44,6 +44,7 @@ class CursesUI(object):
         self.prompt_win = curses.newwin(1, 2, h - 1, 0)
         self.input_win = curses.newwin(1, w - 2, h - 1, 2)
         self.input_pad = curses.textpad.Textbox(self.input_win)
+        self.last_cmd = None
 
         # Enable auto-scrolling in the main window
         self.content_win.scrollok(1)
@@ -53,8 +54,6 @@ class CursesUI(object):
 
         # Make input non-blocking
         self.input_win.nodelay(1)
-
-        self.last_cmd = None
 
     def set_prompt(self, prompt_char):
         self.prompt_win.addstr(0, 0, prompt_char)
@@ -75,24 +74,26 @@ class CursesUI(object):
             raw_cmd = self._tick_until_command().strip()
             self.display(self._prompt_char() + ' ' + raw_cmd)
 
-            cmd = raw_cmd.split()
+            split_cmd = raw_cmd.split()
+            cmd, args = split_cmd[0], split_cmd[1:]
 
             if not cmd:
                 continue
+
             # Meta-commands here
-            if cmd[0] == 'quit':
+            if cmd == 'quit':
                 break
-            elif cmd[0] == 'prompt':
+            elif cmd == 'prompt':
                 # Goofy debug command
-                self.set_prompt(cmd[1][0] if len(cmd) > 1 else '>')
-            elif cmd[0] == '.':
+                self.set_prompt(args[0] if len(args) else '>')
+            elif cmd == '.':
                 if not self.last_cmd:
                     continue
                 self.world.command(self.last_cmd)
             else:
                 # Let the world handle it
-                self.last_cmd = cmd
-                self.world.command(cmd)
+                self.last_cmd = raw_cmd
+                self.world.command(raw_cmd)
 
     def _prompt_char(self):
         return self.prompt_win.instr(0, 0, 1)
@@ -448,10 +449,11 @@ class World(object):
     def cmd_time(self, args):
         self.render('World time is {}.'.format(self.clock.ticks))
 
-    def command(self, cmd):
+    def command(self, raw_cmd):
         # TODO: getattr here is kind of hokey, maintain a dict of commands
         #       instead so we can enumerate them on 'help'
-        cmd, args = (cmd[0], cmd[1:])
+        split_cmd = raw_cmd.strip().split()
+        cmd, args = split_cmd[0], split_cmd[1:]
         if hasattr(self, 'cmd_' + cmd):
             getattr(self, 'cmd_' + cmd)(args)
         else:

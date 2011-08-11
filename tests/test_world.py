@@ -69,7 +69,7 @@ class TestWorld(object):
             self.world.output.popleft()
 
     def cmd(self, cmd):
-        self.world.command(cmd.split())
+        self.world.command(cmd)
 
     def test_create_world(self):
         """Creation of worlds"""
