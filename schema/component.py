@@ -129,7 +129,7 @@ class Container(Component):
             self.contents.remove(ent)
             ent[Storable].container = None
 
-            if self.ent.is_(Massive):
+            if ent.is_(Massive) and self.ent.is_(Massive):
                 self.ent[Massive].mass -= ent[Massive].mass
 
             if self.ent.is_(Positionable):
