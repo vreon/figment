@@ -342,7 +342,6 @@ class World(object):
             self.render('You take the {} from the {}.'.format(ent.name, container_ent.name))
         else:
             container_ent[Container].store(ent)
-            self.render('You\'re unable to carry the {}.'.format(ent.name))
 
     def cmd_take(self, args):
         self.cmd_get(args)
@@ -424,7 +423,6 @@ class World(object):
             self.render('You put the {} in the {}.'.format(ent.name, container_ent.name))
         else:
             self.player[Container].store(ent)
-            self.render('The {} is unable to hold the {}.'.format(container_ent.name, ent.name))
 
     def cmd_punch(self, args):
         if not args:
