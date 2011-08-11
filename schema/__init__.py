@@ -278,7 +278,7 @@ class World(object):
         self.render(ent.desc)
 
     def cmd_inventory(self, args):
-        self.cmd_look('in self'.split())
+        self.command('look in self')
 
     def cmd_get(self, args):
         # TODO: This shares a lot of logic with "put"
