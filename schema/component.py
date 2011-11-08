@@ -8,19 +8,17 @@ class Component(object):
 
 
 class Positionable(Component):
-    def __init__(self, ent, x, y):
+    def __init__(self, ent, position):
         super(Positionable, self).__init__(ent)
-        self.position = x, y
+        self.position = position
 
-    def distance_from(self, ent):
+    def visible_by(self, ent):
         if not ent.is_(Positionable):
-            return None
-        x1, y1 = self.position
-        x2, y2 = ent[Positionable].position
-        return sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+            return False
+        return ent[Positionable].position == self.position
 
     def __str__(self):
-        return 'at position {}'.format(str(self.position))
+        return 'at position {0}'.format(str(self.position))
 
 
 class Massive(Component):
@@ -29,7 +27,7 @@ class Massive(Component):
         self.mass = mass
 
     def __str__(self):
-        return 'with mass {} kg'.format(self.mass)
+        return 'with mass {0} kg'.format(self.mass)
 
 
 class Damageable(Component):
@@ -69,8 +67,8 @@ class Damageable(Component):
         return self.hp > self.min
 
     def __str__(self):
-        damageable_str = 'damageable ({}/{}) '.format(self.hp, self.max)
-        scale_str = ' '.join('[{}:{:0.2f}]'.format(k[:2], v) for k, v in self.scale.iteritems())
+        damageable_str = 'damageable ({0}/{1}) '.format(self.hp, self.max)
+        scale_str = ' '.join('[{0}:{1:0.2f}]'.format(k[:2], v) for k, v in self.scale.iteritems())
         return damageable_str + scale_str
 
 
@@ -80,7 +78,7 @@ class Voluminous(Component):
         self.volume = volume
 
     def __str__(self):
-        return 'occupies {} cm^3'.format(self.volume)
+        return 'occupies {0} cm^3'.format(self.volume)
 
 
 class Container(Component):
@@ -133,14 +131,13 @@ class Container(Component):
                 self.ent[Massive].mass -= ent[Massive].mass
 
             if self.ent.is_(Positionable):
-                x, y = self.ent[Positionable].position
-                ent.is_now(Positionable, x, y)
+                ent.is_now(Positionable, self.ent[Positionable].position)
 
             return True
         return False
 
     def __str__(self):
-        return 'is container ({} entit{}, {}/{} cm^3, {}/{} kg)'.format(
+        return 'is container ({0} entit{1}, {2}/{3} cm^3, {4}/{5} kg)'.format(
             len(self.contents),
             'y' if len(self.contents) == 1 else 'ies',
             self._contents_volume(), self.max_volume,
@@ -154,7 +151,7 @@ class Storable(Component):
         self.container = None
 
     def __str__(self):
-        return 'stored in entity #{}'.format(self.container.id) if self.container else 'not stored'
+        return 'stored in entity #{0}'.format(self.container.id) if self.container else 'not stored'
 
 
 class Flammable(Component):

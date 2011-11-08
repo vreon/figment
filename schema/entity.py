@@ -9,16 +9,16 @@ class Entity(object):
         Entity._active += 1
         self.components = {}
         self.name = name
-        self.desc = desc or 'A {} sits nearby.'.format(name)
+        self.desc = desc or 'A {0} sits nearby.'.format(name)
 
     def __getitem__(self, com_cls):
         try:
             return self.components[com_cls.__name__]
         except KeyError:
-            raise KeyError('{} has no {} Component'.format(self, com_cls.__name__))
+            raise KeyError('{0} has no {1} Component'.format(self, com_cls.__name__))
 
     def __str__(self):
-        ent_str = '\'{}\' (ID {})\n'.format(self.name, self.id)
+        ent_str = '\'{0}\' (ID {1})\n'.format(self.name, self.id)
         com_str = '\n'.join('    ' + str(com) for com in self.components.itervalues())
         return ent_str + com_str
 
