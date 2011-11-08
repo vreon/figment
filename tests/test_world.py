@@ -10,12 +10,17 @@ class TestWorld(object):
     def setup(self):
         self.world = World()
 
+        self.rooms['room'] = {
+            'name': 'The Test Room',
+            'desc': 'A nondescript room for testing.',
+        }
+
         # Knock out the old clock and replace it with an instant one
         self.world.clock = Clock(self.world.tick, 0)
 
         # Create a default player
         self.player = self.world.player = Entity('self', "Yep, that's you.")
-        self.player.is_now(Positionable, 0, 0)
+        self.player.is_now(Positionable, 'room')
         self.player.is_now(Massive, 75)
         self.player.is_now(Voluminous, 8000)
         self.player.is_now(Damageable)
@@ -28,12 +33,12 @@ class TestWorld(object):
         # Create some basic entities
         # Save them all to the fixture for convenience
         self.thingy = Entity()
-        self.thingy.is_now(Positionable, 0, 0)
+        self.thingy.is_now(Positionable, 'room')
         self.thingy.is_now(Storable)
         self.world.entities.append(self.thingy)
 
         self.crate = Entity('large crate')
-        self.crate.is_now(Positionable, 3, 5)
+        self.crate.is_now(Positionable, 'room')
         self.crate.is_now(Massive, 77)
         self.crate.is_now(Damageable, 40)
         self.crate.is_now(Flammable)
@@ -42,7 +47,7 @@ class TestWorld(object):
         self.world.entities.append(self.crate)
 
         self.sphere = Entity('sphere', 'A weighted metal sphere of some sort.')
-        self.sphere.is_now(Positionable, 0, 3)
+        self.sphere.is_now(Positionable, 'room')
         self.sphere.is_now(Massive, 9)
         self.sphere.is_now(Damageable, 500)
         self.sphere.is_now(Storable)
@@ -50,7 +55,7 @@ class TestWorld(object):
         self.world.entities.append(self.sphere)
 
         self.backpack = Entity('backpack')
-        self.backpack.is_now(Positionable, 1, -1)
+        self.backpack.is_now(Positionable, 'room')
         self.backpack.is_now(Massive, 0.5)
         self.backpack.is_now(Damageable, 40)
         self.backpack.is_now(Flammable)

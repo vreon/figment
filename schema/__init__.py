@@ -156,8 +156,8 @@ class World(object):
     def render(self, value):
         self.output.append(value)
 
-    def _ents_near(self, ent, radius=30):
-        return [e for e in self.entities if e.is_(Positionable) and e[Positionable].distance_from(ent) <= radius]
+    def _ents_near(self, ent):
+        return [e for e in self.entities if e.is_(Positionable) and e[Positionable].position == ent[Positionable].position]
 
     def _get_nearby_ent(self, args, check_inventory=True):
         ent_set = self._ents_near(self.player)
