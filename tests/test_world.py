@@ -2,17 +2,15 @@ from schema import World, Clock
 from schema.entity import Entity
 from schema.component import *
 
-def inside(ent, container_ent):
-    """Returns True if the entity is inside the container."""
-    return container_ent.is_(Container) and ent in container_ent[Container].contents
-
 class TestWorld(object):
     def setup(self):
         self.world = World()
 
-        self.rooms['room'] = {
-            'name': 'The Test Room',
-            'desc': 'A nondescript room for testing.',
+        self.world.rooms = {
+            'room': {
+                'name': 'The Test Room',
+                'desc': 'A nondescript room for testing.'
+            }
         }
 
         # Knock out the old clock and replace it with an instant one
@@ -141,18 +139,18 @@ class TestWorld(object):
     def test_get_nearby(self):
         """Pick up an entity"""
         self.cmd('get sphere')
-        assert inside(self.sphere, self.player)
+        assert self.sphere in self.player
         assert 'pick up' in self.out
 
     def test_get_unstorable(self):
         """Try to pick up something that you can't"""
         self.cmd('get crate')
-        assert not inside(self.crate, self.player)
+        assert not self.crate in self.player
 
     def test_put_in_container(self):
         """Try to put something in a container"""
         self.cmd('put sphere in crate')
-        assert inside(self.sphere, self.crate)
+        assert self.sphere in self.crate
         self.flush()
         self.cmd('look in crate')
         assert 'sphere' in self.out
@@ -160,7 +158,7 @@ class TestWorld(object):
     def test_put_in_noncontainer(self):
         """Try to put something in a noncontainer"""
         self.cmd('put thingy in sphere')
-        assert not inside(self.thingy, self.sphere)
+        assert not self.thingy in self.sphere
         self.flush()
         self.cmd('look')
         assert 'thingy' in self.out
@@ -169,23 +167,23 @@ class TestWorld(object):
         """Get something out of a container"""
         self.cmd('put sphere in crate')
         self.cmd('get sphere from crate')
-        assert not inside(self.sphere, self.crate)
+        assert not self.sphere in self.crate
 
     def test_put_container_droste(self):
         """Try to put a container in itself"""
         self.cmd('put backpack in backpack')
-        assert not inside(self.backpack, self.backpack)
+        assert not self.backpack in self.backpack
 
     def test_put_container_nested(self):
         """Try to put a container in a container"""
         self.cmd('put sphere in backpack')
-        assert inside(self.sphere, self.backpack)
+        assert self.sphere in self.backpack
         self.cmd('put backpack in crate')
-        assert inside(self.backpack, self.crate)
+        assert self.backpack in self.crate
         self.cmd('get backpack from crate')
         self.cmd('drop backpack')
         self.cmd('get sphere from backpack')
-        assert inside(self.sphere, self.player)
+        assert self.sphere in self.player
 
     def test_punch_damageable(self):
         """Damageables take damage when you punch them"""
@@ -208,4 +206,4 @@ class TestWorld(object):
         self.flush()
         while self.backpack[Damageable].alive():
             self.cmd('punch backpack')
-        assert not inside(self.sphere, self.backpack)
+        assert not self.sphere in self.backpack

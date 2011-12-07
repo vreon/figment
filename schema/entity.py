@@ -1,5 +1,6 @@
 import random
 import string
+from schema.component import Container
 
 class Entity(object):
     def __init__(self, name='thingy', desc=None):
@@ -22,6 +23,11 @@ class Entity(object):
         ent_str = '\'{0}\' (ID {1})\n'.format(self.name, self.id)
         com_str = '\n'.join('    ' + str(com) for com in self.components.itervalues())
         return ent_str + com_str
+
+    def __iter__(self):
+        if self.is_(Container):
+            for item in self[Container].contents:
+                yield item
 
     def is_now(self, com_cls, *args, **kwargs):
         self.components[com_cls.__name__] = com_cls(self, *args, **kwargs)
