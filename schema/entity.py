@@ -1,15 +1,16 @@
-from collections import defaultdict
+import random
+import string
 
 class Entity(object):
-    _last_id = 0
-    _active = 0
-
     def __init__(self, name='thingy', desc=None):
-        Entity._last_id = self.id = Entity._last_id + 1
-        Entity._active += 1
+        self.id = Entity.create_id()
         self.components = {}
         self.name = name
         self.desc = desc or 'A {0} sits nearby.'.format(name)
+
+    @staticmethod
+    def create_id():
+        return ''.join(random.choice(string.ascii_letters) for i in xrange(12))
 
     def __getitem__(self, com_cls):
         try:

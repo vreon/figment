@@ -151,7 +151,7 @@ class Storable(Component):
         self.container = None
 
     def __str__(self):
-        return 'stored in entity #{0}'.format(self.container.id) if self.container else 'not stored'
+        return 'stored in entity {0}'.format(self.container.id) if self.container else 'not stored'
 
 
 class Flammable(Component):
