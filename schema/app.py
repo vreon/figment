@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request, abort
-from schema.models import Entity, create_player
+from schema.models import redis
 
 app = Flask(__name__)
 
@@ -7,15 +7,11 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+# TODO: Assume entity exists for now
 @app.route('/login')
 def login():
     id = request.args.get('id', '')
-    return jsonify(ok=Entity(id).exists())
-
-@app.route('/register')
-def register():
-    player = create_player()
-    return jsonify(id=player.id)
+    return jsonify(ok=True)
 
 @app.route('/admin')
 def admin():
@@ -27,10 +23,6 @@ def command():
     id = request.args.get('id', '')
     command = request.args.get('command', '')
 
-    entity = Entity(id)
-    if not entity.exists():
-        abort(404)
-
-    entity.perform(command)
+    redis.rpush('incoming', ' '.join((id, command)))
 
     return None, 204

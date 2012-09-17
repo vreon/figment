@@ -1,41 +1,40 @@
 #!/usr/bin/env python
-import time
-import os
-from datetime import datetime
-from werkzeug._internal import _log
-from werkzeug.serving import run_with_reloader
 from flask.ext.script import Manager, Server
-from juggernaut import Juggernaut
+from schema.models import Entity, redis, create_world, create_player
 from schema.app import app
-from schema.models import Entity, create_world
 
 manager = Manager(app)
 manager.add_command('runserver', Server())
 
-@manager.command
-def tick():
-    timestamp = datetime.now().strftime('%M:%S.%f')[:-4]
-    print ' * [%s] Tick.' % timestamp
-    for entity in Entity.all():
-        entity.respond_to('on_tick')
+def process_command():
+    queue_name, queue_item = redis.blpop(['incoming'])
+
+    entity_id, _, command = queue_item.partition(' ')
+    entity = Entity.get(entity_id)
+
+    if not entity:
+        return
+
+    print '[%s] <%s> %s' % (entity.id, entity.name, command),
+    entity.perform(command)
+    print '| ok'
+
 
 @manager.command
-def runticker():
-    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
-        print ' * Ticking.'
-
-    run_with_reloader(tick_server)
-
-def tick_server():
-    ticks = 0
-    while True:
-        tick()
-        ticks += 1
-        time.sleep(2)
-
-@manager.command
-def init():
+def runschema():
     create_world()
+    player = create_player()
+    print 'Player ID: %s' % player.id
+    while True:
+        process_command()
+
+
+# @manager.command
+# def tick():
+#     timestamp = datetime.now().strftime('%M:%S.%f')[:-4]
+#     print ' * [%s] Tick.' % timestamp
+#     for entity in Entity.all():
+#         entity.respond_to('on_tick')
 
 if __name__ == '__main__':
     manager.run()

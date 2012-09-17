@@ -19,11 +19,7 @@ def _to_id(entity_or_id):
 def _to_entity(entity_or_id):
     if isinstance(entity_or_id, Entity):
         return entity_or_id
-    return Entity(entity_or_id)
-
-
-def start_room():
-    return Entity(redis.get('start-room'))
+    return Entity.get(entity_or_id)
 
 
 class AmbiguousArgument(Exception):
@@ -40,7 +36,7 @@ def action(pattern):
                 return f(self, *[CommandArgument(i, v) for i, v in enumerate(args)])
             except AmbiguousArgument as ex:
                 descriptor = ex.args[0]
-                DisambiguateMode(self).bind(f, args, descriptor.index)
+                self.mode = DisambiguateMode(self, f.__name__, args, descriptor.index)
         ACTIONS[pattern] = wrapper
         return wrapper
     return decorator
@@ -62,39 +58,34 @@ class CommandArgument(object):
         return 'CommandArgument(%r, %r)' % (self.index, self.value)
 
 
-class EntityData(object):
-    def __init__(self, key, transform=None):
-        self.key = key
-        self.transform = transform
-
-    def __get__(self, instance, owner):
-        value = redis.hget(instance.key, self.key)
-        if self.transform is None:
-            return value
-        return self.transform(value)
-
-    def __set__(self, instance, value):
-        redis.hset(instance.key, self.key, value)
-
-    def __delete__(self, instance):
-        redis.hdel(instance.key, self.key)
-
-
 class Entity(object):
-    name = EntityData('name')
-    desc = EntityData('desc')
-    container_id = EntityData('container_id')
-    is_container = EntityData('is_container', str_to_bool)
-    is_invisible = EntityData('is_invisible', str_to_bool)
-    is_carriable = EntityData('is_carriable', str_to_bool)
-    is_enterable = EntityData('is_enterable', str_to_bool)
-    is_edible    = EntityData('is_edible', str_to_bool)
-    is_potable   = EntityData('is_potable', str_to_bool)
+    ALL = {}
+    START_ROOM = None
 
-    all_key = 'entities'
+    def __init__(self, name, desc, **kwargs):
+        self.id = Entity.create_id()
+        self.name = name
+        self.desc = desc
+        self.mode = ExploreMode(self)
+        self.container_id = None
+        self.is_container = False
+        self.is_invisible = False
+        self.is_carriable = False
+        self.is_enterable = False
+        self.is_edible = False
+        self.is_potable = False
 
-    def __init__(self, id):
-        self.id = id
+        self._contents = set()
+        self._exits = {}
+        self._behaviors = []
+        self._recently_seen = []
+
+        # TODO: This is kind of a hack
+        for k, v in kwargs.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+
+        Entity.ALL[self.id] = self
 
     def __eq__(self, other):
         if isinstance(other, Entity):
@@ -108,46 +99,9 @@ class Entity(object):
     def __hash__(self):
         return hash(self.id)
 
-    #########################
-    # Redis keys
-    #########################
-
-    @property
-    def key(self):
-        return 'entity:%s' % self.id
-
-    @property
-    def contents_key(self):
-        return 'entity:%s:contents' % self.id
-
-    @property
-    def exits_key(self):
-        return 'entity:%s:exits' % self.id
-
-    @property
-    def messages_key(self):
-        return 'entity:%s:messages' % self.id
-
-    @property
-    def behaviors_key(self):
-        return 'entity:%s:behaviors' % self.id
-
-    @property
-    def recently_seen_key(self):
-        return 'entity:%s:recently-seen' % self.id
-
     @classmethod
-    def new(cls, name, desc, **kwargs):
-        kwargs.update({
-            'name': name,
-            'desc': desc,
-            'mode': 'explore',
-        })
-        id = cls.create_id()
-        redis.sadd(Entity.all_key, id)
-        entity = cls(id)
-        entity.update(kwargs)
-        return entity
+    def get(cls, id):
+        return cls.ALL.get(id)
 
     @staticmethod
     def create_id():
@@ -155,67 +109,36 @@ class Entity(object):
 
     @classmethod
     def all(cls):
-        return set(Entity(id) for id in redis.smembers(Entity.all_key))
+        return cls.ALL.values()
 
-    def exists(self):
-        return redis.exists(self.key)
+    @property
+    def messages_key(self):
+        return 'entity:%s:messages' % self.id
 
     def destroy(self):
         for item in self.contents():
             item.container_id = self.container_id
 
-        pipe = redis.pipeline()
-
         container = self.container
         if container:
-            pipe.srem(container.contents_key, self.id)
+            self.container._contents.remove(self.id)
 
-        pipe.delete(self.behaviors_key)
-        pipe.delete(self.contents_key)
-        pipe.delete(self.exits_key)
-        pipe.delete(self.key)
-        pipe.srem(Entity.all_key, self.id)
-        pipe.execute()
+        self._behaviors = []
+        self._contents = set()
+        self._exits = {}
 
-    def update(self, dict_):
-        redis.hmset(self.key, dict_)
+        self.ALL.pop(self.id, None)
 
     def clone(self):
-        clone = Entity.new(self.name, self.desc)
+        clone = Entity(self.name, self.desc)
 
-        pipe = redis.pipeline()
-
-        data = redis.hgetall(self.key)
-        if data:
-            pipe.hmset(clone.key, data)
-
-        behaviors = redis.hgetall(self.behaviors_key)
-        if behaviors:
-            pipe.hmset(clone.behaviors_key, behaviors)
-
-        exits = redis.hgetall(self.exits_key)
-        if exits:
-            pipe.hmset(clone.exits_key, exits)
-
-        # TODO: Deep clone the object's contents too
-
-        container = self.container
-        if self.container:
-            pipe.sadd(container.contents_key, clone.id)
-
-        pipe.execute()
+        # TODO: Copy properties
+        # TODO: Copy behaviors
+        # TODO: Copy exits
+        # TODO: Clone (not copy) contents
+        # TODO: Add clone to clone.container_id's contents
 
         return clone
-
-    def data(self, key):
-        return redis.hget(self.key, key)
-
-    def set_data(self, key, value):
-        return redis.hset(self.key, key, value)
-
-    @property
-    def mode(self):
-        return MODE_MAP[redis.hget(self.key, 'mode')](self)
 
     # Sacrificing Pythonic coding style here for convenience.
     @property
@@ -255,12 +178,10 @@ class Entity(object):
             return entities.pop()
         else:
             self.tell("Which '{0}' do you mean?".format(descriptor.value))
-            pipe = redis.pipeline()
             for index, entity in enumerate(entities):
                 position = 'in inventory' if entity.container == self else 'nearby'
                 self.tell(indent('{0}. {1.name} ({2})'.format(index + 1, entity, position)))
-                pipe.rpush(self.recently_seen_key, entity.id)
-            pipe.execute()
+                self._recently_seen.append(entity.id)
             raise AmbiguousArgument(descriptor)
 
     def pick_nearby(self, descriptor):
@@ -283,50 +204,46 @@ class Entity(object):
     def move(entity, container):
         old_container = entity.container
 
-        pipe = redis.pipeline()
-
         if old_container:
-            pipe.srem(old_container.contents_key, entity.id)
+            old_container._contents.remove(entity.id)
 
-        pipe.sadd(container.contents_key, entity.id)
-        pipe.hset(entity.key, 'container_id', container.id)
-        pipe.execute()
+        container._contents.add(entity.id)
+        entity.container_id = container.id
 
     def store(self, entity):
         Entity.move(entity, self)
 
+    # TODO: Rename to drop (but collides with action of same name)
     def remove(self, entity):
         Entity.move(entity, self.container)
 
     @property
     def container(self):
         if self.container_id:
-            return Entity(self.container_id)
+            return Entity.get(self.container_id)
 
     def contents(self):
-        return set(Entity(id) for id in redis.smembers(self.contents_key))
+        return set(Entity.get(id) for id in self._contents)
 
     def exits(self):
-        exits = redis.hgetall(self.exits_key)
-
         resolved_exits = {}
-        for name, descriptor in exits.iteritems():
+        for name, descriptor in self._exits.items():
             if descriptor == '.':
                 id = self.id
             elif descriptor == '..':
                 id = self.container_id
             else:
                 id = descriptor
-            resolved_exits[name] = Entity(id)
+            resolved_exits[name] = Entity.get(id)
         return resolved_exits
 
     def link(self, direction, destination, back_direction=None):
         # NOTE: This depends on _to_id not transforming values like . or ..
         destination_id = _to_id(destination)
-        redis.hset(self.exits_key, direction, destination_id)
+        self._exits[direction] = destination_id
         if back_direction and not destination in ('.', '..'):
             destination = _to_entity(destination)
-            redis.hset(destination.exits_key, back_direction, self.id)
+            destination._exits[back_direction] = self.id
 
     #########################
     # Communication
@@ -361,7 +278,7 @@ class Entity(object):
         exits = room.exits()
         if exits:
             messages.append('Exits:')
-            for direction, destination in exits.iteritems():
+            for direction, destination in exits.items():
                 messages.append(indent('{0}: {1}'.format(direction, destination.name)))
 
         entities_nearby = [e for e in self.nearby() if not e.is_invisible]
@@ -376,52 +293,34 @@ class Entity(object):
     # Events and behaviors
     #########################
 
-    def trigger(self, event, *args, **kwargs):
-        listeners = self.nearby() | self.contents()
+    # TODO
+    def trigger(self, event, *args):
+        # listeners = self.nearby() | self.contents()
+        # listeners.add(self)
 
-        listeners.add(self)
+        # container = self.container
+        # if container:
+        #     listeners.add(container)
 
-        container = self.container
-        if container:
-            listeners.add(container)
+        # args = list(args)
+        # args.insert(0, self) # Every behavior gets the actor as the first argument
 
-        args = list(args)
-        args.insert(0, self) # Every behavior gets the actor as the first argument
+        # any_overridden = False
+        # for listener in listeners:
+        #     if listener.respond_to(event, *args, **kwargs):
+        #         any_overridden = True
 
-        any_overridden = False
-        for listener in listeners:
-            if listener.respond_to(event, *args, **kwargs):
-                any_overridden = True
-
-        return any_overridden
-
-    def respond_to(self, event, *args, **kwargs):
-        if not self.exists():
-            return False
-
-        entity_behaviors = redis.hgetall(self.behaviors_key)
-        for behavior, kwargs in entity_behaviors.iteritems():
-            if not behavior in behaviors:
-                continue
-
-            behavior_class = behaviors[behavior]
-            behaving_entity = behavior_class(self.id)
-            # There has got to be a better way to do this, one that doesn't involve
-            # serializing json into to redis hashes
-            return getattr(behaving_entity, event)(*args, **json.loads(kwargs))
+        # return any_overridden
         return False
 
-    def all_data(self):
-        return redis.hgetall(self.key)
-
-    def behaviors(self):
-        return redis.hgetall(self.behaviors_key)
-
-    def add_behavior(self, behavior, **kwargs):
-        redis.hset(self.behaviors_key, behavior, json.dumps(kwargs))
-
-    def remove_behavior(self, behavior):
-        redis.hdel(self.behaviors_key, behavior)
+    def respond_to(self, event, *args):
+        # TODO: Every action should be a behavior
+        # This true/false stuff can be replaced with calls to super() (the default behavior)
+        # Instead of flag properties, add Behaviors; Edible, Invisible ... might need to think about this more
+        # entity_behaviors = redis.hgetall(self.behaviors_key)
+        # for behavior_instance in self._behaviors.values():
+        #     getattr(behavior_instance, event, None)(*args)
+        return False
 
     #########################
     # Actions
@@ -434,8 +333,8 @@ class Entity(object):
     @action(r'^name (.+)$')
     def set_name(self, descriptor):
         name = upper_first(descriptor.value) # TODO: name filtering :p
-        for ent in self.nearby():
-            ent.tell('{0.Name} is now known as {1}.'.format(self, name))
+        for entity in self.nearby():
+            entity.tell('{0.Name} is now known as {1}.'.format(self, name))
         self.tell('Your name is now {0}.'.format(name))
         self.name = name
 
@@ -541,7 +440,7 @@ class Entity(object):
         self.tell('Nothing happens.')
 
     @action('^(?:get|take) (.+)$')
-    def get(self, descriptor):
+    def _get(self, descriptor):
         if not self.is_container:
             self.tell("You're unable to hold items.")
             return
@@ -880,21 +779,21 @@ class Entity(object):
         return self.perform('go west')
 
 def create_player():
-    player = Entity.new(
+    player = Entity(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
         is_container = True,
     )
     player.link('out', '..')
-    start_room().store(player)
+    Entity.get(Entity.START_ROOM).store(player)
     player.emit('A new player appears.')
 
-    hubstone = Entity.new(
+    hubstone = Entity(
         'a hubstone',
         'A fragment of an ancient artifact with space-bending abilities.',
         is_carriable = True,
     )
-    hubstone.add_behavior('hubstone')
+    # hubstone.add_behavior('hubstone')
     player.store(hubstone)
 
     return player
@@ -903,22 +802,22 @@ def create_player():
 def create_world():
     redis.flushdb()
 
-    room = Entity.new(
+    room = Entity(
         'Example Room',
         'This room is for demonstration purposes only.',
         is_container = True,
     )
-    redis.set('start-room', room.id)
+    Entity.START_ROOM = room.id
 
     for letter in 'ABCDE':
-        thingy = Entity.new(
+        thingy = Entity(
             'Thingy ' + letter,
             "It's a thingy emblazoned with the letter " + letter + '.',
             is_carriable = True,
         )
         room.store(thingy)
 
-    box = Entity.new(
+    box = Entity(
         'a box',
         "It's a box made of cardboard. Nothing to get excited about.",
         is_container = True,
@@ -927,7 +826,7 @@ def create_world():
     box.link('out', '..')
     room.store(box)
 
-    backpack = Entity.new(
+    backpack = Entity(
         'a backpack',
         "A plain green backpack.",
         is_container = True,
@@ -935,14 +834,14 @@ def create_world():
     )
     room.store(backpack)
 
-    other_room = Entity.new(
+    other_room = Entity(
         'The Other Room',
         "It's another room.",
         is_container = True,
     )
     room.link('north', other_room, 'south')
 
-    crap_room = Entity.new(
+    crap_room = Entity(
         'Room Filled with Crap',
         'So much stuff!',
         is_container = True,
@@ -950,28 +849,29 @@ def create_world():
     room.link('down', crap_room, 'up')
 
     for i in range(1000):
-        obj = Entity.new(
+        obj = Entity(
             'Object %d' % i,
             'An object.',
             is_carriable=True,
         )
         crap_room.store(obj)
 
-    blob = Entity.new(
+    blob = Entity(
         'a sticky blob',
         "This blob looks difficult to drop.",
         is_carriable = True,
     )
-    blob.add_behavior('stickyblob')
+    # blob.add_behavior('stickyblob')
     other_room.store(blob)
 
-    gen = Entity.new(
+    gen = Entity(
         'a subspace generator',
         "A very complex-looking device with a button on one side.",
         is_carriable = True,
     )
-    gen.add_behavior('roomcreator')
+    # gen.add_behavior('roomcreator')
     other_room.store(gen)
 
-from schema.behaviors import behaviors
-from schema.modes import DisambiguateMode, MODE_MAP
+
+# from schema.behaviors import BEHAVIORS
+from schema.modes import ExploreMode, DisambiguateMode

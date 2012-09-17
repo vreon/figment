@@ -132,7 +132,7 @@ class RoomCreator(Behavior):
             return True
         return False
 
-behaviors = {
+BEHAVIORS = {
     'stickyblob': StickyBlob,
     'hubstone': Hubstone,
     'roomcreator': RoomCreator,
