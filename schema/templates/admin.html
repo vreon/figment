@@ -1,0 +1,55 @@
+{% block head %}
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        th {
+            padding:3px;
+            border:1px solid #555;
+        }
+        td {
+            border:1px solid #ccc;
+            padding:3px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Desc</th>
+                <th>Mode</th>
+                <th>Container</th>
+                <th>Is Cont</th>
+                <th>Invis</th>
+                <th>Carry</th>
+                <th>Enter</th>
+                <th>Eat</th>
+                <th>Drink</th>
+                <th>Behaviors</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entities|sort(attribute='id') %}
+                {% set d = e.all_data() %}
+                {% set b = e.behaviors() %}
+                <tr>
+                    <td>{{ e.id }}</td>
+                    <td>{{ e.Name }}</td>
+                    <td>{{ d.desc }}</td>
+                    <td>{{ d.mode }}</td>
+                    <td>{{ d.container_id }}</td>
+                    <td>{{ 'Y' if d.is_container }}</td>
+                    <td>{{ 'Y' if d.is_invisible }}</td>
+                    <td>{{ 'Y' if d.is_carriable }}</td>
+                    <td>{{ 'Y' if d.is_enterable }}</td>
+                    <td>{{ 'Y' if d.is_edible }}</td>
+                    <td>{{ 'Y' if d.is_potable }}</td>
+                    <td>{{ b }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

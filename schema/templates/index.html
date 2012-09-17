@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <link href="{{ url_for('static', filename='css/dark.css') }}" rel="stylesheet" type="text/css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="http://{{ request.host.partition(':')[0] }}:8080/application.js"></script>
+    <script>
+        $(document).ready(function(){
+            var addMessage = function(msg) {
+                $messages = $("#messages");
+                $messages.append(msg + "\n");
+                $messages.scrollTop($messages.prop("scrollHeight"));
+            };
+            var id = null;
+            var jug = new Juggernaut;
+
+            $("#input input").bind('keyup', function(e){
+                if (e.which == 13) {
+                    var val = $(this).val();
+                    addMessage('<span class="dim">&gt; ' + val + '</span>');
+
+                    if (!id) {
+                        if(val == 'register')
+                        {
+                            $.getJSON('/register', function(data){
+                                if(data.id) {
+                                    id = data.id;
+                                    addMessage('Connected.');
+                                    addMessage('Your login ID is <strong>' + id + '</strong>.');
+                                    addMessage('Please pick a name, e.g. <strong>name Joe</strong>.');
+                                    addMessage('Then try <strong>look</strong>.');
+
+                                    jug.subscribe("entity:" + id + ":messages", function(data){
+                                        addMessage(data);
+                                    });
+                                }
+                            });
+                        } else {
+                            $.getJSON('/login', {id: val}, function(data){
+                                console.log(data);
+                                if(data.ok) {
+                                    addMessage('Connected.');
+
+                                    id = val;
+                                    jug.subscribe("entity:" + id + ":messages", function(data){
+                                        addMessage(data);
+                                    });
+                                } else {
+                                    addMessage('There is no player with that ID.');
+                                }
+                            });
+                        }
+                    } else {
+                        $.get('/command', {id: id, command: val});
+                    }
+
+                    $(this).val('');
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div id="container">
+        <div id="messages">Welcome to the world.
+To log in, enter your ID.
+If you don't have an ID, enter <strong>register</strong>.
+
+<span class="dim">(This process will be friendlier in the future, I promise.)</span>
+</div>
+        <div id="input">
+            <input type="text" value="" />
+        </div>
+    </div>
+{% endblock %}

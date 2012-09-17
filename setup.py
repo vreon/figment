@@ -19,7 +19,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'schema = schema:play',
+            'schema = schema.cli:cli',
         ],
     }
 )

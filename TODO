@@ -1,0 +1,62 @@
+Combat
+    - Single letters
+    - Hotkeys! (1234 etc)
+    - Schedule actions for the next tick
+
+Conversations
+    - Modal
+    - Mutes surroundings (?)
+    - Broadcasts when engaged / disengaged
+    - Should be able to leave at any time, Skyrim-style
+
+Worlds
+    - Run multiple copies of the world?
+    - Players should be able to migrate their entities and owned stuff then
+        - Or maybe a character is permanently linked to a world?
+
+Test items
+    - A key that opens a door
+    - A keycard bound to a particular owner
+    - A bomb that, when used, counts down to 0 and explodes, damaging nearby stuff
+    - Signs, books, walls you can write on/in
+
+Modal interactions
+    - Explore mode: arbitrary commands
+    - Conversation mode: preset convo options
+    - Combat mode: scheduler based
+    - Shop mode?
+
+Instances
+    - Copies of rooms, NPCs can be created for parties
+    - Have a function that creates a list of entities and an instance start room
+    - Store the entities in a redis list and tear them down when the party leaves / wins
+
+Flags
+    - is_dark (would this be better as a behavior?)
+    - is_open (for containers)
+    - is_closable "
+    - is_lockable "
+    - is_flexible (volume is sum of volume of contained objects)
+    - is_visible (for stuff like spawners)
+    - is_writable
+
+Scaling
+    - Every entity has a "zone ID"
+    - One ticker per zone
+        - Runticker uses multiprocessing to create workers
+    - Entities that tick must register with the per-zone tick set
+
+Stuff to think about
+    - names and capitalization
+    - chairs, beds, vehicles(?)
+    - stacks of objects / inventory management / gold
+    - equipment
+    - holding items
+        - inventory is a closed container
+        - held items go in an open container
+    - change the frontend to purge old messages
+    - need a room.unlink() for moving rooms
+
+Frontend improvements
+    - Purge old messages
+    - Command history
