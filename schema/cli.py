@@ -1,6 +1,7 @@
 import sys
 import argparse
-from schema.models import Entity
+import json
+from schema.models import Entity, redis
 
 def cli():
     parser = argparse.ArgumentParser(description='Manipulates a Schema world.')
@@ -8,18 +9,23 @@ def cli():
 
     subparsers = parser.add_subparsers(dest='command')
 
-    # parser_listen = subparsers.add_parser('listen', help='connect to entity\'s messages stream')
+    parser_listen = subparsers.add_parser('listen', help='connect to entity\'s messages stream')
     parser_perform = subparsers.add_parser('perform', help='perform an action from the entity\'s perspective')
     parser_perform.add_argument('action', type=str, help='the action to perform')
 
     args = parser.parse_args()
-    actor = Entity(args.entity_id)
-
-    if not actor:
-        print 'fatal: no entity with ID {0}'.format(args.entity_id)
-        sys.exit(1)
 
     if args.command == 'perform':
-        actor.perform(args.action)
-    # elif args.command == 'listen':
-        # actor.listen()
+        redis.rpush('incoming', ' '.join((args.entity_id, args.action)))
+    elif args.command == 'listen':
+        pubsub = redis.pubsub()
+
+        channel = 'entity:%s:messages' % args.entity_id
+        pubsub.subscribe('juggernaut')
+
+        print "Listening to %s..." % channel
+        for message in pubsub.listen():
+            # Why, juggernaut, why
+            payload = json.loads(message['data'])
+            if channel in payload['channels']:
+                print payload['data']
