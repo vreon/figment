@@ -4,6 +4,9 @@ import json
 from redis import StrictRedis
 from juggernaut import Juggernaut
 from schema.utils import upper_first, str_to_bool, indent
+import tempfile
+import shutil
+import os
 
 redis = StrictRedis()
 jug = Juggernaut()
@@ -22,7 +25,7 @@ def _to_entity(entity_or_id):
     return Entity.get(entity_or_id)
 
 
-class AmbiguousArgument(Exception):
+class AmbiguousDescriptor(Exception):
     pass
 
 
@@ -34,9 +37,11 @@ def action(pattern):
         def wrapper(self, *args):
             try:
                 return f(self, *[CommandArgument(i, v) for i, v in enumerate(args)])
-            except AmbiguousArgument as ex:
-                descriptor = ex.args[0]
-                self.mode = DisambiguateMode(self, f.__name__, args, descriptor.index)
+            except AmbiguousDescriptor as ex:
+                descriptor, targets = ex.args
+                self.mode = DisambiguateMode(
+                    self, self.mode, targets, f.__name__, args, descriptor.index
+                )
         ACTIONS[pattern] = wrapper
         return wrapper
     return decorator
@@ -63,7 +68,7 @@ class Entity(object):
     START_ROOM = None
 
     def __init__(self, name, desc, **kwargs):
-        self.id = Entity.create_id()
+        self.id = Entity.create_id() if not 'id' in kwargs else kwargs['id']
         self.name = name
         self.desc = desc
         self.mode = ExploreMode(self)
@@ -78,7 +83,6 @@ class Entity(object):
         self._contents = set()
         self._exits = {}
         self._behaviors = []
-        self._recently_seen = []
 
         # TODO: This is kind of a hack
         for k, v in kwargs.items():
@@ -114,6 +118,56 @@ class Entity(object):
     @property
     def messages_key(self):
         return 'entity:%s:messages' % self.id
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'desc': self.desc,
+            'mode': self.mode.to_dict(),
+            'container_id': self.container_id,
+            'is_container': self.is_container,
+            'is_invisible': self.is_invisible,
+            'is_carriable': self.is_carriable,
+            'is_enterable': self.is_enterable,
+            'is_edible': self.is_edible,
+            'is_potable': self.is_potable,
+            'contents': list(self._contents),
+            'exits': self._exits,
+            'behaviors': '',  # TODO
+        }
+
+    @classmethod
+    def from_dict(cls, dict_):
+        entity = cls(dict_['name'], dict_['desc'], id=dict_['id'])
+        entity.mode = _mode_from_dict(entity, dict_['mode'])
+
+        entity.container_id = dict_['container_id']
+        entity.is_container = dict_['is_container']
+        entity.is_invisible = dict_['is_invisible']
+        entity.is_carriable = dict_['is_carriable']
+        entity.is_enterable = dict_['is_enterable']
+        entity.is_edible = dict_['is_edible']
+        entity.is_potable = dict_['is_potable']
+
+        entity._contents = set(dict_['contents'])
+        entity._exits = dict_['exits']
+        # TODO: entity.behaviors
+
+        cls.ALL[dict_['id']] = entity
+
+        return entity
+
+    @classmethod
+    def dump(cls):
+        child_pid = os.fork()
+
+        if not child_pid:
+            f = tempfile.NamedTemporaryFile(delete=False)
+            f.write(json.dumps([e.to_dict() for e in cls.all()]))
+            f.close()
+            shutil.move(f.name, 'dump.json')
+            os._exit(os.EX_OK)
 
     def destroy(self):
         for item in self.contents():
@@ -178,11 +232,12 @@ class Entity(object):
             return entities.pop()
         else:
             self.tell("Which '{0}' do you mean?".format(descriptor.value))
+            targets = []
             for index, entity in enumerate(entities):
                 position = 'in inventory' if entity.container == self else 'nearby'
                 self.tell(indent('{0}. {1.name} ({2})'.format(index + 1, entity, position)))
-                self._recently_seen.append(entity.id)
-            raise AmbiguousArgument(descriptor)
+                targets.append(entity.id)
+            raise AmbiguousDescriptor(descriptor, targets)
 
     def pick_nearby(self, descriptor):
         return self.pick_interactively(descriptor, self.nearby(), area='nearby')
@@ -325,6 +380,11 @@ class Entity(object):
     #########################
     # Actions
     #########################
+
+    @action(r'^dump$')
+    def do_dump(self):
+        self.tell('Dumping!')
+        Entity.dump()
 
     @action(r'^name$')
     def get_name(self):
@@ -841,21 +901,6 @@ def create_world():
     )
     room.link('north', other_room, 'south')
 
-    crap_room = Entity(
-        'Room Filled with Crap',
-        'So much stuff!',
-        is_container = True,
-    )
-    room.link('down', crap_room, 'up')
-
-    for i in range(1000):
-        obj = Entity(
-            'Object %d' % i,
-            'An object.',
-            is_carriable=True,
-        )
-        crap_room.store(obj)
-
     blob = Entity(
         'a sticky blob',
         "This blob looks difficult to drop.",
@@ -874,4 +919,4 @@ def create_world():
 
 
 # from schema.behaviors import BEHAVIORS
-from schema.modes import ExploreMode, DisambiguateMode
+from schema.modes import ExploreMode, DisambiguateMode, _mode_from_dict

@@ -3,6 +3,8 @@ import random
 from schema.models import redis, ACTIONS
 from schema.utils import int_or_none
 
+def _mode_from_dict(entity, dict_):
+    return MODE_MAP[dict_['name']].from_dict(entity, dict_)
 
 class Mode(object):
     def __init__(self, entity):
@@ -13,7 +15,17 @@ class Mode(object):
 
 
 class ExploreMode(Mode):
-    name = 'explore'
+    def __init__(self, entity):
+        self.entity = entity
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+        }
+
+    @classmethod
+    def from_dict(cls, entity, dict_):
+        return cls(entity)
 
     def perform(self, command):
         matches = {}
@@ -33,25 +45,51 @@ class ExploreMode(Mode):
 
 
 class DisambiguateMode(Mode):
-    name = 'disambiguate'
-
-    def __init__(self, entity, callback, arguments, index):
+    def __init__(self, entity, previous_mode, options, callback, arguments, index):
         self.entity = entity
+        self.previous_mode = previous_mode
         self.callback = callback
         self.arguments = list(arguments)
+        self.options = options
         self.index = index
 
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'previous_mode': self.previous_mode.to_dict(),
+            'callback': self.callback,
+            'arguments': self.arguments,
+            'options': self.options,
+            'index': self.index,
+        }
+
+    @classmethod
+    def from_dict(cls, entity, dict_):
+        return cls(
+            entity,
+            _mode_from_dict(entity, dict_['previous_mode']),
+            dict_['options'],
+            dict_['callback'],
+            dict_['arguments'],
+            dict_['index'],
+        )
+
     def perform(self, command):
-        self.entity.mode = ExploreMode(self.entity)
+        self.entity.mode = self.previous_mode
 
         option_index = int_or_none(command)
-        options = self.entity._recently_seen
-        self.entity._recently_seen = []
 
-        if option_index is not None and 0 < option_index <= len(options):
-            option = options[option_index - 1]
+        if option_index is not None and 0 < option_index <= len(self.options):
+            option = self.options[option_index - 1]
             self.arguments[self.index] = option
             getattr(self.entity, self.callback)(*self.arguments)
             return
 
         self.entity.mode.perform(command)
+
+MODE_MAP = {
+    'explore': ExploreMode,
+    'disambiguate': DisambiguateMode,
+}
+for k, v in MODE_MAP.items():
+    v.name = k

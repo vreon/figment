@@ -2,6 +2,8 @@
 from flask.ext.script import Manager, Server
 from schema.models import Entity, redis, create_world, create_player
 from schema.app import app
+import json
+import os
 
 manager = Manager(app)
 manager.add_command('runserver', Server())
@@ -22,9 +24,18 @@ def process_command():
 
 @manager.command
 def runschema():
-    create_world()
-    player = create_player()
-    print 'Player ID: %s' % player.id
+    if os.path.exists('dump.json'):
+        print 'Loading entities...'
+        with open('dump.json', 'r') as f:
+            entity_list = json.loads(f.read())
+            for entity_dict in entity_list:
+                entity = Entity.from_dict(entity_dict)
+                print '  [%s] %s' % (entity.id, entity.name)
+    else:
+        create_world()
+        player = create_player()
+        print 'Player ID: %s' % player.id
+    print 'Listening.'
     while True:
         process_command()
 

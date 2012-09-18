@@ -1,3 +1,15 @@
+Zones
+    - Each instance of a runschema process can be a zone
+    - Entities can migrate to a new zone via serialization to Redis
+    - Runschema processes should be wrapped in an exception handler
+    - Ctrl+C should shutdown gracefully (dumping first)
+
+Persistence
+    x Fork, then dump a JSON list of entities
+    x On start, check for a dump.json
+        x If it exists, load it
+        x Otherwise, create the world
+
 Combat
     - Single letters
     - Hotkeys! (1234 etc)
@@ -9,11 +21,6 @@ Conversations
     - Broadcasts when engaged / disengaged
     - Should be able to leave at any time, Skyrim-style
 
-Worlds
-    - Run multiple copies of the world?
-    - Players should be able to migrate their entities and owned stuff then
-        - Or maybe a character is permanently linked to a world?
-
 Test items
     - A key that opens a door
     - A keycard bound to a particular owner
@@ -22,8 +29,11 @@ Test items
 
 Modal interactions
     - Explore mode: arbitrary commands
+    - Disambiguation mode
+        x should return the entity to the previous mode
     - Conversation mode: preset convo options
     - Combat mode: scheduler based
+        - or, mostly turn based with 20 sec forfeit?
     - Shop mode?
 
 Instances
@@ -40,12 +50,6 @@ Flags
     - is_visible (for stuff like spawners)
     - is_writable
 
-Scaling
-    - Every entity has a "zone ID"
-    - One ticker per zone
-        - Runticker uses multiprocessing to create workers
-    - Entities that tick must register with the per-zone tick set
-
 Stuff to think about
     - names and capitalization
     - chairs, beds, vehicles(?)
@@ -54,7 +58,6 @@ Stuff to think about
     - holding items
         - inventory is a closed container
         - held items go in an open container
-    - change the frontend to purge old messages
     - need a room.unlink() for moving rooms
 
 Frontend improvements
