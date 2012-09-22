@@ -1,0 +1,13 @@
+redis:
+  host: localhost
+  port: 6379
+persistence:
+  mode: snapshot
+  file: "%s.json"
+  frequency: 60
+  compression: yes
+zones:
+  default:
+    description: The default zone.
+  space:
+    description: Outer space!!
