@@ -4,9 +4,6 @@ import json
 from redis import StrictRedis
 from juggernaut import Juggernaut
 from schema.utils import upper_first, str_to_bool, indent
-import tempfile
-import shutil
-import os
 
 redis = StrictRedis()
 jug = Juggernaut()
@@ -157,17 +154,6 @@ class Entity(object):
         cls.ALL[dict_['id']] = entity
 
         return entity
-
-    @classmethod
-    def dump(cls):
-        child_pid = os.fork()
-
-        if not child_pid:
-            f = tempfile.NamedTemporaryFile(delete=False)
-            f.write(json.dumps([e.to_dict() for e in cls.all()]))
-            f.close()
-            shutil.move(f.name, 'dump.json')
-            os._exit(os.EX_OK)
 
     def destroy(self):
         for item in self.contents():
@@ -380,11 +366,6 @@ class Entity(object):
     #########################
     # Actions
     #########################
-
-    @action(r'^dump$')
-    def do_dump(self):
-        self.tell('Dumping!')
-        Entity.dump()
 
     @action(r'^name$')
     def get_name(self):

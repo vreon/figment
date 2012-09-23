@@ -4,8 +4,120 @@ import argparse
 import json
 import yaml
 import os
+import tempfile
+import shutil
 from schema.models import Entity, redis, create_world, create_player
 from schema.app import app
+
+
+class Zone(object):
+    def __init__(self, id, config_path):
+        self.id = id
+        self.load_config(config_path)
+        if not self.load_snapshot():
+            self.debug_create_world()
+
+    def load_config(self, path):
+        path = os.path.expanduser(path)
+
+        try:
+            with open(path) as f:
+                config = yaml.safe_load(f)
+        except EnvironmentError:
+            fatal("couldn't read configuration file")
+        except yaml.YAMLError as e:
+            fatal("error in configuration file:\n%s" % e)
+
+        if not self.id in config['zones']:
+            fatal("undefined zone '%s'" % self.id)
+
+        # TODO: per-zone persistence settings
+
+        persistence = config.get('persistence')
+        if not persistence:
+            fatal('unspecified persistence settings')
+
+        # TODO: alternate persistence modes
+
+        if not persistence['mode'] == 'snapshot':
+            fatal("unrecognized persistence mode '%s'" % persistence['mode'])
+
+        self.config = config
+
+    @property
+    def snapshot_path(self):
+        snapshot_path = self.config['persistence']['file']
+        try:
+            snapshot_path = snapshot_path % self.id
+        except TypeError:
+            pass
+        return os.path.expanduser(snapshot_path)
+
+    def load_snapshot(self):
+        if not os.path.exists(self.snapshot_path):
+            return False
+
+        print('Loading entities from snapshot.')
+        with open(self.snapshot_path, 'r') as f:
+            entity_list = json.loads(f.read())
+            for entity_dict in entity_list:
+                entity = Entity.from_dict(entity_dict)
+                print('  [%s] %s' % (entity.id, entity.name))
+
+        return True
+
+    def debug_create_world(self):
+        create_world()
+        player = create_player()
+        print('Player ID: %s' % player.id)
+
+    def snapshot(self):
+        child_pid = os.fork()
+
+        if not child_pid:
+            f = tempfile.NamedTemporaryFile(delete=False)
+            f.write(json.dumps([e.to_dict() for e in Entity.all()]))
+            f.close()
+            shutil.move(f.name, self.snapshot_path)
+            os._exit(os.EX_OK)
+
+    def run(self):
+        print('Listening.')
+        try:
+            while True:
+                self.process_one_command()
+        except Exception as e:
+            print('Fatal: snapshotting and halting due to exception:')
+            print(e)
+        except BaseException as e:
+            pass
+
+        self.snapshot()
+
+    def process_one_command(self):
+        zone_key = 'zone:%s:incoming' % self.id
+        queue_name, queue_item = redis.blpop([zone_key])
+
+        entity_id, _, command = queue_item.partition(' ')
+
+        # TODO: This is laughably insecure right now considering
+        # that clients can specify the entity ID
+        if entity_id == 'admin':
+            print('[admin] %s' % command)
+            if command == 'snapshot':
+                self.snapshot()
+            if command == 'crash':
+                raise RuntimeError('Craaaaash')
+            elif command == 'halt':
+                sys.exit()
+        else:
+            entity = Entity.get(entity_id)
+
+            if not entity:
+                return
+
+            print('[%s] <%s> %s' % (entity.id, entity.name, command))
+            entity.perform(command)
 
 
 def fatal(message):
@@ -23,10 +135,13 @@ def perform(args):
 
 
 def prompt(args):
-    action = raw_input('> ')
-    while action and not action == 'quit':
-        _perform(args.zone, args.entity_id, action)
+    try:
         action = raw_input('> ')
+        while action and not action == 'quit':
+            _perform(args.zone, args.entity_id, action)
+            action = raw_input('> ')
+    except (EOFError, KeyboardInterrupt):
+        print()
 
 
 def listen(args):
@@ -44,77 +159,13 @@ def listen(args):
             print(payload['data'])
 
 
-def load_config(path):
-    path = os.path.expanduser(path)
-
-    try:
-        with open(path) as f:
-            config = yaml.safe_load(f)
-    except EnvironmentError:
-        fatal("couldn't read configuration file")
-    except yaml.YAMLError as e:
-        fatal("error in configuration file:\n%s" % e)
-
-    return config
-
-
 def run(args):
-    config = load_config(args.config)
-    print(config)
-
-    if not args.zone in config['zones']:
-        fatal("undefined zone '%s'" % args.zone)
-
-    # TODO: per-zone persistence settings
-
-    persistence = config.get('persistence')
-    if not persistence:
-        fatal('unspecified persistence settings')
-
-    # TODO: alternate persistence modes
-
-    if not persistence['mode'] == 'snapshot':
-        fatal("unrecognized persistence mode '%s'" % persistence['mode'])
-
-    try:
-        snapshot_path = persistence['file'] % args.zone
-    except TypeError:
-        snapshot_path = persistence['file']
-    snapshot_path = os.path.expanduser(snapshot_path)
-
-    if os.path.exists(snapshot_path):
-        print('Loading entities from snapshot.')
-        with open(snapshot_path, 'r') as f:
-            entity_list = json.loads(f.read())
-            for entity_dict in entity_list:
-                entity = Entity.from_dict(entity_dict)
-                print('  [%s] %s' % (entity.id, entity.name))
-    else:
-        create_world()
-        player = create_player()
-        print('Player ID: %s' % player.id)
-
-    print('Listening.')
-    while True:
-        process_one_command(args.zone)
-
-
-def process_one_command(zone):
-    zone_key = 'zone:%s:incoming' % zone
-    queue_name, queue_item = redis.blpop([zone_key])
-
-    entity_id, _, command = queue_item.partition(' ')
-    entity = Entity.get(entity_id)
-
-    if not entity:
-        return
-
-    print('[%s] <%s> %s' % (entity.id, entity.name, command))
-    entity.perform(command)
+    zone = Zone(args.zone, args.config)
+    zone.run()
 
 
 def serve(args):
-    # TODO: This currently relies on Flask + Juggernaut, but juggernaut is
+    # TODO: This currently relies on Flask + Juggernaut, but Juggernaut is
     # abandoned. Switch to something actively maintained.
     app.run(debug=True)
 
