@@ -201,15 +201,12 @@ class Positioned(Aspect):
             event.actor.tell('You say: "{0}"'.format(message))
             event.actor.Positioned.emit('{0.Name} says: "{1}"'.format(event.actor, message))
 
-    # @action(r'^l(?:ook)?(?: around)?$')
-    # def look(event):
-    #     if self.trigger('before_look'):
-    #         return
-
-    #     self.emit('{0.Name} looks around.'.format(self.entity))
-    #     self.tell_surroundings()
-
-    #     self.trigger('after_look')
+    @action(r'^l(?:ook)?(?: around)?$')
+    def look(event):
+        event.trigger('before')
+        if not event.prevented:
+            event.actor.Positioned.emit('{0.Name} looks around.'.format(event.actor))
+            event.actor.Positioned.tell_surroundings()
 
     # @action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (.+)$')
     # def look_in(self, descriptor):
