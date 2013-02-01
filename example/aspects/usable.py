@@ -1,33 +1,31 @@
-from schema import EntityPlugin, before, after, action
-from plugins import Positioned
+from schema import Aspect, action
+from . import Positioned
 
-class Usable(EntityPlugin):
+class Usable(Aspect):
     """Provides a 'use' hook for entities."""
 
     requires = [Positioned]
 
     @action(r'^use (?P<target>.+)$')
-    def use(self, event):
-        target = self.pick_nearby_inventory(event.target)
+    def use(event):
+        target = event.actor.pick_nearby_inventory(event.target)
         if not target:
             return
 
-        event.before()
-
+        event.trigger('before')
         if not event.prevented:
-            self.tell('Nothing happens.')
+            event.actor.tell('Nothing happens.')
 
     @action(r'^use (?P<item>.+) on (?P<target>.+)')
-    def use_on(self, event):
-        item = self.pick_nearby_inventory(event.item)
+    def use_on(event):
+        item = event.actor.pick_nearby_inventory(event.item)
         if not item:
             return
 
-        target = self.pick_nearby_inventory(event.target)
+        target = event.actor.pick_nearby_inventory(event.target)
         if not target:
             return
 
-        event.before()
-
+        event.trigger('before')
         if not event.prevented:
             self.tell('Nothing happens.')

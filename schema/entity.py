@@ -83,7 +83,7 @@ class Entity(object):
 
     def to_dict(self):
         mode_dict = self.mode.to_dict()
-        mode_dict['name'] = self.mode.name
+        mode_dict['name'] = self.mode.__class__.__name__
         return {
             'id': self.id,
             'name': self.name,
@@ -158,4 +158,4 @@ class Entity(object):
 
 
 from schema.utils import upper_first
-from schema.modes import ExploreMode, DisambiguateMode
+from schema.modes import Mode, ExploreMode, DisambiguateMode

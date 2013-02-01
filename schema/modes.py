@@ -11,7 +11,6 @@ class ModeMeta(type):
         new_class = super(ModeMeta, cls).__new__(cls, name, bases, dict_)
         if name != 'Mode':
             Mode.ALL[name] = new_class
-            new_class.name = name.lower()
         return new_class
 
 

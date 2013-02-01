@@ -1,4 +1,5 @@
-from schema import Aspect, action
+from schema import Entity, Aspect, action, jug
+from schema.utils import upper_first
 
 class Positioned(Aspect):
     def __init__(self, is_container=False, is_carriable=False, is_enterable=False):
@@ -45,8 +46,12 @@ class Positioned(Aspect):
         self._contents = set()
         self._exits = {}
 
+    #########################
+    # Selection
+    #########################
+
     def nearby(self):
-        return set(entity for entity in self.container.contents() if not entity == self.entity)
+        return set(entity for entity in self.container.Positioned.contents() if not entity == self.entity)
 
     def pick(self, descriptor, entity_set):
         """
@@ -86,7 +91,7 @@ class Positioned(Aspect):
         return self.pick_interactively(descriptor, self.contents(), area='in your inventory')
 
     def pick_from(self, descriptor, container):
-        return self.pick_interactively(descriptor, container.contents(), area='in {0.name}'.format(container))
+        return self.pick_interactively(descriptor, container.Positioned.contents(), area='in {0.name}'.format(container))
 
     def pick_nearby_inventory(self, descriptor):
         return self.pick_interactively(descriptor, self.contents() | self.nearby(), area='nearby')
@@ -115,7 +120,7 @@ class Positioned(Aspect):
     @property
     def container(self):
         if self.container_id:
-            return Positioned.get(self.container_id)
+            return Entity.get(self.container_id)
 
     def contents(self):
         return set(Entity.get(id) for id in self._contents)
@@ -166,7 +171,7 @@ class Positioned(Aspect):
 
         messages = [room.name.title(), room.desc]
 
-        exits = room.exits()
+        exits = room.Positioned.exits()
         if exits:
             messages.append('Exits:')
             for direction, destination in exits.items():
@@ -179,11 +184,6 @@ class Positioned(Aspect):
                 messages.append(indent(entity.name))
 
         self.entity.tell('\n'.join(messages))
-
-    ### TODO: Remove me
-
-    def trigger(self, *args, **kwargs):
-        pass
 
     #########################
     # Actions
@@ -199,7 +199,7 @@ class Positioned(Aspect):
         event.trigger('before')
         if not event.prevented:
             event.actor.tell('You say: "{0}"'.format(message))
-            event.actor.emit('{0.Name} says: "{1}"'.format(event.actor, message))
+            event.actor.Positioned.emit('{0.Name} says: "{1}"'.format(event.actor, message))
 
     # @action(r'^l(?:ook)?(?: around)?$')
     # def look(event):

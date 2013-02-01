@@ -3,7 +3,7 @@
 import random
 
 from schema import Entity, Zone
-from aspects import *
+from aspects.positioned import Positioned
 
 def create_player():
     return Entity(
@@ -22,5 +22,7 @@ if __name__ == '__main__':
     player = create_player()
     room.Positioned.store(player)
 
-    zone = Zone('test', 'config.yaml')
+    zone = Zone('default')
     zone.save_snapshot()
+
+    print player.id

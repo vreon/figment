@@ -1,5 +1,7 @@
 import logging
-logging.getLogger().setLevel(logging.DEBUG)
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+root_logger.addHandler(logging.StreamHandler())
 
 from redis import StrictRedis
 from juggernaut import Juggernaut

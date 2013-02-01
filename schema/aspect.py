@@ -1,4 +1,7 @@
+import logging
 import inspect
+
+log = logging.getLogger(__name__)
 
 HOOK_TYPES = []
 
@@ -9,19 +12,21 @@ class AspectMeta(type):
             return new_class
 
         new_class.HOOKS = {}
-        for name, method in inspect.getmembers(new_class):
-            if hasattr(method, '_action'):
+        for method_name, method in inspect.getmembers(new_class):
+            if hasattr(method, '_action_pattern'):
                 # XXX: black magic
-                setattr(new_class, name, staticmethod(method.im_func))
-                Aspect.ACTIONS[method._action] = getattr(new_class, name)
+                log.debug('Found action pattern %r on %r of %r' % (method._action_pattern, method, new_class))
+                setattr(new_class, method_name, staticmethod(method.im_func))
+                Aspect.ACTIONS[method._action_pattern] = getattr(new_class, method_name)
 
             for hook_type in HOOK_TYPES:
                 hook_type_attr = '_hook_%s' % hook_type
                 if hasattr(method, hook_type_attr):
+                    log.debug('Found hook %r on %r of %r' % (getattr(method, hook_type_attr), method, new_class))
                     for hooked_function in getattr(method, hook_type_attr):
                         new_class.HOOKS.setdefault(hook_type, {})\
                             .setdefault(hooked_function, [])\
-                            .append(getattr(new_class, name))
+                            .append(getattr(new_class, method_name))
 
         Aspect.ALL[name] = new_class
         return new_class
@@ -53,7 +58,7 @@ class Aspect(object):
 # TODO: Make this automatically trigger 'after', somehow
 def action(regex):
     def decorator(f):
-        setattr(f, '_action', regex)
+        setattr(f, '_action_pattern', regex)
         return f
     return decorator
 
