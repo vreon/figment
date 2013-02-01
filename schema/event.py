@@ -14,6 +14,9 @@ class Event(object):
 
     def trigger(self, hook_type):
         for witness in self.witnesses():
+            # TODO: This iterates over every aspect... but we know (or
+            # should know) which aspects hook which actions. We should only
+            # iterate over those aspect instances
             for aspect in witness.aspects:
                 hooks = aspect.HOOKS.get(hook_type, {}).get(self.action, [])
                 for hook in hooks:

@@ -3,7 +3,7 @@
 import random
 
 from schema import Entity, Zone
-from aspects.positioned import Positioned
+from aspects import *
 
 def create_player():
     return Entity(
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     room = Entity(
         'A Room',
         'A nondescript room.',
-        [Positioned(is_container=True)]
+        [Positioned(is_container=True), Dark()]
     )
 
     player = create_player()

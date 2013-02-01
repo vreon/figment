@@ -16,6 +16,10 @@ Plugins
         - or just reload the whole server
     - @before(tick) should be a thing... maybe
 
+    ! @action should accept an optional second argument: an Event subclass
+        - This event subclass is attached to the action and can be constructed instead of Event
+        - The subclass defines witnesses
+
 Registration
     - ???
     - Accounts have a username, password, list of controllable entities

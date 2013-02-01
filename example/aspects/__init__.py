@@ -1,12 +1,13 @@
 from positioned import Positioned
 from usable import Usable
+from dark import Dark
 
 ### Override Event.witnesses
 
-from schema import Event
+from schema import Event, Entity
 
-# TODO
+# TODO: Restrict this
 def find_witnesses(self):
-    return set()
+    return Entity.ALL.values()
 
 Event.witnesses = find_witnesses
