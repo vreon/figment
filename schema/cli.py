@@ -49,7 +49,7 @@ def run(args):
 def serve(args):
     # TODO: This currently relies on Flask + Juggernaut, but Juggernaut is
     # abandoned. Switch to something actively maintained.
-    app.run(debug=True)
+    app.run(debug=True, host=args.host, port=args.port)
 
 
 def cli():
@@ -120,8 +120,15 @@ def cli():
     parser_serve = subparsers.add_parser(
         'serve', help='run a web server for websocket clients'
     )
+    parser_serve.add_argument(
+        '-H', '--host', type=str, default=None,
+        help='the hostname to use'
+    )
+    parser_serve.add_argument(
+        '-p', '--port', type=str, default=5000,
+        help='the port to listen on'
+    )
     parser_serve.set_defaults(func=serve)
-    # TODO: host, port
 
     args = parser.parse_args()
     args.func(args)
