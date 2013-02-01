@@ -82,11 +82,13 @@ class Entity(object):
         return 'entity:%s:messages' % self.id
 
     def to_dict(self):
+        mode_dict = self.mode.to_dict()
+        mode_dict['name'] = self.mode.name
         return {
             'id': self.id,
             'name': self.name,
             'desc': self.desc,
-            'mode': self.mode.to_dict(),
+            'mode': mode_dict,
             'aspects': dict(
                 (a.__class__.__name__, a.to_dict()) for a in self.aspects
             )
@@ -95,7 +97,10 @@ class Entity(object):
     @classmethod
     def from_dict(cls, dict_):
         entity = cls(dict_['name'], dict_['desc'], id=dict_['id'])
-        entity.mode = _mode_from_dict(entity, dict_['mode'])
+
+        mode_dict = dict_['mode']
+        mode_name = mode_dict.pop('name')
+        entity.mode = Mode.class_from_name(mode_name).from_dict(entity, mode_dict)
 
         aspects = []
         for aspect_name, aspect_dict in dict_.get('aspects', {}).items():
@@ -153,4 +158,4 @@ class Entity(object):
 
 
 from schema.utils import upper_first
-from schema.modes import ExploreMode, DisambiguateMode, _mode_from_dict
+from schema.modes import ExploreMode, DisambiguateMode

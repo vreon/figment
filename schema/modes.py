@@ -5,30 +5,39 @@ from schema.aspect import Aspect
 from schema.event import Event
 from schema.utils import int_or_none
 
-def _mode_from_dict(entity, dict_):
-    return MODE_MAP[dict_['name']].from_dict(entity, dict_)
+
+class ModeMeta(type):
+    def __new__(cls, name, bases, dict_):
+        new_class = super(ModeMeta, cls).__new__(cls, name, bases, dict_)
+        if name != 'Mode':
+            Mode.ALL[name] = new_class
+            new_class.name = name.lower()
+        return new_class
+
 
 class Mode(object):
+    __metaclass__ = ModeMeta
+    ALL = {}
+
+    @classmethod
+    def class_from_name(cls, name):
+        return cls.ALL[name]
+
     def __init__(self, entity):
         self.entity = entity
+
+    @classmethod
+    def from_dict(cls, entity, dict_):
+        return cls(entity)
+
+    def to_dict(self):
+        return {}
 
     def perform(self, command):
         raise NotImplementedError
 
 
 class ExploreMode(Mode):
-    def __init__(self, entity):
-        self.entity = entity
-
-    def to_dict(self):
-        return {
-            'name': self.name,
-        }
-
-    @classmethod
-    def from_dict(cls, entity, dict_):
-        return cls(entity)
-
     def perform(self, command):
         matches = {}
         for pattern, action in Aspect.ACTIONS.items():
@@ -61,7 +70,6 @@ class DisambiguateMode(Mode):
 
     def to_dict(self):
         return {
-            'name': self.name,
             'previous_mode': self.previous_mode.to_dict(),
             'callback': self.callback,
             'arguments': self.arguments,
@@ -71,9 +79,11 @@ class DisambiguateMode(Mode):
 
     @classmethod
     def from_dict(cls, entity, dict_):
+        previous_mode_dict = dict_['previous_mode']
+        previous_mode_name = previous_mode_dict.pop('name')
         return cls(
             entity,
-            _mode_from_dict(entity, dict_['previous_mode']),
+            Mode.class_from_name(previous_mode_name).from_dict(entity, previous_mode_dict),
             dict_['options'],
             dict_['callback'],
             dict_['arguments'],
@@ -92,10 +102,3 @@ class DisambiguateMode(Mode):
             return
 
         self.entity.mode.perform(command)
-
-MODE_MAP = {
-    'explore': ExploreMode,
-    'disambiguate': DisambiguateMode,
-}
-for k, v in MODE_MAP.items():
-    v.name = k
