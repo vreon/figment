@@ -1,14 +1,8 @@
 import random
 import string
-import json
-from redis import StrictRedis
-from juggernaut import Juggernaut
 
+from schema import jug
 from schema.aspect import Aspect
-
-redis = StrictRedis()
-jug = Juggernaut()
-
 
 class AmbiguousDescriptor(Exception):
     pass
@@ -158,5 +152,5 @@ class Entity(object):
         jug.publish(self.messages_key, message)
 
 
-from schema.utils import upper_first, str_to_bool, indent, to_id, to_entity
+from schema.utils import upper_first
 from schema.modes import ExploreMode, DisambiguateMode, _mode_from_dict

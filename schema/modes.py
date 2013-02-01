@@ -1,6 +1,6 @@
 import re
 import random
-from schema.entity import redis
+from schema import redis
 from schema.aspect import Aspect
 from schema.event import Event
 from schema.utils import int_or_none

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request, abort
-from schema.entity import redis
+from schema import redis
 
 app = Flask(__name__)
 
