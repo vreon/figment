@@ -1,8 +1,26 @@
 Zones
-    - Each instance of a runschema process can be a zone
+    x Each instance of a runschema process can be a zone
     - Entities can migrate to a new zone via serialization to Redis
-    - Runschema processes should be wrapped in an exception handler
-    - Ctrl+C should shutdown gracefully (dumping first)
+    x Runschema processes should be wrapped in an exception handler
+    x Ctrl+C should shutdown gracefully (dumping first)
+
+Refactoring
+    - Get rid of as much global state as you can
+        - Make it possible to run tests without polluting the entity space
+
+Plugins
+    - Define behaviors, actions, modes
+        - Should be able to define dependencies?
+    - Loaded at runtime
+    - Reloadable?
+        - or just reload the whole server
+    - @before(tick) should be a thing... maybe
+
+Registration
+    - ???
+    - Accounts have a username, password, list of controllable entities
+    - The connection should have some state (account ID, entity logged in as)
+        - So the client doesn't have to send entity ID with every command
 
 Persistence
     x Fork, then dump a JSON list of entities

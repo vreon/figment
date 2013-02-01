@@ -1,4 +1,4 @@
-from schema.models import Entity, start_room
+from schema.entity import Entity, start_room
 import random
 
 class Behavior(Entity):

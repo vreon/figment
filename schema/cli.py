@@ -6,7 +6,8 @@ import yaml
 import os
 import tempfile
 import shutil
-from schema.models import Entity, redis, create_world, create_player
+import zlib
+from schema.entity import Entity, redis
 from schema.app import app
 
 
@@ -14,8 +15,7 @@ class Zone(object):
     def __init__(self, id, config_path):
         self.id = id
         self.load_config(config_path)
-        if not self.load_snapshot():
-            self.debug_create_world()
+        self.load_snapshot()
 
     def load_config(self, path):
         path = os.path.expanduser(path)
@@ -59,24 +59,27 @@ class Zone(object):
 
         print('Loading entities from snapshot.')
         with open(self.snapshot_path, 'r') as f:
-            entity_list = json.loads(f.read())
-            for entity_dict in entity_list:
+            snapshot = f.read()
+            # if self.config['persistence'].get('compression'):
+            #     snapshot = zlib.decompress(snapshot)
+            snapshot = json.loads(snapshot)
+            for entity_dict in snapshot['entities']:
                 entity = Entity.from_dict(entity_dict)
                 print('  [%s] %s' % (entity.id, entity.name))
 
         return True
 
-    def debug_create_world(self):
-        create_world()
-        player = create_player()
-        print('Player ID: %s' % player.id)
-
-    def snapshot(self):
+    def save_snapshot(self):
         child_pid = os.fork()
 
         if not child_pid:
             f = tempfile.NamedTemporaryFile(delete=False)
-            f.write(json.dumps([e.to_dict() for e in Entity.all()]))
+            snapshot = json.dumps({
+                'entities': [e.to_dict() for e in Entity.all()]
+            })
+            # if self.config['persistence'].get('compression'):
+            #     snapshot = zlib.compress(snapshot)
+            f.write(snapshot)
             f.close()
             shutil.move(f.name, self.snapshot_path)
             os._exit(os.EX_OK)
@@ -92,7 +95,7 @@ class Zone(object):
         except BaseException as e:
             pass
 
-        self.snapshot()
+        self.save_snapshot()
 
     def process_one_command(self):
         zone_key = 'zone:%s:incoming' % self.id
@@ -105,7 +108,7 @@ class Zone(object):
         if entity_id == 'admin':
             print('[admin] %s' % command)
             if command == 'snapshot':
-                self.snapshot()
+                self.save_snapshot()
             if command == 'crash':
                 raise RuntimeError('Craaaaash')
             elif command == 'halt':

@@ -1,3 +1,5 @@
+from schema.entity import Entity
+
 def int_or_none(value):
     try:
         value = int(value)
@@ -13,3 +15,14 @@ def str_to_bool(value):
 
 def indent(value):
     return ''.join((' ' * 4, value))
+
+def to_id(entity_or_id):
+    if isinstance(entity_or_id, Entity):
+        return entity_or_id.id
+    return entity_or_id
+
+
+def to_entity(entity_or_id):
+    if isinstance(entity_or_id, Entity):
+        return entity_or_id
+    return Entity.get(entity_or_id)

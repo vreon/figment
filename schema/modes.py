@@ -1,6 +1,8 @@
 import re
 import random
-from schema.models import redis, ACTIONS
+from schema.entity import redis
+from schema.aspect import Aspect
+from schema.event import Event
 from schema.utils import int_or_none
 
 def _mode_from_dict(entity, dict_):
@@ -29,17 +31,21 @@ class ExploreMode(Mode):
 
     def perform(self, command):
         matches = {}
-        for pattern, action in ACTIONS.iteritems():
+        for pattern, action in Aspect.ACTIONS.items():
             match = re.match(pattern, command)
             if match:
-                matches[pattern] = (action, match.groups())
+                matches[pattern] = (action, match.groupdict())
 
         # If multiple patterns match this command, pick the longest one
         if matches:
             matching_patterns = matches.keys()
             matching_patterns.sort(key=len, reverse=True)
-            action, groups = matches[matching_patterns[0]]
-            action(self.entity, *groups)
+            action, groupdict = matches[matching_patterns[0]]
+
+            event = Event(**groupdict)
+            event.actor = self.entity
+            event.action = action
+            action(event)
         else:
             self.entity.tell(random.choice(('What?', 'Eh?', 'Come again?', 'Unknown command.')))
 

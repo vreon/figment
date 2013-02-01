@@ -1,0 +1,162 @@
+import random
+import string
+import json
+from redis import StrictRedis
+from juggernaut import Juggernaut
+
+from schema.aspect import Aspect
+
+redis = StrictRedis()
+jug = Juggernaut()
+
+
+class AmbiguousDescriptor(Exception):
+    pass
+
+# def action(pattern):
+#     def decorator(f):
+#         def wrapper(self, *args):
+#             try:
+#                 return f(self, *[CommandArgument(i, v) for i, v in enumerate(args)])
+#             except AmbiguousDescriptor as ex:
+#                 descriptor, targets = ex.args
+#                 self.mode = DisambiguateMode(
+#                     self, self.mode, targets, f.__name__, args, descriptor.index
+#                 )
+#         ACTIONS[pattern] = wrapper
+#         return wrapper
+#     return decorator
+
+
+class CommandArgument(object):
+    """
+    An 'intelligent parameter' that knows its position in the player
+    command. This is so ambiguities can be resolved later.
+    """
+    def __init__(self, index, value):
+        self.index = index
+        self.value = value
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return 'CommandArgument(%r, %r)' % (self.index, self.value)
+
+
+class Entity(object):
+    ALL = {}
+
+    def __init__(self, name, desc, aspects=None, id=None):
+        self.id = id or Entity.create_id()
+        self.name = name
+        self.desc = desc
+        self.mode = ExploreMode(self)
+        self.aspects = []
+
+        if aspects:
+            self.apply_aspects(aspects)
+
+        Entity.ALL[self.id] = self
+
+    def __eq__(self, other):
+        if isinstance(other, Entity):
+            return self.id == other.id
+        return NotImplemented
+
+    def __ne__(self, other):
+        equal = self.__eq__(other)
+        return NotImplemented if equal is NotImplemented else not equal
+
+    def __hash__(self):
+        return hash(self.id)
+
+    @classmethod
+    def get(cls, id):
+        return cls.ALL.get(id)
+
+    @staticmethod
+    def create_id():
+        return ''.join(random.choice(string.ascii_letters) for i in xrange(12))
+
+    @classmethod
+    def all(cls):
+        return cls.ALL.values()
+
+    @property
+    def messages_key(self):
+        return 'entity:%s:messages' % self.id
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'desc': self.desc,
+            'mode': self.mode.to_dict(),
+            'aspects': dict(
+                (a.__class__.__name__, a.to_dict()) for a in self.aspects
+            )
+        }
+
+    @classmethod
+    def from_dict(cls, dict_):
+        entity = cls(dict_['name'], dict_['desc'], id=dict_['id'])
+        entity.mode = _mode_from_dict(entity, dict_['mode'])
+
+        aspects = []
+        for aspect_name, aspect_dict in dict_.get('aspects', {}).items():
+            aspect = Aspect.class_from_name(aspect_name).from_dict(aspect_dict)
+            aspects.append(aspect)
+
+        entity.apply_aspects(aspects)
+
+        cls.ALL[dict_['id']] = entity
+
+        return entity
+
+    # TODO: self.aspects.add()
+    # rename self.aspects to self._aspects
+    # TODO: force=True skips dependency check
+    def apply_aspects(self, aspects):
+        for aspect in aspects:
+            setattr(self, aspect.__class__.__name__, aspect)
+            aspect.entity = self
+            self.aspects.append(aspect)
+
+    # TODO: self.aspects.remove()
+    def remove_aspects(self, aspect_classes):
+        for aspect_class in aspect_classes:
+            getattr(self, aspect_class.__name__).destroy()
+            delattr(self, aspect_class.__name__)
+
+    def destroy(self):
+        self.remove_aspects([a.__class__ for a in self.aspects])
+        self.ALL.pop(self.id, None)
+
+    def clone(self):
+        clone = Entity(self.name, self.desc)
+
+        # TODO: Copy properties
+        # TODO: Copy behaviors
+        # TODO: Copy exits
+        # TODO: Clone (not copy) contents
+        # TODO: Add clone to clone.container_id's contents
+
+        return clone
+
+    # Sacrificing Pythonic coding style here for convenience.
+    @property
+    def Name(self):
+        return upper_first(self.name)
+
+    def perform(self, command):
+        command = ' '.join(command.strip().split())
+        self.mode.perform(command)
+
+    def tell(self, message):
+        """Send text to this entity."""
+        jug.publish(self.messages_key, message)
+
+
+from schema.utils import upper_first, str_to_bool, indent, to_id, to_entity
+from schema.modes import ExploreMode, DisambiguateMode, _mode_from_dict
