@@ -2,6 +2,7 @@ from __future__ import print_function
 import argparse
 import json
 import readline
+
 from schema import redis
 from schema.zone import Zone
 from schema.app import app

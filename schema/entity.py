@@ -2,7 +2,6 @@ import random
 import string
 
 from schema import jug
-from schema.aspect import Aspect
 
 class AmbiguousDescriptor(Exception):
     pass
@@ -159,3 +158,4 @@ class Entity(object):
 
 from schema.utils import upper_first
 from schema.modes import Mode, ExploreMode, DisambiguateMode
+from schema.aspect import Aspect

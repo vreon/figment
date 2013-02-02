@@ -1,7 +1,8 @@
 import logging
 import inspect
 
-log = logging.getLogger(__name__)
+from schema.logger import log
+from schema.event import Event
 
 HOOK_TYPES = []
 
@@ -13,21 +14,20 @@ class AspectMeta(type):
 
         new_class.HOOKS = {}
         for method_name, method in inspect.getmembers(new_class):
-            if hasattr(method, '_action_pattern'):
+            if hasattr(method, '_action_regex'):
                 # XXX: black magic
-                log.debug('Found action pattern %r on %r of %r' % (method._action_pattern, method, new_class))
                 setattr(new_class, method_name, staticmethod(method.im_func))
-                Aspect.ACTIONS[method._action_pattern] = getattr(new_class, method_name)
+                Aspect.ACTIONS[method._action_regex] = getattr(new_class, method_name)
 
             for hook_type in HOOK_TYPES:
                 hook_type_attr = '_hook_%s' % hook_type
                 if hasattr(method, hook_type_attr):
-                    log.debug('Found hook %r on %r of %r' % (getattr(method, hook_type_attr), method, new_class))
                     for hooked_function in getattr(method, hook_type_attr):
                         new_class.HOOKS.setdefault(hook_type, {})\
                             .setdefault(hooked_function, [])\
                             .append(getattr(new_class, method_name))
 
+        log.info('Registered aspect: %s' % name)
         Aspect.ALL[name] = new_class
         return new_class
 
@@ -55,10 +55,11 @@ class Aspect(object):
         self.entity = None
 
 
+# TODO: Make this accept an Event subclass
 # TODO: Make this automatically trigger 'after', somehow
-def action(regex):
+def action(regex, event=Event):
     def decorator(f):
-        setattr(f, '_action_pattern', regex)
+        setattr(f, '_action_regex', regex)
         return f
     return decorator
 

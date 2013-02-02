@@ -8,10 +8,11 @@ import traceback
 
 from schema import redis
 from schema.entity import Entity
+from schema.logger import log
 
 
 def fatal(message):
-    print('Fatal: %s' % message)
+    log.error('Fatal: %s' % message)
     sys.exit(1)
 
 
@@ -64,7 +65,7 @@ class Zone(object):
         if not os.path.exists(self.snapshot_path):
             return False
 
-        print('Loading entities from snapshot.')
+        log.info('Loading entities from snapshot.')
         with open(self.snapshot_path, 'r') as f:
             snapshot = f.read()
             # if self.config['persistence'].get('compressed'):
@@ -72,7 +73,7 @@ class Zone(object):
             snapshot = json.loads(snapshot)
             for entity_dict in snapshot['entities']:
                 entity = Entity.from_dict(entity_dict)
-                print('  [%s] %s' % (entity.id, entity.name))
+                log.info('  [%s] %s' % (entity.id, entity.name))
 
         return True
 
@@ -98,13 +99,13 @@ class Zone(object):
         __import__(self.config.get('aspects', {}).get('path', 'aspects'))
 
     def run(self):
-        print('Listening.')
+        log.info('Listening.')
         try:
             while True:
                 self.process_one_command()
         except Exception as e:
-            print('Fatal: snapshotting and halting due to exception:')
-            print traceback.print_exc()
+            log.error('Fatal: snapshotting and halting due to exception:')
+            log.error(traceback.format_exc())
         except BaseException as e:
             pass
 
@@ -119,7 +120,7 @@ class Zone(object):
         # TODO: This is laughably insecure right now considering
         # that clients can specify the entity ID
         if entity_id == 'admin':
-            print('[admin] %s' % command)
+            log.info('[admin] %s' % command)
             if command == 'snapshot':
                 self.save_snapshot()
             if command == 'crash':
@@ -132,5 +133,5 @@ class Zone(object):
             if not entity:
                 return
 
-            print('[%s] <%s> %s' % (entity.id, entity.name, command))
+            log.info('[%s] <%s> %s' % (entity.id, entity.name, command))
             entity.perform(command)
