@@ -20,11 +20,11 @@ def saw(self, msg):
 
 
 class Visible(Aspect):
-    @action(r'^l(?:ook)?(?: at)? (?P<target>.+)')
+    @action(r'^l(?:ook)?(?: at)? (?P<descriptor>.+)')
     def look_at(event):
-        target = Entity.get(event.target)
+        target = Entity.get(event.descriptor)
         if not target:
-            event.actor.tell('No such entity %r.' % target)
+            event.actor.tell('No such entity %r.' % event.descriptor)
             return
 
         event.trigger('before')
@@ -47,22 +47,22 @@ class Colorful(Aspect):
         self.color = dict_['color']
         return self
 
-    @action(r'^color(?: of)? (?P<target>.+)')
+    @action(r'^color(?: of)? (?P<descriptor>.+)')
     def color_of(event):
-        target = Entity.get(event.target)
+        target = Entity.get(event.descriptor)
         if not target:
-            event.actor.tell('No such entity %r.' % target)
+            event.actor.tell('No such entity %r.' % event.descriptor)
             return
 
         event.trigger('before')
         if not event.prevented:
             event.actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
 
-    @action(r'^paint (?P<target>.+) (?P<color>.+)')
+    @action(r'^paint (?P<descriptor>.+) (?P<color>.+)')
     def paint(event):
-        target = Entity.get(event.target)
+        target = Entity.get(event.descriptor)
         if not target:
-            event.actor.tell('No such entity %r.' % target)
+            event.actor.tell('No such entity %r.' % event.descriptor)
             return
 
         event.trigger('before')
@@ -75,11 +75,11 @@ class BlackHole(Aspect):
     """An example aspect that overrides actions from another."""
     @before(Colorful.paint)
     def absorb_paint(self, event):
-        if self.entity.id == event.target:
+        if self.entity.id == event.descriptor:
             event.color = 'black'
 
     @before(Visible.look_at)
     def prevent_look_at(self, event):
-        if self.entity.id == event.target:
+        if self.entity.id == event.descriptor:
             event.actor.tell("You're unable to look directly at {0.name}.".format(self.entity))
             event.prevent_default()

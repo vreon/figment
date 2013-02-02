@@ -73,11 +73,11 @@ class Zone(object):
             snapshot = json.loads(snapshot)
             for entity_dict in snapshot['entities']:
                 entity = Entity.from_dict(entity_dict)
-                log.info('  [%s] %s' % (entity.id, entity.name))
 
         return True
 
     def save_snapshot(self):
+        log.info('Saving snapshot: %s' % self.snapshot_path)
         child_pid = os.fork()
 
         if not child_pid:
@@ -104,7 +104,6 @@ class Zone(object):
             while True:
                 self.process_one_command()
         except Exception as e:
-            log.error('Fatal: snapshotting and halting due to exception:')
             log.error(traceback.format_exc())
         except BaseException as e:
             pass

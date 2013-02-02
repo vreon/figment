@@ -2,6 +2,7 @@ import random
 import string
 
 from schema import jug
+from schema.logger import log
 
 class AmbiguousDescriptor(Exception):
     pass
@@ -45,10 +46,12 @@ class Entity(object):
         self.name = name
         self.desc = desc
         self.mode = ExploreMode(self)
-        self.aspects = []
+        self.aspects = []  # TODO: This should be a dict, for fast 'has aspect' checking
 
         if aspects:
             self.apply_aspects(aspects)
+
+        log.debug('Created entity: [%s] %s' % (self.id, self.name))
 
         Entity.ALL[self.id] = self
 
@@ -75,6 +78,13 @@ class Entity(object):
     @classmethod
     def all(cls):
         return cls.ALL.values()
+
+    @classmethod
+    def purge(cls):
+        log.info('Purging all entities.')
+        ids = cls.ALL.keys()
+        for id in ids:
+            cls.get(id).destroy()
 
     @property
     def messages_key(self):
@@ -126,6 +136,11 @@ class Entity(object):
         for aspect_class in aspect_classes:
             getattr(self, aspect_class.__name__).destroy()
             delattr(self, aspect_class.__name__)
+            # TODO: This doesn't remove the aspect from self.aspects
+
+    # TODO: This won't work until self.aspects is a dict
+    def has_aspect(self, aspect_class):
+        return aspect_class in self.aspects
 
     def destroy(self):
         self.remove_aspects([a.__class__ for a in self.aspects])

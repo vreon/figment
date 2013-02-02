@@ -1,12 +1,13 @@
 from schema import Entity, Aspect, action, jug
-from schema.utils import upper_first
+from schema.utils import upper_first, indent, to_id, to_entity
 
 class Positioned(Aspect):
-    def __init__(self, is_container=False, is_carriable=False, is_enterable=False):
+    def __init__(self, is_container=False, is_carriable=False, is_enterable=False, is_invisible=False):
         self.container_id = None
         self.is_container = is_container
         self.is_carriable = is_carriable
         self.is_enterable = is_enterable
+        self.is_invisible = is_invisible
 
         self._contents = set()
         self._exits = {}
@@ -17,6 +18,7 @@ class Positioned(Aspect):
             'container_id': self.container_id,
             'is_carriable': self.is_carriable,
             'is_enterable': self.is_enterable,
+            'is_invisible': self.is_invisible,
             'contents': list(self._contents),
             'exits': self._exits,
         }
@@ -29,6 +31,7 @@ class Positioned(Aspect):
         self.is_container = dict_['is_container']
         self.is_carriable = dict_['is_carriable']
         self.is_enterable = dict_['is_enterable']
+        self.is_invisible = dict_['is_invisible']
         self._contents = set(dict_['contents'])
         self._exits = dict_['exits']
 
@@ -58,11 +61,10 @@ class Positioned(Aspect):
         Pick entities from a set by descriptor (name or ID). In most cases you
         should use one of the higher-level pick_* functions.
         """
-        value = descriptor.value
-        if value in ('self', 'me', 'myself'):
+        if descriptor in ('self', 'me', 'myself'):
             return set((self.entity,))
 
-        return set(e for e in entity_set if (value.lower() in e.name.lower() or value == e.id) and not e.is_invisible)
+        return set(e for e in entity_set if (descriptor.lower() in e.name.lower() or descriptor == e.id) and not e.Positioned.is_invisible)
 
     def pick_interactively(self, descriptor, entity_set, area='in that area'):
         """
@@ -177,7 +179,7 @@ class Positioned(Aspect):
             for direction, destination in exits.items():
                 messages.append(indent('{0}: {1}'.format(direction, destination.name)))
 
-        entities_nearby = [e for e in self.nearby() if not e.is_invisible]
+        entities_nearby = [e for e in self.nearby() if not e.Positioned.is_invisible]
         if entities_nearby:
             messages.append('Things nearby:')
             for entity in entities_nearby:
@@ -208,208 +210,199 @@ class Positioned(Aspect):
             event.actor.Positioned.emit('{0.Name} looks around.'.format(event.actor))
             event.actor.Positioned.tell_surroundings()
 
-    # @action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (.+)$')
-    # def look_in(self, descriptor):
-    #     target = self.pick_nearby_inventory(descriptor)
-    #     if not target:
-    #         return
+    @action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<descriptor>.+)$')
+    def look_in(event):
+        target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
+        if not target:
+            return
 
-    #     if not target.Positioned.is_container:
-    #         self.entity.tell("You can't look inside of that.")
-    #         return
+        if not target.Positioned.is_container:
+            event.actor.tell("You can't look inside of that.")
+            return
 
-    #     if self.trigger('before_look_in', target):
-    #         return
+        event.trigger('before')
+        if event.prevented:
+            return
 
-    #     self.entity.tell('Contents:')
+        event.actor.tell('Contents:')
 
-    #     contents = [e for e in target.contents() if not e.is_invisible]
-    #     if contents:
-    #         for item in contents:
-    #             self.entity.tell(indent('{0.name}'.format(item)))
-    #     else:
-    #         self.entity.tell(indent('nothing'))
+        contents = [e for e in target.Positioned.contents() if not e.Positioned.is_invisible]
+        if contents:
+            for item in contents:
+                event.actor.tell(indent('{0.name}'.format(item)))
+        else:
+            event.actor.tell(indent('nothing'))
 
-    #     self.trigger('after_look_in', target)
+    @action(r'^(?:ex(?:amine)?|l(?:ook)?) (?:at )?(?P<descriptor>.+)$')
+    def look_at(event):
+        target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
+        if not target:
+            return
 
-    # @action(r'^(?:ex(?:amine)?|l(?:ook)?) (?:at )?(.+)$')
-    # def look_at(self, descriptor):
-    #     target = self.pick_nearby_inventory(descriptor)
-    #     if not target:
-    #         return
+        event.trigger('before')
+        if event.prevented:
+            return
 
-    #     if self.trigger('before_look_at', target):
-    #         return
+        event.actor.tell(target.desc)
+        event.actor.Positioned.emit('{0.Name} looks at {1}.'.format(event.actor, target.name), exclude=target)
+        target.tell('{0.Name} looks at you.'.format(event.actor))
 
-    #     self.entity.tell(target.desc)
-    #     self.emit('{0.Name} looks at {1}.'.format(self.entity, target.name), exclude=target)
-    #     target.tell('{0.Name} looks at you.'.format(self.entity))
+    @action('^(?:get|take) (?P<descriptor>.+)$')
+    def get(event):
+        if not event.actor.Positioned.is_container:
+            event.actor.tell("You're unable to hold items.")
+            return
 
-    #     self.trigger('after_look_at', target)
+        target = event.actor.Positioned.pick_nearby(event.descriptor)
+        if not target:
+            return
 
-    # @action('^(?:get|take) (.+)$')
-    # def get(self, descriptor):
-    #     if not self.is_container:
-    #         self.entity.tell("You're unable to hold items.")
-    #         return
+        if target == event.actor:
+            event.actor.tell("You can't put yourself in your inventory.")
+            return
 
-    #     item = self.pick_nearby(descriptor)
-    #     if not item:
-    #         return
+        if not target.Positioned.is_carriable:
+            event.actor.tell("That can't be carried.")
+            return
 
-    #     if item == self.entity:
-    #         self.entity.tell("You can't put yourself in your inventory.")
-    #         return
+        event.trigger('before')
+        if event.prevented:
+            return
 
-    #     if not item.Positioned.is_carriable:
-    #         self.entity.tell("That can't be carried.")
-    #         return
+        event.actor.tell('You pick up {0.name}.'.format(target))
+        event.actor.Positioned.emit('{0.Name} picks up {1.name}.'.format(event.actor, target), exclude=target)
+        target.tell('{0.Name} picks you up.'.format(event.actor))
+        event.actor.Positioned.store(target)
 
-    #     if self.trigger('before_get', item):
-    #         return
+    @action('^(?:get|take) (?P<target_descriptor>.+) from (?P<container_descriptor>.+)$')
+    def get_from(event):
+        if not event.actor.Positioned.is_container:
+            event.actor.tell("You're unable to hold items.")
+            return
 
-    #     self.entity.tell('You pick up {0.name}.'.format(item))
-    #     self.emit('{0.Name} picks up {1.name}.'.format(self.entity, item), exclude=item)
-    #     item.tell('{0.Name} picks you up.'.format(self.entity))
-    #     self.store(item)
+        container = event.actor.Positioned.pick_nearby_inventory(event.container_descriptor)
+        if not container:
+            return
 
-    #     self.trigger('after_get', item)
+        if container == event.actor:
+            event.actor.tell("You can't get things from your inventory, they'd just go right back in!")
+            return
 
-    # @action('^(?:get|take) (.+) from (.+)$')
-    # def get_from(self, target_descriptor, container_descriptor):
-    #     if not self.is_container:
-    #         self.entity.tell("You're unable to hold items.")
-    #         return
+        if not container.Positioned.is_container:
+            event.actor.tell("{0.Name} can't hold items.".format(container))
+            return
 
-    #     container = self.pick_nearby_inventory(container_descriptor)
-    #     if not container:
-    #         return
+        target = event.actor.Positioned.pick_from(event.target_descriptor, container)
+        if not target:
+            return
 
-    #     if container == self.entity:
-    #         self.entity.tell("You can't get things from your inventory, they'd just go right back in!")
-    #         return
+        if target == event.actor:
+            event.actor.tell("You can't put yourself in your inventory.")
+            return
 
-    #     if not container.Positioned.is_container:
-    #         self.entity.tell("{0.Name} can't hold items.".format(container))
-    #         return
+        event.trigger('before')
+        if event.prevented:
+            return
 
-    #     item = self.pick_from(target_descriptor, container)
-    #     if not item:
-    #         return
+        event.actor.tell('You take {0.name} from {1.name}.'.format(target, container))
+        event.actor.Positioned.emit('{0.Name} takes {1.name} from {2.name}.'.format(event.actor, target, container), exclude=(target, container))
+        container.tell('{0.Name} takes {1.name} from you.'.format(event.actor, target))
+        target.tell('{0.Name} takes you from {1.name}.'.format(event.actor, container))
+        event.actor.Positioned.store(target)
 
-    #     if item == self.entity:
-    #         self.entity.tell("You can't put yourself in your inventory.")
-    #         return
+    @action(r'^put (?P<target_descriptor>.+) in (?P<container_descriptor>.+)$')
+    def put_in(event):
+        target = event.actor.Positioned.pick_nearby_inventory(event.target_descriptor)
+        if not target:
+            return
 
-    #     if self.trigger('before_get_from', item, container):
-    #         return
+        container = event.actor.Positioned.pick_nearby_inventory(event.container_descriptor)
+        if not container:
+            return
 
-    #     self.entity.tell('You take {0.name} from {1.name}.'.format(item, container))
-    #     self.emit('{0.Name} takes {1.name} from {2.name}.'.format(self.entity, item, container), exclude=(item, container))
-    #     container.tell('{0.Name} takes {1.name} from you.'.format(self.entity, item))
-    #     item.tell('{0.Name} takes you from {1.name}.'.format(self.entity, container))
-    #     self.store(item)
+        if not container.Positioned.is_container:
+            event.actor.tell("{0.Name} can't hold items.".format(container))
+            return
 
-    #     self.trigger('after_get_from', item, container)
+        event.trigger('before')
+        if event.prevented:
+            return
 
-    # @action(r'^put (.+) in (.+)$')
-    # def put_in(self, target_descriptor, container_descriptor):
-    #     item = self.pick_nearby_inventory(target_descriptor)
-    #     if not item:
-    #         return
+        event.actor.tell('You put {0.name} in {1.name}.'.format(target, container))
+        event.actor.Positioned.emit('{0.Name} puts {1.name} in {2.name}.'.format(event.actor, target, container), exclude=(target, container))
+        container.tell('{0.Name} puts {1.name} in your inventory.'.format(event.actor, target))
+        target.tell('{0.Name} puts you in {1.name}.'.format(event.actor, container))
+        container.Positioned.store(target)
 
-    #     container = self.pick_nearby_inventory(container_descriptor)
-    #     if not container:
-    #         return
+    @action(r'^drop (?P<descriptor>.+)$')
+    def drop(event):
+        event.target = target = event.actor.Positioned.pick_inventory(event.descriptor)
+        if not target:
+            return
 
-    #     if not container.Positioned.is_container:
-    #         self.entity.tell("{0.Name} can't hold items.".format(container))
-    #         return
+        event.trigger('before')
 
-    #     if self.trigger('before_put_in', item, container):
-    #         return
+        event.actor.Positioned.remove(target)
+        event.actor.tell('You drop {0.name}.'.format(target))
+        event.actor.Positioned.emit('{0.Name} drops {1.name}.'.format(event.actor, target), exclude=target)
+        target.tell('{0.Name} drops you.'.format(event.actor))
 
-    #     self.entity.tell('You put {0.name} in {1.name}.'.format(item, container))
-    #     self.emit('{0.Name} puts {1.name} in {2.name}.'.format(self.entity, item, container), exclude=(item, container))
-    #     container.tell('{0.Name} puts {1.name} in your inventory.'.format(self.entity, item))
-    #     item.tell('{0.Name} puts you in {1.name}.'.format(self.entity, container))
-    #     container.store(item)
+    @action('^(?:w(?:alk)?|go) (?P<direction>.+)$')
+    def walk(event):
+        # FIXME: assumes actor is Positioned
+        # if not event.actor.has_aspect(Positioned): ...
+        room = event.actor.Positioned.container
 
-    #     self.trigger('after_put_in', item, container)
+        exits = room.Positioned.exits()
+        if not exits:
+            event.actor.tell("There don't seem to be any exits here.")
+            return
 
-    # @action(r'^drop (.+)$')
-    # def drop(self, descriptor):
-    #     item = self.pick_inventory(descriptor)
-    #     if not item:
-    #         return
+        for exit_name in exits:
+            if event.direction.lower() == exit_name.lower():
+                event.direction = exit_name
+                break
+        else:
+            event.actor.tell("You're unable to go that way.")
+            return
 
-    #     if self.trigger('before_drop', item):
-    #         return
+        destination = exits[event.direction]
 
-    #     self.remove(item)
-    #     self.entity.tell('You drop {0.name}.'.format(item))
-    #     self.emit('{0.Name} drops {1.name}.'.format(self.entity, item), exclude=item)
-    #     item.tell('{0.Name} drops you.'.format(self.entity))
+        event.trigger('before')
+        if event.prevented:
+            return
 
-    #     self.trigger('after_drop', item)
+        event.actor.tell('You travel {0}.'.format(event.direction))
+        event.actor.Positioned.emit('{0.Name} travels {1} to {2.name}.'.format(event.actor, event.direction, destination))
+        destination.Positioned.announce('{0.Name} arrives from {1.name}.'.format(event.actor, room))
+        destination.Positioned.store(event.actor)
 
-    # @action('^(?:w(?:alk)?|go) (.+)$')
-    # def walk(self, direction):
-    #     room = self.container
+        event.actor.Positioned.tell_surroundings()
 
-    #     exits = room.exits()
-    #     if not exits:
-    #         self.entity.tell("There don't seem to be any exits here.")
-    #         return
+    @action(r'^enter (?P<descriptor>.+)$')
+    def enter(event):
+        # FIXME: assumes actor is Positioned
+        # if not event.actor.has_aspect(Positioned): ...
+        room = event.actor.Positioned.container
 
-    #     direction = direction.value
-    #     for exit in exits:
-    #         if direction.lower() == exit.lower():
-    #             direction = exit
-    #             break
-    #     else:
-    #         self.entity.tell("You're unable to go that way.")
-    #         return
+        container = event.actor.Positioned.pick_nearby(event.descriptor)
+        if not container:
+            return
 
-    #     destination = exits[direction]
+        if not container.Positioned.is_container or not container.Positioned.is_enterable:
+            event.actor.tell("You can't enter that.")
+            return
 
-    #     if self.trigger('before_walk', direction, destination):
-    #         return
+        event.trigger('before')
+        if event.prevented:
+            return
 
-    #     self.entity.tell('You travel {0}.'.format(direction))
-    #     self.emit('{0.Name} travels {1} to {2.name}.'.format(self.entity, direction, destination))
-    #     destination.announce('{0.Name} arrives from {1.name}.'.format(self.entity, self.container))
-    #     destination.store(self.entity)
+        event.actor.tell('You enter {0.name}.'.format(container))
+        event.actor.Positioned.emit('{0.Name} enters {1.name}.'.format(event.actor, container))
+        container.Positioned.announce('{0.Name} arrives from {1.name}.'.format(event.actor, room))
+        container.Positioned.store(event.actor)
 
-    #     self.tell_surroundings()
-
-    #     # self.trigger('after_walk', direction, source)
-
-    # @action(r'^enter (.+)$')
-    # def enter(self, descriptor):
-    #     room = self.container
-
-    #     container = self.pick_nearby(descriptor)
-    #     if not container:
-    #         return
-
-    #     if not container.Positioned.is_container or not container.Positioned.is_enterable:
-    #         self.entity.tell("You can't enter that.")
-    #         return
-
-    #     # for ent in [self.container, container] + self.nearby():
-    #         # if not ent.trigger('before_enter', (self.entity, container)):
-    #             # return
-
-    #     self.entity.tell('You enter {0.name}.'.format(container))
-    #     self.emit('{0.Name} enters {1.name}.'.format(self.entity, container))
-    #     container.announce('{0.Name} arrives from {1.name}.'.format(self.entity, self.container))
-    #     container.store(self.entity)
-
-    #     self.tell_surroundings()
-
-    #     # for ent in [container] + self.nearby():
-    #         # ent.trigger('after_enter', (self, container))
+        event.actor.Positioned.tell_surroundings()
 
     ##########################
     # Aliases and shortcuts

@@ -20,6 +20,19 @@ Plugins
         - This event subclass is attached to the action and can be constructed instead of Event
         - The subclass defines witnesses
 
+    ! An action is a generator
+        - A generator can be thought of as a suspendable function
+        - event.trigger('before') -> yield 'before'
+        - Calling function:
+            - for hook_type in action(event):
+                - # gather witnesses
+                - # do stuff with hook_type and event
+        - This means hooks could live on the action?
+
+    ! Problem: need better aspect checking
+        - Positioned.walk assumes the actor is Positioned
+        - Colorful.paint assumes the target is Colorful
+
 Registration
     - ???
     - Accounts have a username, password, list of controllable entities

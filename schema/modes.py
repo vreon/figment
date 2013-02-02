@@ -50,7 +50,8 @@ class ExploreMode(Mode):
             matching_patterns.sort(key=len, reverse=True)
             action, groupdict = matches[matching_patterns[0]]
 
-            event = Event(**groupdict)
+            event_class = action._action_event_class
+            event = event_class(**groupdict)
             event.actor = self.entity
             event.action = action
             action(event)

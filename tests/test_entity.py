@@ -18,9 +18,7 @@ class TestEntity(object):
         ])
 
     def teardown(self):
-        ids = Entity.ALL.keys()
-        for id in ids:
-            Entity.get(id).destroy()
+        Entity.purge()
 
     def test_look_at(self):
         self.player.perform('look at %s' % self.ball.id)

@@ -22,10 +22,7 @@ class Event(object):
                 for hook in hooks:
                     hook(aspect, self)
 
-    def end(self):
-        # TODO: Find all witnesses of this event and pass self to the hooks
-        pass
-
     def witnesses(self):
-        # TODO: How should this be handled?
-        pass
+        # If an event fires in a Schema world, but no Entities are around to
+        # witness it ... did it really happen?
+        return []

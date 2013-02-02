@@ -55,11 +55,11 @@ class Aspect(object):
         self.entity = None
 
 
-# TODO: Make this accept an Event subclass
 # TODO: Make this automatically trigger 'after', somehow
 def action(regex, event=Event):
     def decorator(f):
         setattr(f, '_action_regex', regex)
+        setattr(f, '_action_event_class', event)
         return f
     return decorator
 
