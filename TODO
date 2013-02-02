@@ -32,6 +32,10 @@ Plugins
     ! Problem: need better aspect checking
         - Positioned.walk assumes the actor is Positioned
         - Colorful.paint assumes the target is Colorful
+        - Usable.use assumes the actor is Positioned
+        - ...
+
+    ! schema listen needs graceful interrupt handling
 
 Registration
     - ???

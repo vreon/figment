@@ -61,7 +61,7 @@ class Positioned(Aspect):
         Pick entities from a set by descriptor (name or ID). In most cases you
         should use one of the higher-level pick_* functions.
         """
-        if descriptor in ('self', 'me', 'myself'):
+        if descriptor.lower() in ('self', 'me', 'myself'):
             return set((self.entity,))
 
         return set(e for e in entity_set if (descriptor.lower() in e.name.lower() or descriptor == e.id) and not e.Positioned.is_invisible)
@@ -247,7 +247,7 @@ class Positioned(Aspect):
         event.actor.Positioned.emit('{0.Name} looks at {1}.'.format(event.actor, target.name), exclude=target)
         target.tell('{0.Name} looks at you.'.format(event.actor))
 
-    @action('^(?:get|take) (?P<descriptor>.+)$')
+    @action('^(?:get|take|pick up) (?P<descriptor>.+)$')
     def get(event):
         if not event.actor.Positioned.is_container:
             event.actor.tell("You're unable to hold items.")
