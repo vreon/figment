@@ -193,6 +193,10 @@ class Positioned(Aspect):
 
     @action(r'^s(?:ay)? (?P<message>.+)$')
     def say(event):
+        if not event.actor.has_aspect(Positioned):
+            event.actor.tell("You're unable to do that.")
+            return
+
         message = upper_first(event.message.strip().replace('"', "'"))
 
         if not message[-1] in ('.', '?', '!'):
@@ -205,6 +209,10 @@ class Positioned(Aspect):
 
     @action(r'^l(?:ook)?(?: around)?$')
     def look(event):
+        if not event.actor.has_aspect(Positioned):
+            event.actor.tell("You're unable to do that.")
+            return
+
         event.trigger('before')
         if not event.prevented:
             event.actor.Positioned.emit('{0.Name} looks around.'.format(event.actor))
@@ -212,11 +220,15 @@ class Positioned(Aspect):
 
     @action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<descriptor>.+)$')
     def look_in(event):
+        if not event.actor.has_aspect(Positioned):
+            event.actor.tell("You're unable to do that.")
+            return
+
         target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
         if not target:
             return
 
-        if not target.Positioned.is_container:
+        if not target.has_aspect(Positioned) or not target.Positioned.is_container:
             event.actor.tell("You can't look inside of that.")
             return
 
@@ -235,6 +247,10 @@ class Positioned(Aspect):
 
     @action(r'^(?:ex(?:amine)?|l(?:ook)?) (?:at )?(?P<descriptor>.+)$')
     def look_at(event):
+        if not event.actor.has_aspect(Positioned):
+            event.actor.tell("You're unable to do that.")
+            return
+
         target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
         if not target:
             return
@@ -249,8 +265,8 @@ class Positioned(Aspect):
 
     @action('^(?:get|take|pick up) (?P<descriptor>.+)$')
     def get(event):
-        if not event.actor.Positioned.is_container:
-            event.actor.tell("You're unable to hold items.")
+        if not event.actor.has_aspect(Positioned) or not event.actor.Positioned.is_container:
+            event.actor.tell("You're unable to do that.")
             return
 
         target = event.actor.Positioned.pick_nearby(event.descriptor)
@@ -261,7 +277,7 @@ class Positioned(Aspect):
             event.actor.tell("You can't put yourself in your inventory.")
             return
 
-        if not target.Positioned.is_carriable:
+        if not target.has_aspect(Positioned) or not target.Positioned.is_carriable:
             event.actor.tell("That can't be carried.")
             return
 
@@ -274,9 +290,9 @@ class Positioned(Aspect):
         target.tell('{0.Name} picks you up.'.format(event.actor))
         event.actor.Positioned.store(target)
 
-    @action('^(?:get|take) (?P<target_descriptor>.+) from (?P<container_descriptor>.+)$')
+    @action('^(?:get|take|pick up) (?P<target_descriptor>.+) from (?P<container_descriptor>.+)$')
     def get_from(event):
-        if not event.actor.Positioned.is_container:
+        if not event.actor.has_aspect(Positioned) or not event.actor.Positioned.is_container:
             event.actor.tell("You're unable to hold items.")
             return
 
@@ -288,7 +304,7 @@ class Positioned(Aspect):
             event.actor.tell("You can't get things from your inventory, they'd just go right back in!")
             return
 
-        if not container.Positioned.is_container:
+        if not container.has_aspect(Positioned) or not container.Positioned.is_container:
             event.actor.tell("{0.Name} can't hold items.".format(container))
             return
 
@@ -298,6 +314,10 @@ class Positioned(Aspect):
 
         if target == event.actor:
             event.actor.tell("You can't put yourself in your inventory.")
+            return
+
+        if not target.has_aspect(Positioned):
+            event.actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
             return
 
         event.trigger('before')
@@ -310,18 +330,26 @@ class Positioned(Aspect):
         target.tell('{0.Name} takes you from {1.name}.'.format(event.actor, container))
         event.actor.Positioned.store(target)
 
-    @action(r'^put (?P<target_descriptor>.+) in (?P<container_descriptor>.+)$')
+    @action(r'^put (?P<target_descriptor>.+) (?:in(?:to|side(?: of)?)?) (?P<container_descriptor>.+)$')
     def put_in(event):
+        if not event.actor.has_aspect(Positioned) or not event.actor.Positioned.is_container:
+            event.actor.tell("You're unable to hold things.")
+            return
+
         target = event.actor.Positioned.pick_nearby_inventory(event.target_descriptor)
         if not target:
+            return
+
+        if not target.has_aspect(Positioned):
+            event.actor.tell("You can't put {0.name} into anything.")
             return
 
         container = event.actor.Positioned.pick_nearby_inventory(event.container_descriptor)
         if not container:
             return
 
-        if not container.Positioned.is_container:
-            event.actor.tell("{0.Name} can't hold items.".format(container))
+        if not container.has_aspect(Positioned) or not container.Positioned.is_container:
+            event.actor.tell("{0.Name} can't hold things.".format(container))
             return
 
         event.trigger('before')
@@ -336,7 +364,12 @@ class Positioned(Aspect):
 
     @action(r'^drop (?P<descriptor>.+)$')
     def drop(event):
-        event.target = target = event.actor.Positioned.pick_inventory(event.descriptor)
+        if not event.actor.has_aspect(Positioned):
+            event.actor.tell("You're unable to drop things.")
+            return
+
+        # TODO: use event.target here
+        target = event.actor.Positioned.pick_inventory(event.descriptor)
         if not target:
             return
 
@@ -349,9 +382,16 @@ class Positioned(Aspect):
 
     @action('^(?:w(?:alk)?|go) (?P<direction>.+)$')
     def walk(event):
-        # FIXME: assumes actor is Positioned
-        # if not event.actor.has_aspect(Positioned): ...
+        if not event.actor.has_aspect(Positioned):
+            event.actor.tell("You're unable to move.")
+            return
+
         room = event.actor.Positioned.container
+
+        # Actor is hanging out at the top level, or room is in a bad state
+        if not room or not room.has_aspect(Positioned):
+            event.actor.tell("You're unable to leave this place.")
+            return
 
         exits = room.Positioned.exits()
         if not exits:
@@ -368,6 +408,11 @@ class Positioned(Aspect):
 
         destination = exits[event.direction]
 
+        # Ensure the destination is still a container
+        if not destination or not destination.has_aspect(Positioned) or not destination.Positioned.is_container:
+            event.actor.tell("You're unable to go that way.")
+            return
+
         event.trigger('before')
         if event.prevented:
             return
@@ -381,15 +426,22 @@ class Positioned(Aspect):
 
     @action(r'^enter (?P<descriptor>.+)$')
     def enter(event):
-        # FIXME: assumes actor is Positioned
-        # if not event.actor.has_aspect(Positioned): ...
+        if not event.actor.has_aspect(Positioned):
+            event.actor.tell("You're unable to move.")
+            return
+
         room = event.actor.Positioned.container
+
+        # Actor is hanging out at the top level, or room is in a bad state
+        if not room or not room.has_aspect(Positioned):
+            event.actor.tell("You're unable to leave this place.")
+            return
 
         container = event.actor.Positioned.pick_nearby(event.descriptor)
         if not container:
             return
 
-        if not container.Positioned.is_container or not container.Positioned.is_enterable:
+        if not container.has_aspect(Positioned) or not container.Positioned.is_container or not container.Positioned.is_enterable:
             event.actor.tell("You can't enter that.")
             return
 

@@ -20,6 +20,7 @@ class Zone(object):
     def __init__(self, id, config_path='config.json'):
         self.id = id
         self.working_dir = '.'
+
         self.load_config(config_path)
         self.load_aspects()
         self.load_snapshot()
@@ -110,6 +111,12 @@ class Zone(object):
 
         self.save_snapshot()
 
+    def restart(self):
+        # TODO: Make sure this actually works
+        log.info('Restarting.')
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
+
     def process_one_command(self):
         zone_key = 'zone:%s:incoming' % self.id
         queue_name, queue_item = redis.blpop([zone_key])
@@ -118,12 +125,16 @@ class Zone(object):
 
         # TODO: This is laughably insecure right now considering
         # that clients can specify the entity ID
+        # Also the processing should happen somewhere else (admin Aspect??)
+        # Entities would need a handle to the current Zone
         if entity_id == 'admin':
-            log.info('[admin] %s' % command)
+            log.debug('Processing: <admin> %s' % command)
             if command == 'snapshot':
                 self.save_snapshot()
-            if command == 'crash':
+            elif command == 'crash':
                 raise RuntimeError('Craaaaash')
+            elif command == 'restart':
+                self.restart()
             elif command == 'halt':
                 sys.exit()
         else:
@@ -132,5 +143,5 @@ class Zone(object):
             if not entity:
                 return
 
-            log.info('[%s] <%s> %s' % (entity.id, entity.name, command))
+            log.debug('Processing: <%s, %s> %s' % (entity.id, entity.name, command))
             entity.perform(command)

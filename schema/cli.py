@@ -2,10 +2,12 @@ from __future__ import print_function
 import argparse
 import json
 import readline
+import logging
 
 from schema import redis
 from schema.zone import Zone
 from schema.app import app
+from schema.logger import log
 
 
 def _perform(zone, entity_id, action):
@@ -43,6 +45,7 @@ def listen(args):
 
 
 def run(args):
+    log.setLevel(logging.DEBUG)
     zone = Zone(args.zone, args.config)
     zone.run()
 
@@ -114,6 +117,10 @@ def cli():
         '-c', '--config', type=str, default='config.json',
         help='path to the config file'
     )
+    parser_run.add_argument(
+        '-d', '--debug', action='store_true',
+        help='show debug output'
+    )
     parser_run.set_defaults(func=run)
 
     # Serve parser
@@ -122,7 +129,7 @@ def cli():
         'serve', help='run a web server for websocket clients'
     )
     parser_serve.add_argument(
-        '-H', '--host', type=str, default=None,
+        '-H', '--host', type=str, default='127.0.0.1',
         help='the hostname to use'
     )
     parser_serve.add_argument(

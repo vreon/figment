@@ -46,7 +46,7 @@ class Entity(object):
         self.name = name
         self.desc = desc
         self.mode = ExploreMode(self)
-        self.aspects = []  # TODO: This should be a dict, for fast 'has aspect' checking
+        self.aspects = {}
 
         if aspects:
             self.apply_aspects(aspects)
@@ -99,7 +99,7 @@ class Entity(object):
             'desc': self.desc,
             'mode': mode_dict,
             'aspects': dict(
-                (a.__class__.__name__, a.to_dict()) for a in self.aspects
+                (a.__class__.__name__, a.to_dict()) for a in self.aspects.values()
             )
         }
 
@@ -129,25 +129,27 @@ class Entity(object):
         for aspect in aspects:
             setattr(self, aspect.__class__.__name__, aspect)
             aspect.entity = self
-            self.aspects.append(aspect)
+            self.aspects[aspect.__class__] = aspect
 
     # TODO: self.aspects.remove()
     def remove_aspects(self, aspect_classes):
         for aspect_class in aspect_classes:
             getattr(self, aspect_class.__name__).destroy()
             delattr(self, aspect_class.__name__)
-            # TODO: This doesn't remove the aspect from self.aspects
+            self.aspects.pop(aspect_class, None)
 
-    # TODO: This won't work until self.aspects is a dict
     def has_aspect(self, aspect_class):
         return aspect_class in self.aspects
 
     def destroy(self):
-        self.remove_aspects([a.__class__ for a in self.aspects])
+        self.remove_aspects(self.aspects.keys())
         self.ALL.pop(self.id, None)
 
     def clone(self):
         clone = Entity(self.name, self.desc)
+
+        # TODO: aspects should have a clone method that returns a dict
+        # TODO: that way they can determine whether or not to deep copy
 
         # TODO: Copy properties
         # TODO: Copy behaviors
