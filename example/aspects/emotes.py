@@ -18,8 +18,8 @@ class Emotes(Aspect):
             event.actor.tell('You {0}.'.format(verb))
             return
 
-        target = event.actor.Positioned.pick_nearby(event.descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_nearby(event.descriptor)
+        if not event.target:
             return
 
         yield 'before'
@@ -27,13 +27,13 @@ class Emotes(Aspect):
             return
 
         if join:
-            event.actor.Positioned.emit('{0.Name} {1} {2} {3.name}.'.format(event.actor, plural, join, target), exclude=target)
-            event.actor.tell('You {0} {1} {2.name}.'.format(verb, join, target))
-            target.tell('{0.Name} {1} {2} you.'.format(event.actor, plural, join))
+            event.actor.Positioned.emit('{0.Name} {1} {2} {3.name}.'.format(event.actor, plural, join, event.target), exclude=event.target)
+            event.actor.tell('You {0} {1} {2.name}.'.format(verb, join, event.target))
+            event.target.tell('{0.Name} {1} {2} you.'.format(event.actor, plural, join))
         else:
-            event.actor.Positioned.emit('{0.Name} {1} {2.name}.'.format(event.actor, plural, target), exclude=target)
-            event.actor.tell('You {0} {1.name}.'.format(verb, target))
-            target.tell('{0.Name} {1} you.'.format(event.actor, plural))
+            event.actor.Positioned.emit('{0.Name} {1} {2.name}.'.format(event.actor, plural, event.target), exclude=event.target)
+            event.actor.tell('You {0} {1.name}.'.format(verb, event.target))
+            event.target.tell('{0.Name} {1} you.'.format(event.actor, plural))
 
     @action(r'^dance(?: with (?P<descriptor>.+))?$')
     def dance(event):

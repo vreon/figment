@@ -224,11 +224,11 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to do that.")
             return
 
-        target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
+        if not event.target:
             return
 
-        if not target.has_aspect(Positioned) or not target.Positioned.is_container:
+        if not event.target.has_aspect(Positioned) or not event.target.Positioned.is_container:
             event.actor.tell("You can't look inside of that.")
             return
 
@@ -238,7 +238,7 @@ class Positioned(Aspect):
 
         event.actor.tell('Contents:')
 
-        contents = [e for e in target.Positioned.contents() if not e.Positioned.is_invisible]
+        contents = [e for e in event.target.Positioned.contents() if not e.Positioned.is_invisible]
         if contents:
             for item in contents:
                 event.actor.tell(indent('{0.name}'.format(item)))
@@ -251,17 +251,17 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to do that.")
             return
 
-        target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
+        if not event.target:
             return
 
         yield 'before'
         if event.prevented:
             return
 
-        event.actor.tell(target.desc)
-        event.actor.Positioned.emit('{0.Name} looks at {1}.'.format(event.actor, target.name), exclude=target)
-        target.tell('{0.Name} looks at you.'.format(event.actor))
+        event.actor.tell(event.target.desc)
+        event.actor.Positioned.emit('{0.Name} looks at {1}.'.format(event.actor, event.target.name), exclude=event.target)
+        event.target.tell('{0.Name} looks at you.'.format(event.actor))
 
     @action('^(?:get|take|pick up) (?P<descriptor>.+)$')
     def get(event):
@@ -269,15 +269,15 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to do that.")
             return
 
-        target = event.actor.Positioned.pick_nearby(event.descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_nearby(event.descriptor)
+        if not event.target:
             return
 
-        if target == event.actor:
+        if event.target == event.actor:
             event.actor.tell("You can't put yourself in your inventory.")
             return
 
-        if not target.has_aspect(Positioned) or not target.Positioned.is_carriable:
+        if not event.target.has_aspect(Positioned) or not event.target.Positioned.is_carriable:
             event.actor.tell("That can't be carried.")
             return
 
@@ -285,10 +285,10 @@ class Positioned(Aspect):
         if event.prevented:
             return
 
-        event.actor.tell('You pick up {0.name}.'.format(target))
-        event.actor.Positioned.emit('{0.Name} picks up {1.name}.'.format(event.actor, target), exclude=target)
-        target.tell('{0.Name} picks you up.'.format(event.actor))
-        event.actor.Positioned.store(target)
+        event.actor.tell('You pick up {0.name}.'.format(event.target))
+        event.actor.Positioned.emit('{0.Name} picks up {1.name}.'.format(event.actor, event.target), exclude=event.target)
+        event.target.tell('{0.Name} picks you up.'.format(event.actor))
+        event.actor.Positioned.store(event.target)
 
     @action('^(?:get|take|pick up) (?P<target_descriptor>.+) from (?P<container_descriptor>.+)$')
     def get_from(event):
@@ -296,39 +296,39 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to hold items.")
             return
 
-        container = event.actor.Positioned.pick_nearby_inventory(event.container_descriptor)
-        if not container:
+        event.container = event.actor.Positioned.pick_nearby_inventory(event.container_descriptor)
+        if not event.container:
             return
 
-        if container == event.actor:
+        if event.container == event.actor:
             event.actor.tell("You can't get things from your inventory, they'd just go right back in!")
             return
 
-        if not container.has_aspect(Positioned) or not container.Positioned.is_container:
-            event.actor.tell("{0.Name} can't hold items.".format(container))
+        if not event.container.has_aspect(Positioned) or not event.container.Positioned.is_container:
+            event.actor.tell("{0.Name} can't hold items.".format(event.container))
             return
 
-        target = event.actor.Positioned.pick_from(event.target_descriptor, container)
-        if not target:
+        event.target = event.actor.Positioned.pick_from(event.target_descriptor, event.container)
+        if not event.target:
             return
 
-        if target == event.actor:
+        if event.target == event.actor:
             event.actor.tell("You can't put yourself in your inventory.")
             return
 
-        if not target.has_aspect(Positioned):
-            event.actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
+        if not event.target.has_aspect(Positioned):
+            event.actor.tell("You can't take {0.name} from {1.name}.".format(event.target, event.container))
             return
 
         yield 'before'
         if event.prevented:
             return
 
-        event.actor.tell('You take {0.name} from {1.name}.'.format(target, container))
-        event.actor.Positioned.emit('{0.Name} takes {1.name} from {2.name}.'.format(event.actor, target, container), exclude=(target, container))
-        container.tell('{0.Name} takes {1.name} from you.'.format(event.actor, target))
-        target.tell('{0.Name} takes you from {1.name}.'.format(event.actor, container))
-        event.actor.Positioned.store(target)
+        event.actor.tell('You take {0.name} from {1.name}.'.format(event.target, event.container))
+        event.actor.Positioned.emit('{0.Name} takes {1.name} from {2.name}.'.format(event.actor, event.target, event.container), exclude=(event.target, event.container))
+        event.container.tell('{0.Name} takes {1.name} from you.'.format(event.actor, event.target))
+        event.target.tell('{0.Name} takes you from {1.name}.'.format(event.actor, event.container))
+        event.actor.Positioned.store(event.target)
 
     @action(r'^put (?P<target_descriptor>.+) (?:in(?:to|side(?: of)?)?) (?P<container_descriptor>.+)$')
     def put_in(event):
@@ -336,31 +336,31 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to hold things.")
             return
 
-        target = event.actor.Positioned.pick_nearby_inventory(event.target_descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_nearby_inventory(event.target_descriptor)
+        if not event.target:
             return
 
-        if not target.has_aspect(Positioned):
+        if not event.target.has_aspect(Positioned):
             event.actor.tell("You can't put {0.name} into anything.")
             return
 
-        container = event.actor.Positioned.pick_nearby_inventory(event.container_descriptor)
-        if not container:
+        event.container = event.actor.Positioned.pick_nearby_inventory(event.container_descriptor)
+        if not event.container:
             return
 
-        if not container.has_aspect(Positioned) or not container.Positioned.is_container:
-            event.actor.tell("{0.Name} can't hold things.".format(container))
+        if not event.container.has_aspect(Positioned) or not event.container.Positioned.is_container:
+            event.actor.tell("{0.Name} can't hold things.".format(event.container))
             return
 
         yield 'before'
         if event.prevented:
             return
 
-        event.actor.tell('You put {0.name} in {1.name}.'.format(target, container))
-        event.actor.Positioned.emit('{0.Name} puts {1.name} in {2.name}.'.format(event.actor, target, container), exclude=(target, container))
-        container.tell('{0.Name} puts {1.name} in your inventory.'.format(event.actor, target))
-        target.tell('{0.Name} puts you in {1.name}.'.format(event.actor, container))
-        container.Positioned.store(target)
+        event.actor.tell('You put {0.name} in {1.name}.'.format(event.target, event.container))
+        event.actor.Positioned.emit('{0.Name} puts {1.name} in {2.name}.'.format(event.actor, event.target, event.container), exclude=(event.target, event.container))
+        event.container.tell('{0.Name} puts {1.name} in your inventory.'.format(event.actor, event.target))
+        event.target.tell('{0.Name} puts you in {1.name}.'.format(event.actor, event.container))
+        event.container.Positioned.store(event.target)
 
     @action(r'^drop (?P<descriptor>.+)$')
     def drop(event):
@@ -368,19 +368,19 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to drop things.")
             return
 
-        # TODO: use event.target here
-        target = event.actor.Positioned.pick_inventory(event.descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_inventory(event.descriptor)
+        if not event.target:
             return
 
-        yield 'before'
+        # TODO: other nearby stuff
+        yield 'before', [event.target]
         if event.prevented:
             return
 
-        event.actor.Positioned.remove(target)
-        event.actor.tell('You drop {0.name}.'.format(target))
-        event.actor.Positioned.emit('{0.Name} drops {1.name}.'.format(event.actor, target), exclude=target)
-        target.tell('{0.Name} drops you.'.format(event.actor))
+        event.actor.Positioned.remove(event.target)
+        event.actor.tell('You drop {0.name}.'.format(event.target))
+        event.actor.Positioned.emit('{0.Name} drops {1.name}.'.format(event.actor, event.target), exclude=event.target)
+        event.target.tell('{0.Name} drops you.'.format(event.actor))
 
     @action('^(?:w(?:alk)?|go) (?P<direction>.+)$')
     def walk(event):
@@ -439,11 +439,11 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to leave this place.")
             return
 
-        container = event.actor.Positioned.pick_nearby(event.descriptor)
-        if not container:
+        event.container = event.actor.Positioned.pick_nearby(event.descriptor)
+        if not event.container:
             return
 
-        if not container.has_aspect(Positioned) or not container.Positioned.is_container or not container.Positioned.is_enterable:
+        if not event.container.has_aspect(Positioned) or not event.container.Positioned.is_container or not event.container.Positioned.is_enterable:
             event.actor.tell("You can't enter that.")
             return
 
@@ -451,10 +451,10 @@ class Positioned(Aspect):
         if event.prevented:
             return
 
-        event.actor.tell('You enter {0.name}.'.format(container))
-        event.actor.Positioned.emit('{0.Name} enters {1.name}.'.format(event.actor, container))
-        container.Positioned.announce('{0.Name} arrives from {1.name}.'.format(event.actor, room))
-        container.Positioned.store(event.actor)
+        event.actor.tell('You enter {0.name}.'.format(event.container))
+        event.actor.Positioned.emit('{0.Name} enters {1.name}.'.format(event.actor, event.container))
+        event.container.Positioned.announce('{0.Name} arrives from {1.name}.'.format(event.actor, room))
+        event.container.Positioned.store(event.actor)
 
         event.actor.Positioned.tell_surroundings()
 

@@ -71,7 +71,7 @@ class ExploreMode(Mode):
             return
 
         event.actor = self.entity
-        for hook_point in action(event):
+        for hook_point in action(event) or []:
             if isinstance(hook_point, basestring):
                 hook_type, witnesses = hook_point, []
             else:

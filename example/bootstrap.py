@@ -51,6 +51,8 @@ if __name__ == '__main__':
         zone=zone
     )
 
+    blob = Entity('a sticky blob', "It's sticky.", [Positioned(is_carriable=True), StickyBlob()], zone=zone)
+
     ball = Entity('a ball', 'a rubber ball', [Positioned(is_carriable=True)], zone=zone)
 
     player = create_player(zone)
@@ -58,6 +60,7 @@ if __name__ == '__main__':
     room.Positioned.store(box)
     room.Positioned.store(parrot)
     box.Positioned.store(ball)
+    box.Positioned.store(blob)
 
     room.Positioned.link('north', outside, 'south')
 
