@@ -3,11 +3,23 @@ import argparse
 import json
 import readline
 import logging
+from functools import wraps
 
 from schema import redis
 from schema.zone import Zone
 from schema.app import app
 from schema.logger import log
+
+
+def keyboard_interactive(f):
+    """Gracefully handle Ctrl+C and Ctrl+D events."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            f(*args, **kwargs)
+        except (EOFError, KeyboardInterrupt):
+            print()
+    return wrapper
 
 
 def _perform(zone, entity_id, action):
@@ -19,16 +31,14 @@ def perform(args):
     _perform(args.zone, args.entity_id, args.action)
 
 
+@keyboard_interactive
 def prompt(args):
-    try:
+    action = raw_input('> ')
+    while action and not action == 'quit':
+        _perform(args.zone, args.entity_id, action)
         action = raw_input('> ')
-        while action and not action == 'quit':
-            _perform(args.zone, args.entity_id, action)
-            action = raw_input('> ')
-    except (EOFError, KeyboardInterrupt):
-        print()
 
-
+@keyboard_interactive
 def listen(args):
     # TODO: args.timestamps
     pubsub = redis.pubsub()

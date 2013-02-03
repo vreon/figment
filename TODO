@@ -12,26 +12,12 @@ General
     - Define behaviors, actions, modes
     - @before(tick) should be a thing... maybe
 
-    ! @action should accept an optional second argument: an Event subclass
-        - This event subclass is attached to the action and can be constructed instead of Event
-        - The subclass defines witnesses
-
     ! An action is a generator
-        - A generator can be thought of as a suspendable function
-        - event.trigger('before') -> yield 'before'
-        - Calling function:
-            - for hook_type in action(event):
-                - # gather witnesses
-                - # do stuff with hook_type and event
+        x A generator can be thought of as a suspendable function
+        x event.trigger('before') -> yield 'before'
         - This means hooks could live on the action?
 
-    ! Problem: need better aspect checking
-        x Positioned.walk assumes the actor is Positioned
-        x Colorful.paint assumes the target is Colorful
-        - Usable.use assumes the actor is Positioned
-        - ...
-
-    - schema listen needs graceful interrupt handling
+    x schema listen needs graceful interrupt handling
     - Message templates (and action patterns) should use gettext for i18n
 
 Action Flow
@@ -48,6 +34,7 @@ Action Flow
     - Actually carry out the action
         - Tell the actor they carried out the action
         - Tell targets that the action was carried out on them
+    - Trigger 'after' event
 
 Core Aspects
     - Have an optional "core" aspect package that can be imported
