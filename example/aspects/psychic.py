@@ -1,6 +1,5 @@
 from schema import Aspect, Event, before
 from . import Positioned
-import random
 
 class Psychic(Aspect):
     @before(Positioned.say)

@@ -17,8 +17,7 @@ def create_player(zone):
     )
 
 if __name__ == '__main__':
-    zone = Zone.from_disk('default')
-    zone.purge()
+    zone = Zone.from_config('default')
 
     log.info('Bootstrapping new entity set.')
 
@@ -47,7 +46,7 @@ if __name__ == '__main__':
     parrot = Entity(
         'a psychic parrot',
         'A neon purple bird. It scans your mind as you examine it.',
-        [Positioned(is_carriable=True), Psychic()],
+        [Positioned(is_carriable=True), Psychic(), Bird()],
         zone=zone
     )
 

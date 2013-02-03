@@ -5,3 +5,4 @@ from admin import Admin
 from emotes import Emotes
 from psychic import Psychic
 from sticky_blob import StickyBlob
+from bird import Bird

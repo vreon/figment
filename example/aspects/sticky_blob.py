@@ -7,6 +7,6 @@ class StickyBlob(Aspect):
     @before(Positioned.drop)
     def stick(self, event):
         if self.entity == event.target:
-            if random.randint(1, 5) != 1:
+            if not random.randint(0, 4):
                 event.actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(self.entity))
                 event.prevent_default()

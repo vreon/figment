@@ -54,10 +54,17 @@ def listen(args):
             print(payload['data'])
 
 
+@keyboard_interactive
 def run(args):
-    log.setLevel(logging.DEBUG)
-    zone = Zone.from_disk(args.zone, args.config)
-    zone.start()
+    if args.debug:
+        log.setLevel(logging.DEBUG)
+    zone = Zone.from_config(args.zone, args.config)
+
+    if args.ticker:
+        zone.start_ticker()
+    else:
+        zone.load_snapshot()
+        zone.start()
 
 
 def serve(args):
@@ -130,6 +137,10 @@ def cli():
     parser_run.add_argument(
         '-d', '--debug', action='store_true',
         help='show debug output'
+    )
+    parser_run.add_argument(
+        '-t', '--ticker', action='store_true',
+        help='run as a tick event generator'
     )
     parser_run.set_defaults(func=run)
 

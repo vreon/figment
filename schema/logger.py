@@ -2,7 +2,7 @@ import logging
 from termcolor import colored
 
 FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
-DATE_FORMAT = '%m-%d %H:%M'
+DATE_FORMAT = '%m-%d %H:%M:%S'
 
 class ColoredFormatter(logging.Formatter):
     COLORS = {

@@ -5,6 +5,7 @@ import shutil
 # import zlib
 import json
 import traceback
+from time import sleep
 
 from schema import redis
 from schema.entity import Entity
@@ -20,9 +21,10 @@ class Zone(object):
     def __init__(self):
         self.id = None
         self.entities = {}
+        self.tick_every = 1
 
     @classmethod
-    def from_disk(cls, id, config_path='config.json'):
+    def from_config(cls, id, config_path='config.json'):
         self = cls()
 
         self.id = id
@@ -30,9 +32,16 @@ class Zone(object):
 
         self.load_config(config_path)
         self.load_aspects()
-        self.load_snapshot()
 
         return self
+
+    @property
+    def tick_key(self):
+        return 'zone:%s:tick' % self.id
+
+    @property
+    def incoming_key(self):
+        return 'zone:%s:incoming' % self.id
 
     def load_config(self, path):
         path = os.path.abspath(os.path.expanduser(path))
@@ -47,6 +56,9 @@ class Zone(object):
 
         if not self.id in config['zones']:
             fatal("undefined zone '%s'" % self.id)
+
+        tick_every = config['zones'][self.id].get('tick', 1)
+        self.tick_every = tick_every
 
         # TODO: per-zone persistence settings
 
@@ -113,7 +125,7 @@ class Zone(object):
         log.info('Listening.')
         try:
             while True:
-                self.process_one_command()
+                self.process_one_event()
         except Exception as e:
             log.error(traceback.format_exc())
         except BaseException as e:
@@ -132,11 +144,30 @@ class Zone(object):
         # Couldn't we just fall out of the event loop?
         sys.exit()
 
-    def process_one_command(self):
-        zone_key = 'zone:%s:incoming' % self.id
-        queue_name, queue_item = redis.blpop([zone_key])
+    def start_ticker(self):
+        log.info('Ticking.')
+        while True:
+            log.debug('Tick.')
+            # TODO: timestamp here instead of True, for debugging?
+            redis.rpush(self.tick_key, True)
+            sleep(self.tick_every)
 
-        entity_id, _, command = queue_item.partition(' ')
+    def tick(self):
+        # TODO: Limit this to ticking entities / aspects
+        for entity in self.all():
+            for aspect in entity.aspects:
+                aspect.tick()
+
+    def process_one_event(self):
+        key, queue_item = redis.blpop([self.tick_key, self.incoming_key])
+
+        if key == self.tick_key:
+            self.tick()
+        else:
+            entity_id, _, command = queue_item.partition(' ')
+            self.perform(entity_id, command)
+
+    def perform(self, entity_id, command):
         entity = self.get(entity_id)
 
         if not entity:
