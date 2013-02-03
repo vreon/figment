@@ -1,4 +1,4 @@
-from schema import Aspect, action, jug
+from schema import Aspect, action, redis
 from schema.utils import upper_first, indent, to_id, to_entity
 
 class Positioned(Aspect):
@@ -154,7 +154,8 @@ class Positioned(Aspect):
     def announce(self, message):
         """Send text to this entity's contents."""
         channels = [listener.messages_key for listener in self.contents()]
-        jug.publish(channels, message)
+        for channel in channels:
+            redis.publish(channel, message)
 
     def emit(self, sound, exclude=set()):
         """Send text to entities nearby this one."""
@@ -166,7 +167,8 @@ class Positioned(Aspect):
         exclude.add(self.entity)
         listeners = nearby - exclude
         channels = [listener.messages_key for listener in listeners]
-        jug.publish(channels, sound)
+        for channel in channels:
+            redis.publish(channel, sound)
 
     def tell_surroundings(self):
         room = self.container

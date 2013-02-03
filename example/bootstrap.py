@@ -18,6 +18,7 @@ def create_player(zone):
 
 if __name__ == '__main__':
     zone = Zone.from_config('default')
+    zone.load_aspects()
 
     log.info('Bootstrapping new entity set.')
 

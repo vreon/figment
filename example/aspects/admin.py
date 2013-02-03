@@ -1,4 +1,4 @@
-from schema import Aspect, action, jug
+from schema import Aspect, action
 
 class Admin(Aspect):
     @action(r'^snapshot$')

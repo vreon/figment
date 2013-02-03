@@ -1,13 +1,11 @@
 from __future__ import print_function
 import argparse
-import json
 import readline
 import logging
 from functools import wraps
 
 from schema import redis
 from schema.zone import Zone
-from schema.app import app
 from schema.logger import log
 
 
@@ -38,20 +36,18 @@ def prompt(args):
         _perform(args.zone, args.entity_id, action)
         action = raw_input('> ')
 
+
 @keyboard_interactive
 def listen(args):
     # TODO: args.timestamps
     pubsub = redis.pubsub()
 
     channel = 'entity:%s:messages' % args.entity_id
-    pubsub.subscribe('juggernaut')
+    pubsub.subscribe(channel)
 
     print("Listening to %s..." % channel)
     for message in pubsub.listen():
-        # Why, juggernaut, why
-        payload = json.loads(message['data'])
-        if channel in payload['channels']:
-            print(payload['data'])
+        print(message['data'])
 
 
 @keyboard_interactive
@@ -63,14 +59,9 @@ def run(args):
     if args.ticker:
         zone.start_ticker()
     else:
+        zone.load_aspects()
         zone.load_snapshot()
         zone.start()
-
-
-def serve(args):
-    # TODO: This currently relies on Flask + Juggernaut, but Juggernaut is
-    # abandoned. Switch to something actively maintained.
-    app.run(debug=True, host=args.host, port=args.port)
 
 
 def cli():
@@ -143,21 +134,6 @@ def cli():
         help='run as a tick event generator'
     )
     parser_run.set_defaults(func=run)
-
-    # Serve parser
-
-    parser_serve = subparsers.add_parser(
-        'serve', help='run a web server for websocket clients'
-    )
-    parser_serve.add_argument(
-        '-H', '--host', type=str, default='127.0.0.1',
-        help='the hostname to use'
-    )
-    parser_serve.add_argument(
-        '-p', '--port', type=str, default=5000,
-        help='the port to listen on'
-    )
-    parser_serve.set_defaults(func=serve)
 
     args = parser.parse_args()
     args.func(args)

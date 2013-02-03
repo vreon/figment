@@ -32,7 +32,6 @@ class Zone(object):
         self.working_dir = '.'
 
         self.load_config(config_path)
-        self.load_aspects()
 
         return self
 
@@ -43,6 +42,10 @@ class Zone(object):
     @property
     def incoming_key(self):
         return 'zone:%s:incoming' % self.id
+
+    @property
+    def import_key(self):
+        return 'zone:%s:imports' % self.id
 
     def load_config(self, path):
         path = os.path.abspath(os.path.expanduser(path))
@@ -98,6 +101,9 @@ class Zone(object):
                 entity = Entity.from_dict(entity_dict, zone=self)
 
         return True
+
+    def schedule_import(self, entity_dict):
+        redis.rpush(self.import_key, json.dumps(entity_dict))
 
     def save_snapshot(self):
         log.info('Saving snapshot: %s' % self.snapshot_path)
@@ -160,12 +166,15 @@ class Zone(object):
                     aspect.tick()
 
     def process_one_event(self):
-        key, queue_item = redis.blpop([self.tick_key, self.incoming_key])
+        key, value = redis.blpop([self.import_key, self.tick_key, self.incoming_key])
 
-        if key == self.tick_key:
+        if key == self.import_key:
+            # TODO: assumes entity IDs are globally unique
+            Entity.from_dict(json.loads(value), zone=self)
+        elif key == self.tick_key:
             self.tick()
         else:
-            entity_id, _, command = queue_item.partition(' ')
+            entity_id, _, command = value.partition(' ')
             self.perform(entity_id, command)
 
     def perform(self, entity_id, command):

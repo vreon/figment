@@ -2,7 +2,7 @@ import random
 import string
 import collections
 
-from schema import jug
+from schema import redis
 from schema.logger import log
 
 class AmbiguousDescriptor(Exception):
@@ -201,7 +201,7 @@ class Entity(object):
 
     def tell(self, message):
         """Send text to this entity."""
-        jug.publish(self.messages_key, message)
+        redis.publish(self.messages_key, message)
 
 
 from schema.utils import upper_first

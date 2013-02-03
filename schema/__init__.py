@@ -1,8 +1,5 @@
 from redis import StrictRedis
-from juggernaut import Juggernaut
-
 redis = StrictRedis()
-jug = Juggernaut()
 
 from schema.logger import log
 from schema.entity import Entity
