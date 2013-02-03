@@ -202,7 +202,7 @@ class Positioned(Aspect):
         if not message[-1] in ('.', '?', '!'):
             message += '.'
 
-        yield 'before'
+        yield 'before', event.actor.Positioned.nearby()
         if not event.prevented:
             event.actor.tell('You say: "{0}"'.format(message))
             event.actor.Positioned.emit('{0.Name} says: "{1}"'.format(event.actor, message))

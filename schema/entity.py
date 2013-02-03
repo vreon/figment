@@ -182,9 +182,8 @@ class Entity(object):
     def Name(self):
         return upper_first(self.name)
 
-    def perform(self, command):
-        command = ' '.join(command.strip().split())
-        self.mode.perform(command)
+    def perform(self, *args, **kwargs):
+        self.mode.perform(*args, **kwargs)
 
     def tell(self, message):
         """Send text to this entity."""

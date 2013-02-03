@@ -42,38 +42,49 @@ class Mode(object):
 
 
 class ExploreMode(Mode):
-    def perform(self, command):
-        matches = {}
-        for pattern, action in Aspect.ACTIONS.items():
-            match = re.match(pattern, command)
-            if match:
-                matches[pattern] = (action, match.groupdict())
+    def perform(self, command_or_action, **kwargs):
+        event = None
+        action = None
 
-        # If multiple patterns match this command, pick the longest one
-        if matches:
-            matching_patterns = matches.keys()
-            matching_patterns.sort(key=len, reverse=True)
-            action, groupdict = matches[matching_patterns[0]]
+        if isinstance(command_or_action, basestring):
+            command = ' '.join(command_or_action.strip().split())
+            matches = {}
+            for pattern, action in Aspect.ACTIONS.items():
+                match = re.match(pattern, command)
+                if match:
+                    matches[pattern] = (action, match.groupdict())
 
-            event = Event(**groupdict)
-            event.actor = self.entity
+            # If multiple patterns match this command, pick the longest one
+            if matches:
+                matching_patterns = matches.keys()
+                matching_patterns.sort(key=len, reverse=True)
+                action, groupdict = matches[matching_patterns[0]]
 
-            for hook_point in action(event):
-                if isinstance(hook_point, basestring):
-                    hook_type, witnesses = hook_point, []
-                else:
-                    hook_type, witnesses = hook_point
-
-                # TODO: This iterates over every aspect... but we know (or
-                # should know) which aspects hook which actions. We should only
-                # iterate over those aspect instances
-                for witness in witnesses:
-                    for aspect in witness.aspects:
-                        hooks = aspect.HOOKS.get(hook_type, {}).get(action, [])
-                        for hook in hooks:
-                            hook(aspect, event)
+                event = Event(**groupdict)
         else:
+            # Assume it's an action
+            action = command_or_action
+            event = Event(**kwargs)
+
+        if not event:
             self.entity.tell(random.choice(('What?', 'Eh?', 'Come again?', 'Unknown command.')))
+            return
+
+        event.actor = self.entity
+        for hook_point in action(event):
+            if isinstance(hook_point, basestring):
+                hook_type, witnesses = hook_point, []
+            else:
+                hook_type, witnesses = hook_point
+
+            # TODO: This iterates over every aspect... but we know (or
+            # should know) which aspects hook which actions. We should only
+            # iterate over those aspect instances
+            for witness in witnesses:
+                for aspect in witness.aspects:
+                    hooks = aspect.HOOKS.get(hook_type, {}).get(action, [])
+                    for hook in hooks:
+                        hook(aspect, event)
 
 
 class DisambiguateMode(Mode):

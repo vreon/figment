@@ -1,5 +1,5 @@
 from schema import Aspect, before
-from .positioned import Positioned
+from . import Positioned
 import random
 
 class StickyBlob(Aspect):

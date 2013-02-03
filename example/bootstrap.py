@@ -44,11 +44,19 @@ if __name__ == '__main__':
     )
     box.Positioned.link('out', '..')
 
+    parrot = Entity(
+        'a psychic parrot',
+        'A neon purple bird. It scans your mind as you examine it.',
+        [Positioned(is_carriable=True), Psychic()],
+        zone=zone
+    )
+
     ball = Entity('a ball', 'a rubber ball', [Positioned(is_carriable=True)], zone=zone)
 
     player = create_player(zone)
     room.Positioned.store(player)
     room.Positioned.store(box)
+    room.Positioned.store(parrot)
     box.Positioned.store(ball)
 
     room.Positioned.link('north', outside, 'south')

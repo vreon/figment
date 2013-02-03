@@ -2,10 +2,10 @@ from schema.entity import Entity
 
 class Event(object):
     def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
         self.action = None
         self.actor = None
         self.prevented = False
+        self.__dict__.update(kwargs)
 
     # This is probably considered unpythonic, but it makes the event API easier
     # to use, so I'm doin' it
