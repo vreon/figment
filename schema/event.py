@@ -17,8 +17,8 @@ class Event(object):
         # TODO: this is too specific to the before hook
         # How would someone "prevent" a custom hook?
 
-    def trigger(self, hook_type):
-        for witness in self.witnesses():
+    def trigger(self, hook_type, witnesses=[]):
+        for witness in witnesses:
             # TODO: This iterates over every aspect... but we know (or
             # should know) which aspects hook which actions. We should only
             # iterate over those aspect instances

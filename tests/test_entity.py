@@ -10,10 +10,6 @@ class TestEntity(object):
 
     def setup(self):
         self.zone = z = Zone()
-
-        # TODO: This is ugly
-        Event.witnesses = lambda s: z.all()
-
         self.player = Entity(
             'Player', 'A player stands here.', [Visible()], zone=z
         )
