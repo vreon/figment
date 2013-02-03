@@ -12,7 +12,7 @@ def create_player(zone):
     return Entity(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
-        [Positioned(is_container=True), Admin()],
+        [Positioned(is_container=True), Emotes(), Admin()],
         zone=zone
     )
 

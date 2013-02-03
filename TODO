@@ -31,7 +31,7 @@ General
 
     ! Problem: need better aspect checking
         x Positioned.walk assumes the actor is Positioned
-        - Colorful.paint assumes the target is Colorful
+        x Colorful.paint assumes the target is Colorful
         - Usable.use assumes the actor is Positioned
         - ...
 

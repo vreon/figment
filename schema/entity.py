@@ -46,8 +46,14 @@ class AspectStore(object):
             delattr(self.entity, aspect_class.__name__)
             self.aspects.pop(aspect_class, None)
 
-    def has(self, aspect_class):
-        return aspect_class in self.aspects
+    def has(self, aspect_classes):
+        if not isinstance(aspect_classes, collections.Iterable):
+            aspect_classes = [aspect_classes]
+
+        for aspect_class in aspect_classes:
+            if not aspect_class in self.aspects:
+                return False
+        return True
 
     def purge(self):
         self.remove(self.aspects.keys())
@@ -150,8 +156,8 @@ class Entity(object):
 
         return entity
 
-    def has_aspect(self, aspect_class):
-        return self.aspects.has(aspect_class)
+    def has_aspect(self, *args, **kwargs):
+        return self.aspects.has(*args, **kwargs)
 
     def destroy(self):
         self.aspects.purge()
