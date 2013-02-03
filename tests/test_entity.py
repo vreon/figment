@@ -13,7 +13,7 @@ class TestEntity(object):
         self.player = Entity(
             'Player', 'A player stands here.', [Visible()], zone=z
         )
-        self.ball = Entity('a ball', 'A round plastic ball.', [
+        self.ball = Entity('a ball', 'A round rubber ball.', [
             Visible(), Colorful(color='red')
         ], zone=z)
         self.bh = Entity('black hole', 'This text should never appear.', [
@@ -23,7 +23,7 @@ class TestEntity(object):
 
     def test_look_at(self):
         self.player.perform('look at %s' % self.ball.id)
-        assert self.player.saw('plastic ball')
+        assert self.player.saw('rubber ball')
 
     def test_color(self):
         self.player.perform('color of %s' % self.ball.id)
@@ -59,3 +59,6 @@ class TestEntity(object):
         self.player.perform('color of %s' % self.ball.id)
         assert self.player.saw('no particular')
 
+    def test_perform_with_action_and_event(self):
+        self.player.perform(Visible.look_at, descriptor=self.ball.id)
+        assert self.player.saw('rubber')
