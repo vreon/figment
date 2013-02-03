@@ -1,5 +1,5 @@
 from schema import Aspect, action
-from .positioned import Positioned
+from . import Positioned
 
 class Emotes(Aspect):
     """Enables an entity to emote."""
