@@ -37,80 +37,80 @@ class Emotes(Aspect):
 
     @action(r'^dance(?: with (?P<descriptor>.+))?$')
     def dance(event):
-        Emotes.emote(event, 'dance', join='with')
+        return Emotes.emote(event, 'dance', join='with')
 
     @action(r'^laugh(?: at (?P<descriptor>.+))?$')
     def laugh(event):
-        Emotes.emote(event, 'laugh', join='at')
+        return Emotes.emote(event, 'laugh', join='at')
 
     @action(r'^lol$')
     def lol(event):
-        Emotes.emote(event, 'laugh')
+        return Emotes.emote(event, 'laugh')
 
     @action(r'^blink(?: at (?P<descriptor>.+))?$')
     def blink(event):
-        Emotes.emote(event, 'blink', join='at')
+        return Emotes.emote(event, 'blink', join='at')
 
     @action(r'^frown(?: at (?P<descriptor>.+))?$')
     def frown(event):
-        Emotes.emote(event, 'frown', join='at')
+        return Emotes.emote(event, 'frown', join='at')
 
     @action(r'^eyebrow(?: at (?P<descriptor>.+))?$')
     def eyebrow(event):
-        Emotes.emote(event, 'raise an eyebrow', 'raises an eyebrow', join='at')
+        return Emotes.emote(event, 'raise an eyebrow', 'raises an eyebrow', join='at')
 
     @action(r'^shrug(?: at (?P<descriptor>.+))?$')
     def shrug(event):
-        Emotes.emote(event, 'shrug', join='at')
+        return Emotes.emote(event, 'shrug', join='at')
 
     @action(r'^smile(?: at (?P<descriptor>.+))?$')
     def smile(event):
-        Emotes.emote(event, 'smile', join='at')
+        return Emotes.emote(event, 'smile', join='at')
 
     @action(r'^grin(?: at (?P<descriptor>.+))?$')
     def grin(event):
-        Emotes.emote(event, 'grin', join='at')
+        return Emotes.emote(event, 'grin', join='at')
 
     @action(r'^bow(?: to (?P<descriptor>.+))?$')
     def bow(event):
-        Emotes.emote(event, 'bow', join='to')
+        return Emotes.emote(event, 'bow', join='to')
 
     @action(r'^nod(?: (?P<join>at|to) (?P<descriptor>.+))?$')
     def nod(event):
-        Emotes.emote(event, 'nod', join=event.join.value)
+        return Emotes.emote(event, 'nod', join=event.join)
 
     @action(r'^cheer(?: for (?P<descriptor>.+))?$')
     def cheer(event):
-        Emotes.emote(event, 'cheer', join='for')
+        return Emotes.emote(event, 'cheer', join='for')
 
     @action(r'^cough(?: (?P<join>on|at) (?P<descriptor>.+))?$')
     def cough(event):
-        Emotes.emote(event, 'cough', join=event.join.value)
+        return Emotes.emote(event, 'cough', join=event.join)
 
     @action(r'^cry(?: on (?P<descriptor>.+))?$')
     def cry(event):
-        Emotes.emote(event, 'cry', 'cries', join='on')
+        return Emotes.emote(event, 'cry', 'cries', join='on')
 
     @action(r'^point(?: (?P<join>to|at) (?P<descriptor>.+))?$')
     def point(event):
-        Emotes.emote(event, 'point', join=event.join.value)
+        return Emotes.emote(event, 'point', join=event.join)
 
     @action(r'^wave(?: (?P<join>to|at) (?P<descriptor>.+))?$')
     def wave(event):
-        Emotes.emote(event, 'wave', join=event.join.value)
+        return Emotes.emote(event, 'wave', join=event.join)
 
     @action(r'^wink(?: (?P<join>to|at) (?P<descriptor>.+))?$')
     def wink(event):
-        Emotes.emote(event, 'wink', join=event.join.value)
+        return Emotes.emote(event, 'wink', join=event.join)
 
     @action(r'^poke (?P<descriptor>.+)$')
     def poke(event):
-        Emotes.emote(event, 'poke')
+        return Emotes.emote(event, 'poke')
 
     @action(r'^hug (?P<descriptor>.+)$')
     def hug(event):
-        Emotes.emote(event, 'hug')
+        return Emotes.emote(event, 'hug')
 
     @action(r'^kiss (?P<descriptor>.+)$')
     def kiss(event):
-        Emotes.emote(event, 'kiss', 'kisses')
+        return Emotes.emote(event, 'kiss', 'kisses')
