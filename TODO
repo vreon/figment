@@ -6,7 +6,7 @@ Zones
 
 Refactoring
     - Get rid of as much global state as you can
-        - Make it possible to run tests without polluting the entity space
+        x Make it possible to run tests without polluting the entity space
 
 General
     - Define behaviors, actions, modes
@@ -30,7 +30,7 @@ General
         - This means hooks could live on the action?
 
     ! Problem: need better aspect checking
-        - Positioned.walk assumes the actor is Positioned
+        x Positioned.walk assumes the actor is Positioned
         - Colorful.paint assumes the target is Colorful
         - Usable.use assumes the actor is Positioned
         - ...

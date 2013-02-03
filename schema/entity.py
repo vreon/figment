@@ -1,5 +1,6 @@
 import random
 import string
+import collections
 
 from schema import jug
 from schema.logger import log
@@ -28,12 +29,18 @@ class AspectStore(object):
         self.aspects = {}
 
     def add(self, aspects):
+        if not isinstance(aspects, collections.Iterable):
+            aspects = [aspects]
+
         for aspect in aspects:
             setattr(self.entity, aspect.__class__.__name__, aspect)
             aspect.entity = self.entity
             self.aspects[aspect.__class__] = aspect
 
     def remove(self, aspect_classes):
+        if not isinstance(aspect_classes, collections.Iterable):
+            aspect_classes = [aspect_classes]
+
         for aspect_class in aspect_classes:
             getattr(self.entity, aspect_class.__name__).destroy()
             delattr(self.entity, aspect_class.__name__)

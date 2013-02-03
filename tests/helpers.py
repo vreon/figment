@@ -20,6 +20,11 @@ def saw(self, msg):
 
 
 class Visible(Aspect):
+    """
+    A simplified version of Positioned, from the example aspects. It doesn't do
+    descriptor resolution (you have to use the entity ID).
+    """
+
     @action(r'^l(?:ook)?(?: at)? (?P<descriptor>.+)')
     def look_at(event):
         target = event.actor.zone.get(event.descriptor)
@@ -54,6 +59,10 @@ class Colorful(Aspect):
             event.actor.tell('No such entity %r.' % event.descriptor)
             return
 
+        if not target.has_aspect(Colorful):
+            event.actor.tell("{0.Name} has no particular color.".format(target))
+            return
+
         event.trigger('before')
         if not event.prevented:
             event.actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
@@ -63,6 +72,10 @@ class Colorful(Aspect):
         target = event.actor.zone.get(event.descriptor)
         if not target:
             event.actor.tell('No such entity %r.' % event.descriptor)
+            return
+
+        if not target.has_aspect(Colorful):
+            event.actor.tell("{0.Name} cannot be painted.".format(target))
             return
 
         event.trigger('before')
