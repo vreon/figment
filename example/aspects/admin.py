@@ -22,7 +22,7 @@ class Admin(Aspect):
         if not event.prevented:
             raise RuntimeError('Craaaaash')
 
-    @action(r'^restart$')
+    @action(r'^(restart|reload)$')
     def restart(event):
         if not event.actor.has_aspect(Admin):
             event.actor.tell("You're unable to do that.")

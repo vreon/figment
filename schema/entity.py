@@ -37,6 +37,9 @@ class AspectStore(object):
             aspect.entity = self.entity
             self.aspects[aspect.__class__] = aspect
 
+        if self.entity.zone and self.entity.ticking:
+            self.entity.zone.ticking.add(self.entity)
+
     def remove(self, aspect_classes):
         if not isinstance(aspect_classes, collections.Iterable):
             aspect_classes = [aspect_classes]
@@ -45,6 +48,9 @@ class AspectStore(object):
             getattr(self.entity, aspect_class.__name__).destroy()
             delattr(self.entity, aspect_class.__name__)
             self.aspects.pop(aspect_class, None)
+
+        if self.entity.zone and self.entity in self.entity.zone.ticking and not self.entity.ticking:
+            self.entity.zone.ticking.remove(self.entity)
 
     def has(self, aspect_classes):
         if not isinstance(aspect_classes, collections.Iterable):
@@ -86,11 +92,10 @@ class Entity(object):
         self.mode = ExploreMode(self)
         self.aspects = AspectStore(self)
         self._zone = None
+        self.zone = zone
 
         if aspects:
             self.aspects.add(aspects)
-
-        self.zone = zone
 
         log.debug('Created entity: [%s] %s' % (self.id, self.name))
 
@@ -114,9 +119,17 @@ class Entity(object):
     def zone(self, value):
         if self._zone is not None:
             self._zone.entities.pop(self.id, None)
+            if self in self._zone.ticking:
+                self._zone.ticking.remove(self)
         self._zone = value
         if self._zone is not None:
             self._zone.entities[self.id] = self
+            if self.ticking:
+                self._zone.ticking.add(self)
+
+    @property
+    def ticking(self):
+        return any(a.ticking for a in self.aspects)
 
     @staticmethod
     def create_id():
@@ -140,12 +153,13 @@ class Entity(object):
         }
 
     @classmethod
-    def from_dict(cls, dict_):
+    def from_dict(cls, dict_, zone=None):
         entity = cls(dict_['name'], dict_['desc'], id=dict_['id'])
 
         mode_dict = dict_['mode']
         mode_name = mode_dict.pop('name')
         entity.mode = Mode.class_from_name(mode_name).from_dict(entity, mode_dict)
+        entity.zone = zone
 
         aspects = []
         for aspect_name, aspect_dict in dict_.get('aspects', {}).items():

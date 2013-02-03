@@ -10,7 +10,6 @@ Refactoring
 
 General
     - Define behaviors, actions, modes
-    - @before(tick) should be a thing... maybe
 
     ! An action is a generator
         x A generator can be thought of as a suspendable function

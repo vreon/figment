@@ -21,6 +21,7 @@ class Zone(object):
     def __init__(self):
         self.id = None
         self.entities = {}
+        self.ticking = set()
         self.tick_every = 1
 
     @classmethod
@@ -94,8 +95,7 @@ class Zone(object):
             #     snapshot = zlib.decompress(snapshot)
             snapshot = json.loads(snapshot)
             for entity_dict in snapshot['entities']:
-                entity = Entity.from_dict(entity_dict)
-                entity.zone = self
+                entity = Entity.from_dict(entity_dict, zone=self)
 
         return True
 
@@ -153,10 +153,11 @@ class Zone(object):
             sleep(self.tick_every)
 
     def tick(self):
-        # TODO: Limit this to ticking entities / aspects
-        for entity in self.all():
+        for entity in self.ticking:
+            # TODO: Somehow iterate over only ticking aspects
             for aspect in entity.aspects:
-                aspect.tick()
+                if aspect.ticking:
+                    aspect.tick()
 
     def process_one_event(self):
         key, queue_item = redis.blpop([self.tick_key, self.incoming_key])

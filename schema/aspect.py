@@ -54,9 +54,9 @@ class Aspect(object):
     def destroy(self):
         self.entity = None
 
-    def tick(self):
-        pass
-
+    @property
+    def ticking(self):
+        return hasattr(self, 'tick')
 
 # TODO: Make this automatically trigger 'after', somehow
 def action(regex):

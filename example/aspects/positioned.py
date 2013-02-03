@@ -78,7 +78,7 @@ class Positioned(Aspect):
         elif matches == 1:
             return entities.pop()
         else:
-            self.entity.tell("Which '{0}' do you mean?".format(descriptor.value))
+            self.entity.tell("Which '{0}' do you mean?".format(descriptor))
             targets = []
             for index, entity in enumerate(entities):
                 position = 'in inventory' if entity.Positioned.container == self.entity else 'nearby'
