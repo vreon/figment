@@ -1,4 +1,4 @@
-from schema import Entity, Aspect, action, jug
+from schema import Aspect, action, jug
 from schema.utils import upper_first, indent, to_id, to_entity
 
 class Positioned(Aspect):
@@ -122,10 +122,10 @@ class Positioned(Aspect):
     @property
     def container(self):
         if self.container_id:
-            return Entity.get(self.container_id)
+            return self.entity.zone.get(self.container_id)
 
     def contents(self):
-        return set(Entity.get(id) for id in self._contents)
+        return set(self.entity.zone.get(id) for id in self._contents)
 
     def exits(self):
         resolved_exits = {}
@@ -136,7 +136,7 @@ class Positioned(Aspect):
                 id = self.container_id
             else:
                 id = descriptor
-            resolved_exits[name] = Entity.get(id)
+            resolved_exits[name] = self.entity.zone.get(id)
         return resolved_exits
 
     def link(self, direction, destination, back_direction=None):

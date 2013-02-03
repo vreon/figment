@@ -46,8 +46,8 @@ def listen(args):
 
 def run(args):
     log.setLevel(logging.DEBUG)
-    zone = Zone(args.zone, args.config)
-    zone.run()
+    zone = Zone.from_disk(args.zone, args.config)
+    zone.start()
 
 
 def serve(args):

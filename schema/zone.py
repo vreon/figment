@@ -17,13 +17,22 @@ def fatal(message):
 
 
 class Zone(object):
-    def __init__(self, id, config_path='config.json'):
+    def __init__(self):
+        self.id = None
+        self.entities = {}
+
+    @classmethod
+    def from_disk(cls, id, config_path='config.json'):
+        self = cls()
+
         self.id = id
         self.working_dir = '.'
 
         self.load_config(config_path)
         self.load_aspects()
         self.load_snapshot()
+
+        return self
 
     def load_config(self, path):
         path = os.path.abspath(os.path.expanduser(path))
@@ -74,6 +83,7 @@ class Zone(object):
             snapshot = json.loads(snapshot)
             for entity_dict in snapshot['entities']:
                 entity = Entity.from_dict(entity_dict)
+                entity.zone = self
 
         return True
 
@@ -84,7 +94,7 @@ class Zone(object):
         if not child_pid:
             f = tempfile.NamedTemporaryFile(delete=False)
             snapshot = json.dumps({
-                'entities': [e.to_dict() for e in Entity.all()]
+                'entities': [e.to_dict() for e in self.all()]
             })
             # if self.config['persistence'].get('compressed'):
             #     snapshot = zlib.compress(snapshot)
@@ -99,7 +109,7 @@ class Zone(object):
         # As a side effect, Aspect.ALL gets populated with Aspect subclasses
         __import__(self.config.get('aspects', {}).get('path', 'aspects'))
 
-    def run(self):
+    def start(self):
         log.info('Listening.')
         try:
             while True:
@@ -117,31 +127,34 @@ class Zone(object):
         python = sys.executable
         os.execl(python, python, *sys.argv)
 
+    def stop(self):
+        # TODO: Is this necessary?
+        # Couldn't we just fall out of the event loop?
+        sys.exit()
+
     def process_one_command(self):
         zone_key = 'zone:%s:incoming' % self.id
         queue_name, queue_item = redis.blpop([zone_key])
 
         entity_id, _, command = queue_item.partition(' ')
+        entity = self.get(entity_id)
 
-        # TODO: This is laughably insecure right now considering
-        # that clients can specify the entity ID
-        # Also the processing should happen somewhere else (admin Aspect??)
-        # Entities would need a handle to the current Zone
-        if entity_id == 'admin':
-            log.debug('Processing: <admin> %s' % command)
-            if command == 'snapshot':
-                self.save_snapshot()
-            elif command == 'crash':
-                raise RuntimeError('Craaaaash')
-            elif command == 'restart':
-                self.restart()
-            elif command == 'halt':
-                sys.exit()
-        else:
-            entity = Entity.get(entity_id)
+        if not entity:
+            return
 
-            if not entity:
-                return
+        log.debug('Processing: <%s, %s> %s' % (entity.id, entity.name, command))
+        entity.perform(command)
 
-            log.debug('Processing: <%s, %s> %s' % (entity.id, entity.name, command))
-            entity.perform(command)
+    # Entity helpers
+
+    def get(self, id):
+        return self.entities.get(id)
+
+    def all(self):
+        return self.entities.values()
+
+    def purge(self):
+        log.info('Purging all entities.')
+        # TODO: Modifies the dict while iterating; is this ok?
+        for entity in self.entities.values():
+            entity.destroy()

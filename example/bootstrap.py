@@ -8,41 +8,45 @@ from aspects import *
 
 log.setLevel(logging.DEBUG)
 
-def create_player():
+def create_player(zone):
     return Entity(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
-        [Positioned(is_container=True)]
+        [Positioned(is_container=True), Admin()],
+        zone=zone
     )
 
 if __name__ == '__main__':
-    zone = Zone('default')
-    Entity.purge()
+    zone = Zone.from_disk('default')
+    zone.purge()
 
     log.info('Bootstrapping new entity set.')
 
     room = Entity(
         'A Room',
         'A nondescript room.',
-        [Positioned(is_container=True), Dark()]
+        [Positioned(is_container=True), Dark()],
+        zone=zone
     )
 
     outside = Entity(
         'Outside',
         'Outside the room.',
-        [Positioned(is_container=True)]
+        [Positioned(is_container=True)],
+        zone=zone
     )
 
     box = Entity(
         'a box',
         'A cardboard box.',
-        [Positioned(is_container=True, is_carriable=True, is_enterable=True)]
+        [Positioned(is_container=True, is_carriable=True, is_enterable=True)],
+        zone=zone
     )
     box.Positioned.link('out', '..')
 
-    ball = Entity('a ball', 'a rubber ball', [Positioned(is_carriable=True)])
+    ball = Entity('a ball', 'a rubber ball', [Positioned(is_carriable=True)], zone=zone)
 
-    player = create_player()
+    player = create_player(zone)
     room.Positioned.store(player)
     room.Positioned.store(box)
     box.Positioned.store(ball)

@@ -1,4 +1,4 @@
-from schema import Entity, Event
+from schema import Entity, Event, Zone
 from tests.helpers import tell, saw, Visible, Colorful, BlackHole
 
 class TestEntity(object):
@@ -6,19 +6,20 @@ class TestEntity(object):
     def setup_class(cls):
         Entity.tell = tell
         Entity.saw = saw
-        Event.witnesses = lambda s: Entity.ALL.values()
 
     def setup(self):
-        self.player = Entity('Player', 'A player stands here.', [Visible()])
+        self.zone = z = Zone()
+
+        # TODO: This is ugly
+        Event.witnesses = lambda s: z.all()
+
+        self.player = Entity('Player', 'A player stands here.', [Visible()], zone=z)
         self.ball = Entity('a ball', 'A round plastic ball.', [
             Visible(), Colorful(color='red')
-        ])
+        ], zone=z)
         self.bh = Entity('black hole', 'This text should never appear.', [
             Visible(), Colorful(color='black'), BlackHole()
-        ])
-
-    def teardown(self):
-        Entity.purge()
+        ], zone=z)
 
     def test_look_at(self):
         self.player.perform('look at %s' % self.ball.id)

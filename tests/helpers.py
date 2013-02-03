@@ -1,4 +1,4 @@
-from schema import Entity, Aspect, Zone, action, before, after
+from schema import Aspect, action, before
 
 
 def tell(self, msg):
@@ -22,7 +22,7 @@ def saw(self, msg):
 class Visible(Aspect):
     @action(r'^l(?:ook)?(?: at)? (?P<descriptor>.+)')
     def look_at(event):
-        target = Entity.get(event.descriptor)
+        target = event.actor.zone.get(event.descriptor)
         if not target:
             event.actor.tell('No such entity %r.' % event.descriptor)
             return
@@ -49,7 +49,7 @@ class Colorful(Aspect):
 
     @action(r'^color(?: of)? (?P<descriptor>.+)')
     def color_of(event):
-        target = Entity.get(event.descriptor)
+        target = event.actor.zone.get(event.descriptor)
         if not target:
             event.actor.tell('No such entity %r.' % event.descriptor)
             return
@@ -60,7 +60,7 @@ class Colorful(Aspect):
 
     @action(r'^paint (?P<descriptor>.+) (?P<color>.+)')
     def paint(event):
-        target = Entity.get(event.descriptor)
+        target = event.actor.zone.get(event.descriptor)
         if not target:
             event.actor.tell('No such entity %r.' % event.descriptor)
             return

@@ -22,6 +22,33 @@ class AmbiguousDescriptor(Exception):
 #     return decorator
 
 
+class AspectStore(object):
+    def __init__(self, entity):
+        self.entity = entity
+        self.aspects = {}
+
+    def add(self, aspects):
+        for aspect in aspects:
+            setattr(self.entity, aspect.__class__.__name__, aspect)
+            aspect.entity = self.entity
+            self.aspects[aspect.__class__] = aspect
+
+    def remove(self, aspect_classes):
+        for aspect_class in aspect_classes:
+            getattr(self.entity, aspect_class.__name__).destroy()
+            delattr(self.entity, aspect_class.__name__)
+            self.aspects.pop(aspect_class, None)
+
+    def has(self, aspect_class):
+        return aspect_class in self.aspects
+
+    def purge(self):
+        self.remove(self.aspects.keys())
+
+    def __iter__(self):
+        return self.aspects.values().__iter__()
+
+
 class CommandArgument(object):
     """
     An 'intelligent parameter' that knows its position in the player
@@ -39,21 +66,20 @@ class CommandArgument(object):
 
 
 class Entity(object):
-    ALL = {}
-
-    def __init__(self, name, desc, aspects=None, id=None):
+    def __init__(self, name, desc, aspects=None, id=None, zone=None):
         self.id = id or Entity.create_id()
         self.name = name
         self.desc = desc
         self.mode = ExploreMode(self)
-        self.aspects = {}
+        self.aspects = AspectStore(self)
+        self._zone = None
 
         if aspects:
-            self.apply_aspects(aspects)
+            self.aspects.add(aspects)
+
+        self.zone = zone
 
         log.debug('Created entity: [%s] %s' % (self.id, self.name))
-
-        Entity.ALL[self.id] = self
 
     def __eq__(self, other):
         if isinstance(other, Entity):
@@ -67,24 +93,21 @@ class Entity(object):
     def __hash__(self):
         return hash(self.id)
 
-    @classmethod
-    def get(cls, id):
-        return cls.ALL.get(id)
+    @property
+    def zone(self):
+        return self._zone
+
+    @zone.setter
+    def zone(self, value):
+        if self._zone is not None:
+            self._zone.entities.pop(self.id, None)
+        self._zone = value
+        if self._zone is not None:
+            self._zone.entities[self.id] = self
 
     @staticmethod
     def create_id():
         return ''.join(random.choice(string.ascii_letters) for i in xrange(12))
-
-    @classmethod
-    def all(cls):
-        return cls.ALL.values()
-
-    @classmethod
-    def purge(cls):
-        log.info('Purging all entities.')
-        ids = cls.ALL.keys()
-        for id in ids:
-            cls.get(id).destroy()
 
     @property
     def messages_key(self):
@@ -99,7 +122,7 @@ class Entity(object):
             'desc': self.desc,
             'mode': mode_dict,
             'aspects': dict(
-                (a.__class__.__name__, a.to_dict()) for a in self.aspects.values()
+                (a.__class__.__name__, a.to_dict()) for a in self.aspects
             )
         }
 
@@ -116,34 +139,16 @@ class Entity(object):
             aspect = Aspect.class_from_name(aspect_name).from_dict(aspect_dict)
             aspects.append(aspect)
 
-        entity.apply_aspects(aspects)
-
-        cls.ALL[dict_['id']] = entity
+        entity.aspects.add(aspects)
 
         return entity
 
-    # TODO: self.aspects.add()
-    # rename self.aspects to self._aspects
-    # TODO: force=True skips dependency check
-    def apply_aspects(self, aspects):
-        for aspect in aspects:
-            setattr(self, aspect.__class__.__name__, aspect)
-            aspect.entity = self
-            self.aspects[aspect.__class__] = aspect
-
-    # TODO: self.aspects.remove()
-    def remove_aspects(self, aspect_classes):
-        for aspect_class in aspect_classes:
-            getattr(self, aspect_class.__name__).destroy()
-            delattr(self, aspect_class.__name__)
-            self.aspects.pop(aspect_class, None)
-
     def has_aspect(self, aspect_class):
-        return aspect_class in self.aspects
+        return self.aspects.has(aspect_class)
 
     def destroy(self):
-        self.remove_aspects(self.aspects.keys())
-        self.ALL.pop(self.id, None)
+        self.aspects.purge()
+        self.zone = None
 
     def clone(self):
         clone = Entity(self.name, self.desc)
