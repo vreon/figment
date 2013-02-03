@@ -5,6 +5,11 @@ from schema.aspect import Aspect
 from schema.event import Event
 from schema.utils import int_or_none
 
+# For Python 3 compatibility
+try:
+    basestring
+except NameError:
+    basestring = (str, bytes)
 
 class ModeMeta(type):
     def __new__(cls, name, bases, dict_):
@@ -50,11 +55,23 @@ class ExploreMode(Mode):
             matching_patterns.sort(key=len, reverse=True)
             action, groupdict = matches[matching_patterns[0]]
 
-            event_class = action._action_event_class
-            event = event_class(**groupdict)
+            event = Event(**groupdict)
             event.actor = self.entity
-            event.action = action
-            action(event)
+
+            for hook_point in action(event):
+                if isinstance(hook_point, basestring):
+                    hook_type, witnesses = hook_point, []
+                else:
+                    hook_type, witnesses = hook_point
+
+                # TODO: This iterates over every aspect... but we know (or
+                # should know) which aspects hook which actions. We should only
+                # iterate over those aspect instances
+                for witness in witnesses:
+                    for aspect in witness.aspects:
+                        hooks = aspect.HOOKS.get(hook_type, {}).get(action, [])
+                        for hook in hooks:
+                            hook(aspect, event)
         else:
             self.entity.tell(random.choice(('What?', 'Eh?', 'Come again?', 'Unknown command.')))
 

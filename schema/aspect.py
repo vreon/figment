@@ -56,10 +56,9 @@ class Aspect(object):
 
 
 # TODO: Make this automatically trigger 'after', somehow
-def action(regex, event=Event):
+def action(regex):
     def decorator(f):
         setattr(f, '_action_regex', regex)
-        setattr(f, '_action_event_class', event)
         return f
     return decorator
 

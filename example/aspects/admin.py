@@ -7,7 +7,7 @@ class Admin(Aspect):
             event.actor.tell("You're unable to do that.")
             return
 
-        event.trigger('before')
+        yield 'before'
         return not event.prevented
 
     @action(r'^snapshot$')

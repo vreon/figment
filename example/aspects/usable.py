@@ -15,7 +15,7 @@ class Usable(Aspect):
         if not target:
             return
 
-        event.trigger('before')
+        yield 'before'
         if not event.prevented:
             event.actor.tell("You can't use that.")
 
@@ -33,6 +33,6 @@ class Usable(Aspect):
         if not target:
             return
 
-        event.trigger('before')
+        yield 'before'
         if not event.prevented:
             event.actor.tell('Nothing happens.')

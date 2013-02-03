@@ -32,7 +32,7 @@ class Visible(Aspect):
             event.actor.tell('No such entity %r.' % event.descriptor)
             return
 
-        event.trigger('before', event.actor.zone.all())
+        yield 'before', event.actor.zone.all()
         if not event.prevented:
             event.actor.tell(target.desc)
 
@@ -63,7 +63,7 @@ class Colorful(Aspect):
             event.actor.tell("{0.Name} has no particular color.".format(target))
             return
 
-        event.trigger('before', event.actor.zone.all())
+        yield 'before', event.actor.zone.all()
         if not event.prevented:
             event.actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
 
@@ -78,7 +78,7 @@ class Colorful(Aspect):
             event.actor.tell("{0.Name} cannot be painted.".format(target))
             return
 
-        event.trigger('before', event.actor.zone.all())
+        yield 'before', event.actor.zone.all()
         if not event.prevented:
             target.Colorful.color = event.color
             event.actor.tell('{0.Name} is now {0.Colorful.color}.'.format(target))

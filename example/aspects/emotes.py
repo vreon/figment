@@ -22,7 +22,7 @@ class Emotes(Aspect):
         if not target:
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 

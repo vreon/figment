@@ -202,7 +202,7 @@ class Positioned(Aspect):
         if not message[-1] in ('.', '?', '!'):
             message += '.'
 
-        event.trigger('before')
+        yield 'before'
         if not event.prevented:
             event.actor.tell('You say: "{0}"'.format(message))
             event.actor.Positioned.emit('{0.Name} says: "{1}"'.format(event.actor, message))
@@ -213,7 +213,7 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to do that.")
             return
 
-        event.trigger('before')
+        yield 'before'
         if not event.prevented:
             event.actor.Positioned.emit('{0.Name} looks around.'.format(event.actor))
             event.actor.Positioned.tell_surroundings()
@@ -232,7 +232,7 @@ class Positioned(Aspect):
             event.actor.tell("You can't look inside of that.")
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 
@@ -255,7 +255,7 @@ class Positioned(Aspect):
         if not target:
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 
@@ -281,7 +281,7 @@ class Positioned(Aspect):
             event.actor.tell("That can't be carried.")
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 
@@ -320,7 +320,7 @@ class Positioned(Aspect):
             event.actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 
@@ -352,7 +352,7 @@ class Positioned(Aspect):
             event.actor.tell("{0.Name} can't hold things.".format(container))
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 
@@ -373,7 +373,9 @@ class Positioned(Aspect):
         if not target:
             return
 
-        event.trigger('before')
+        yield 'before'
+        if event.prevented:
+            return
 
         event.actor.Positioned.remove(target)
         event.actor.tell('You drop {0.name}.'.format(target))
@@ -413,7 +415,7 @@ class Positioned(Aspect):
             event.actor.tell("You're unable to go that way.")
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 
@@ -445,7 +447,7 @@ class Positioned(Aspect):
             event.actor.tell("You can't enter that.")
             return
 
-        event.trigger('before')
+        yield 'before'
         if event.prevented:
             return
 
