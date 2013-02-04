@@ -139,6 +139,10 @@ class Entity(object):
     def messages_key(self):
         return 'entity:%s:messages' % self.id
 
+    @property
+    def hints_key(self):
+        return 'entity:%s:hints' % self.id
+
     def to_dict(self):
         mode_dict = self.mode.to_dict()
         mode_dict['name'] = self.mode.__class__.__name__
@@ -202,6 +206,10 @@ class Entity(object):
     def tell(self, message):
         """Send text to this entity."""
         redis.publish(self.messages_key, message)
+
+    def hint(self, type_, content):
+        """Send a client hint to this entity."""
+        redis.publish(self.hints_key, json.dumps({'type': type_, 'content': content}))
 
 
 from schema.utils import upper_first

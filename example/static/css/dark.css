@@ -1,23 +1,43 @@
+html {
+    overflow: hidden;
+}
 body {
     font-family:'Ubuntu Mono', monospace;
     margin:0;
-    background:#494444;
+    /* background:#494444; */
+    background: url('/static/img/street.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
 }
 #container {
     width:800px;
     height:500px;
     vertical-align:bottom;
     margin:75px auto 0;
-    box-shadow: 0px 15px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: 0px 15px 50px rgba(0, 0, 0, 0.9);
     border-radius:5px;
+    -webkit-animation: console-up 2.5s cubic-bezier(0.2, 1.0, 0.3, 1.0);
 }
+
+@-webkit-keyframes console-up {
+    0% {
+        opacity: 0;
+        -webkit-transform: translate(0, 100px);
+    }
+    100% {
+        opacity: 1;
+        -webkit-transform: translate(0, 0);
+    }
+}
+
 #messages {
     height:440px;
     padding:10px;
     overflow-y:scroll;
     white-space:pre-wrap;
     color:#e8e8e8;
-    background-color:#111;
+    background-color: rgba(20, 20, 20, 0.95);
     border-top-left-radius:5px;
     border-top-right-radius:5px;
 }

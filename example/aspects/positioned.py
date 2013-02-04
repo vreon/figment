@@ -477,18 +477,18 @@ class Positioned(Aspect):
     def tell_inventory(event):
         return event.actor.perform('look in self')
 
-    @action('^n$')
+    @action('^n(?:orth)?$')
     def go_north(event):
         return event.actor.perform('go north')
 
-    @action('^s$')
+    @action('^s(?:outh)?$')
     def go_south(event):
         return event.actor.perform('go south')
 
-    @action('^e$')
+    @action('^e(?:ast)?$')
     def go_east(event):
         return event.actor.perform('go east')
 
-    @action('^w$')
+    @action('^w(?:est)?$')
     def go_west(event):
         return event.actor.perform('go west')
