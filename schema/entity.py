@@ -34,7 +34,7 @@ class AspectStore(object):
 
         for aspect in aspects:
             setattr(self.entity, aspect.__class__.__name__, aspect)
-            aspect.entity = self.entity
+            aspect.attach(self.entity)
             self.aspects[aspect.__class__] = aspect
 
         if self.entity.zone and self.entity.ticking:
@@ -45,7 +45,7 @@ class AspectStore(object):
             aspect_classes = [aspect_classes]
 
         for aspect_class in aspect_classes:
-            getattr(self.entity, aspect_class.__name__).destroy()
+            getattr(self.entity, aspect_class.__name__).detach()
             delattr(self.entity, aspect_class.__name__)
             self.aspects.pop(aspect_class, None)
 

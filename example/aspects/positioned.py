@@ -2,8 +2,8 @@ from schema import Aspect, action, redis
 from schema.utils import upper_first, indent, to_id, to_entity
 
 class Positioned(Aspect):
-    def __init__(self, is_container=False, is_carriable=False, is_enterable=False, is_invisible=False):
-        self.container_id = None
+    def __init__(self, container_id=None, is_container=False, is_carriable=False, is_enterable=False, is_invisible=False):
+        self.container_id = container_id
         self.is_container = is_container
         self.is_carriable = is_carriable
         self.is_enterable = is_enterable
@@ -37,17 +37,26 @@ class Positioned(Aspect):
 
         return self
 
-    def destroy(self):
+    def attach(self, entity):
+        super(Positioned, self).attach(entity)
+
+        container = self.container
+        if container:
+            container.Positioned._contents.add(self.entity.id)
+
+    def detach(self):
         for item in self.contents():
             item.Positioned.container_id = self.container_id
 
         container = self.container
         if container:
-            self.container.Positioned._contents.remove(self.entity.id)
+            container.Positioned._contents.remove(self.entity.id)
 
         self._behaviors = []
         self._contents = set()
         self._exits = {}
+
+        super(Positioned, self).detach()
 
     #########################
     # Selection

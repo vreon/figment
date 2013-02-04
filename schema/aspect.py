@@ -51,7 +51,10 @@ class Aspect(object):
     def from_dict(cls, dict_):
         return cls()
 
-    def destroy(self):
+    def attach(self, entity):
+        self.entity = entity
+
+    def detach(self):
         self.entity = None
 
     @property

@@ -129,6 +129,9 @@ class Zone(object):
 
     def start(self):
         log.info('Listening.')
+
+        # Clear any existing tick events
+        redis.ltrim(self.tick_key, 0, 0)
         try:
             while True:
                 self.process_one_event()

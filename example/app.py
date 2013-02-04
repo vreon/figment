@@ -35,7 +35,7 @@ def register():
     player = Entity(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
-        [Positioned(is_container=True), Emotes(), Admin()]
+        [Positioned(is_container=True, container_id='startroom'), Emotes()]
     )
 
     zone.schedule_import(player.to_dict())

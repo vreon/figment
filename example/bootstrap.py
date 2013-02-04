@@ -26,6 +26,7 @@ if __name__ == '__main__':
         'A Room',
         'A nondescript room.',
         [Positioned(is_container=True), Dark()],
+        id='startroom',
         zone=zone
     )
 
