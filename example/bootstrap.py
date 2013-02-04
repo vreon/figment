@@ -8,6 +8,20 @@ from aspects import *
 
 log.setLevel(logging.DEBUG)
 
+def add_pigeon(room, destinations):
+    pigeon = Entity(
+        'a pigeon',
+        'Hard to believe this thing descended from dinosaurs.',
+        [
+            Positioned(),
+            Bird(noise='coo'),
+            Pest(),
+            Wandering(wanderlust=0.03, destinations=destinations)
+        ],
+        zone=room.zone,
+    )
+    room.Positioned.store(pigeon)
+
 if __name__ == '__main__':
     zone = Zone.from_config('default')
     zone.load_aspects()
@@ -30,7 +44,7 @@ if __name__ == '__main__':
 
     street_northwest = Entity(
         'The High Street - Northwest',
-        'The nearby antique store and city library make fitting neighbors.',
+        'The nearby antique store and public library make fitting neighbors.',
         [Positioned(is_container=True)],
         zone=zone,
     )
@@ -92,7 +106,7 @@ if __name__ == '__main__':
         [Positioned(is_container=True)],
         zone=zone,
     )
-    police_station.Positioned.link('south', street_northwest, 'north')
+    police_station.Positioned.link('south', street_northwest, 'northwest')
 
     police_offices = Entity(
         'Police Station - Offices',
@@ -144,30 +158,78 @@ if __name__ == '__main__':
         [Positioned(is_container=True, is_enterable=True)],
         zone=zone,
     )
-    police_cell_a.link('out', '..')
-    police_cell_b.link('out', '..')
-    police_cell_c.link('out', '..')
+    police_cell_a.Positioned.link('out', '..')
+    police_cell_b.Positioned.link('out', '..')
+    police_cell_c.Positioned.link('out', '..')
     police_cells.Positioned.store(police_cell_a)
     police_cells.Positioned.store(police_cell_b)
     police_cells.Positioned.store(police_cell_c)
 
     # Antique store
 
+    antique_store = Entity(
+        "Ye O' Antique Shoppe",
+        '...',
+        [Positioned(is_container=True)],
+        zone=zone,
+    )
+    antique_store.Positioned.link('south', street_north, 'north')
+
     # Library
+
+    library = Entity(
+        'Public Library',
+        '...',
+        [Positioned(is_container=True)],
+        zone=zone,
+    )
+    library.Positioned.link('south', street_north, 'northeast')
 
     ### North side
 
     # Cafe
 
-    # Art gallery
+    cafe = Entity(
+        "Baboman's Cafe",
+        '...',
+        [Positioned(is_container=True)],
+        zone=zone,
+    )
+    cafe.Positioned.link('south', street_north, 'northwest')
+
+    # Museum
+
+    museum = Entity(
+        'The Museum - Rotunda',
+        '...',
+        [Positioned(is_container=True)],
+        zone=zone,
+    )
+    museum.Positioned.link('south', street_north, 'north')
 
     # Gift shop
+
+    gift_shop = Entity(
+        'The Museum - Gift Shop',
+        '...',
+        [Positioned(is_container=True)],
+        zone=zone,
+    )
+    gift_shop.Positioned.link('south', street_north, 'northeast')
 
     ### Northeast side
 
     ### Southwest side
 
     # Restaurant
+
+    steakhouse = Entity(
+        "Liara's Steakhouse",
+        '...',
+        [Positioned(is_container=True)],
+        zone=zone,
+    )
+    steakhouse.Positioned.link('north', street_southwest, 'southwest')
 
     # Tailor
 
@@ -188,6 +250,20 @@ if __name__ == '__main__':
     ### Southeast side
 
     # Tavern
+
+    ### Assorted NPCs
+
+    pigeon_destinations = [e.id for e in [
+        street_north, street_northwest, street_northeast,
+        street_south, street_southwest, street_southeast,
+        gift_shop,
+    ]]
+
+    # TODO: gift shop manager should scowl at and shoo pigeons
+
+    add_pigeon(street_north, pigeon_destinations)
+    add_pigeon(street_northwest, pigeon_destinations)
+    add_pigeon(street_southeast, pigeon_destinations)
 
     zone.save_snapshot()
 

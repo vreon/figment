@@ -55,6 +55,10 @@ class Emotes(Aspect):
     def frown(event):
         return Emotes.emote(event, 'frown', join='at')
 
+    @action(r'^scowl(?: at (?P<descriptor>.+))?$')
+    def scowl(event):
+        return Emotes.emote(event, 'scowl', join='at')
+
     @action(r'^eyebrow(?: at (?P<descriptor>.+))?$')
     def eyebrow(event):
         return Emotes.emote(event, 'raise an eyebrow', 'raises an eyebrow', join='at')
