@@ -38,7 +38,7 @@ class AspectStore(object):
             self.aspects[aspect.__class__] = aspect
 
         if self.entity.zone and self.entity.ticking:
-            self.entity.zone.ticking.add(self.entity)
+            self.entity.zone.ticking_entities.add(self.entity)
 
     def remove(self, aspect_classes):
         if not isinstance(aspect_classes, collections.Iterable):
@@ -49,8 +49,8 @@ class AspectStore(object):
             delattr(self.entity, aspect_class.__name__)
             self.aspects.pop(aspect_class, None)
 
-        if self.entity.zone and self.entity in self.entity.zone.ticking and not self.entity.ticking:
-            self.entity.zone.ticking.remove(self.entity)
+        if self.entity.zone and self.entity in self.entity.zone.ticking_entities and not self.entity.ticking:
+            self.entity.zone.ticking_entities.remove(self.entity)
 
     def has(self, aspect_classes):
         if not isinstance(aspect_classes, collections.Iterable):
@@ -119,13 +119,13 @@ class Entity(object):
     def zone(self, value):
         if self._zone is not None:
             self._zone.entities.pop(self.id, None)
-            if self in self._zone.ticking:
-                self._zone.ticking.remove(self)
+            if self in self._zone.ticking_entities:
+                self._zone.ticking_entities.remove(self)
         self._zone = value
         if self._zone is not None:
             self._zone.entities[self.id] = self
             if self.ticking:
-                self._zone.ticking.add(self)
+                self._zone.ticking_entities.add(self)
 
     @property
     def ticking(self):

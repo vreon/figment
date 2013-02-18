@@ -21,8 +21,9 @@ class Zone(object):
     def __init__(self):
         self.id = None
         self.entities = {}
-        self.ticking = set()
+        self.ticking_entities = set()
         self.tick_every = 1
+        self.running = False
 
     @classmethod
     def from_config(cls, id, config_path='config.json'):
@@ -102,9 +103,6 @@ class Zone(object):
 
         return True
 
-    def schedule_import(self, entity_dict):
-        redis.rpush(self.import_key, json.dumps(entity_dict))
-
     def save_snapshot(self):
         log.info('Saving snapshot: %s' % self.snapshot_path)
         child_pid = os.fork()
@@ -128,12 +126,13 @@ class Zone(object):
         __import__(self.config.get('aspects', {}).get('path', 'aspects'))
 
     def start(self):
+        self.running = True
         log.info('Listening.')
 
         # Clear any existing tick events
         redis.ltrim(self.tick_key, 0, 0)
         try:
-            while True:
+            while self.running:
                 self.process_one_event()
         except Exception as e:
             log.error(traceback.format_exc())
@@ -149,9 +148,7 @@ class Zone(object):
         os.execl(python, python, *sys.argv)
 
     def stop(self):
-        # TODO: Is this necessary?
-        # Couldn't we just fall out of the event loop?
-        sys.exit()
+        self.running = False
 
     def start_ticker(self):
         log.info('Ticking.')
@@ -161,33 +158,48 @@ class Zone(object):
             redis.rpush(self.tick_key, True)
             sleep(self.tick_every)
 
-    def tick(self):
-        for entity in self.ticking:
-            # TODO: Somehow iterate over only ticking aspects
-            for aspect in entity.aspects:
-                if aspect.ticking:
-                    aspect.tick()
+    def listen(self, entity_id):
+        entity = self.get(entity_id)
+        pubsub = redis.pubsub()
+        pubsub.subscribe(entity.messages_key)
+        for message in pubsub.listen():
+            yield message['data']
 
     def process_one_event(self):
         key, value = redis.blpop([self.import_key, self.tick_key, self.incoming_key])
 
         if key == self.import_key:
-            # TODO: assumes entity IDs are globally unique
-            Entity.from_dict(json.loads(value), zone=self)
+            self.perform_import(json.loads(value))
         elif key == self.tick_key:
-            self.tick()
+            self.perform_tick()
         else:
             entity_id, _, command = value.partition(' ')
-            self.perform(entity_id, command)
+            self.perform_command(entity_id, command)
 
-    def perform(self, entity_id, command):
+    def enqueue_import(self, entities):
+        if isinstance(entities, Entity):
+            entities = [entities]
+        redis.rpush(self.import_key, json.dumps([e.to_dict() for e in entities]))
+
+    def enqueue_command(self, entity_id, command):
+        redis.rpush(self.incoming_key, ' '.join([entity_id, command]))
+
+    def perform_import(self, entity_dicts):
+        # TODO: assumes entity IDs are globally unique
+        for entity_dict in entity_dicts:
+            Entity.from_dict(entity_dict, zone=self)
+
+    def perform_command(self, entity_id, command):
         entity = self.get(entity_id)
-
-        if not entity:
-            return
-
         log.debug('Processing: <%s, %s> %s' % (entity.id, entity.name, command))
         entity.perform(command)
+
+    def perform_tick(self):
+        for entity in self.ticking_entities:
+            # TODO: Somehow iterate over only ticking aspects
+            for aspect in entity.aspects:
+                if aspect.ticking:
+                    aspect.tick()
 
     # Entity helpers
 

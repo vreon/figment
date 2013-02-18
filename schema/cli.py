@@ -20,34 +20,25 @@ def keyboard_interactive(f):
     return wrapper
 
 
-def _perform(zone, entity_id, action):
-    zone_key = 'zone:%s:incoming' % zone
-    redis.rpush(zone_key, ' '.join((entity_id, action)))
-
-
-def perform(args):
-    _perform(args.zone, args.entity_id, args.action)
+def command(args):
+    zone = Zone.from_config(args.zone, args.config)
+    zone.enqueue_command(args.entity_id, args.command)
 
 
 @keyboard_interactive
 def prompt(args):
-    action = raw_input('> ')
-    while action and not action == 'quit':
-        _perform(args.zone, args.entity_id, action)
-        action = raw_input('> ')
+    zone = Zone.from_config(args.zone, args.config)
+    command = raw_input('> ')
+    while command and not command == 'quit':
+        zone.enqueue_command(args.entity_id, command)
+        command = raw_input('> ')
 
 
 @keyboard_interactive
 def listen(args):
-    # TODO: args.timestamps
-    pubsub = redis.pubsub()
-
-    channel = 'entity:%s:messages' % args.entity_id
-    pubsub.subscribe(channel)
-
-    print("Listening to %s..." % channel)
-    for message in pubsub.listen():
-        print(message['data'])
+    zone = Zone.from_config(args.zone, args.config)
+    for message in zone.listen(args.entity_id):
+        print(message)
 
 
 @keyboard_interactive
@@ -67,6 +58,15 @@ def run(args):
 def cli():
     parser = argparse.ArgumentParser(description='Manipulates a Schema world.')
 
+    parser.add_argument(
+        '-z', '--zone', type=str, default='default',
+        help='name of the target zone'
+    )
+    parser.add_argument(
+        '-c', '--config', type=str, default='config.json',
+        help='path to the config file'
+    )
+
     subparsers = parser.add_subparsers(dest='command')
 
     # Listen parser
@@ -75,39 +75,27 @@ def cli():
         'listen', help='connect to an entity\'s message stream'
     )
     parser_listen.add_argument(
-        '-z', '--zone', type=str, default='default',
-        help='name of the target zone'
-    )
-    parser_listen.add_argument(
         'entity_id', type=str, help='ID of the target entity'
     )
     parser_listen.set_defaults(func=listen)
 
-    # Perform parser
+    # Command parser
 
-    parser_perform = subparsers.add_parser(
-        'perform', help='perform an action from the entity\'s perspective'
+    parser_command = subparsers.add_parser(
+        'command', help='run a command from the entity\'s perspective'
     )
-    parser_perform.add_argument(
-        '-z', '--zone', type=str, default='default',
-        help='name of the target zone'
-    )
-    parser_perform.add_argument(
+    parser_command.add_argument(
         'entity_id', type=str, help='ID of the target entity'
     )
-    parser_perform.add_argument(
-        'action', type=str, help='the action to perform'
+    parser_command.add_argument(
+        'command', type=str, help='the command to perform'
     )
-    parser_perform.set_defaults(func=perform)
+    parser_command.set_defaults(func=command)
 
     # Prompt parser
 
     parser_prompt = subparsers.add_parser(
-        'prompt', help='start an interactive prompt for performing actions'
-    )
-    parser_prompt.add_argument(
-        '-z', '--zone', type=str, default='default',
-        help='name of the target zone'
+        'prompt', help='start an interactive prompt for performing commands'
     )
     parser_prompt.add_argument(
         'entity_id', type=str, help='ID of the target entity'
@@ -117,14 +105,6 @@ def cli():
     # Run parser
 
     parser_run = subparsers.add_parser('run', help='run a schema zone server')
-    parser_run.add_argument(
-        '-z', '--zone', type=str, default='default',
-        help='name of the target zone'
-    )
-    parser_run.add_argument(
-        '-c', '--config', type=str, default='config.json',
-        help='path to the config file'
-    )
     parser_run.add_argument(
         '-d', '--debug', action='store_true',
         help='show debug output'

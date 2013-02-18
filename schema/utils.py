@@ -13,8 +13,8 @@ def upper_first(value):
 def str_to_bool(value):
     return value == 'True'
 
-def indent(value):
-    return ''.join((' ' * 4, value))
+def indent(value, depth=1):
+    return ''.join((' ' * 4 * depth, value))
 
 def to_id(entity_or_id):
     if isinstance(entity_or_id, Entity):

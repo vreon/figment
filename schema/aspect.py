@@ -61,7 +61,7 @@ class Aspect(object):
     def ticking(self):
         return hasattr(self, 'tick')
 
-# TODO: Make this automatically trigger 'after', somehow
+
 def action(regex):
     def decorator(f):
         setattr(f, '_action_regex', regex)

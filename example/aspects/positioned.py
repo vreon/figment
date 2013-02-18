@@ -1,13 +1,14 @@
+import string
 from schema import Aspect, action, redis
 from schema.utils import upper_first, indent, to_id, to_entity
 
 class Positioned(Aspect):
-    def __init__(self, container_id=None, is_container=False, is_carriable=False, is_enterable=False, is_invisible=False):
+    def __init__(self, container_id=None, is_container=False, is_carriable=False, is_enterable=False, is_visible=True):
         self.container_id = container_id
         self.is_container = is_container
         self.is_carriable = is_carriable
         self.is_enterable = is_enterable
-        self.is_invisible = is_invisible
+        self.is_visible = is_visible
 
         self._contents = set()
         self._exits = {}
@@ -18,7 +19,7 @@ class Positioned(Aspect):
             'container_id': self.container_id,
             'is_carriable': self.is_carriable,
             'is_enterable': self.is_enterable,
-            'is_invisible': self.is_invisible,
+            'is_visible': self.is_visible,
             'contents': list(self._contents),
             'exits': self._exits,
         }
@@ -31,7 +32,7 @@ class Positioned(Aspect):
         self.is_container = dict_['is_container']
         self.is_carriable = dict_['is_carriable']
         self.is_enterable = dict_['is_enterable']
-        self.is_invisible = dict_['is_invisible']
+        self.is_visible = dict_['is_visible']
         self._contents = set(dict_['contents'])
         self._exits = dict_['exits']
 
@@ -73,27 +74,27 @@ class Positioned(Aspect):
         if descriptor.lower() in ('self', 'me', 'myself'):
             return set((self.entity,))
 
-        return set(e for e in entity_set if (descriptor.lower() in e.name.lower() or descriptor == e.id) and not e.Positioned.is_invisible)
+        return set(e for e in entity_set if (descriptor.lower() in e.name.lower() or descriptor == e.id) and e.Positioned.is_visible)
 
     def pick_interactively(self, descriptor, entity_set, area='in that area'):
         """
-        Possibly target an object, and possibly enter interactive disambiguation mode.
+        Possibly target an object, and possibly enter a disambiguation menu
         """
-        entities = self.pick(descriptor, entity_set)
-        matches = len(entities)
+        matches = self.pick(descriptor, entity_set)
+        num_matches = len(matches)
 
-        if matches == 0:
+        if num_matches == 0:
             self.entity.tell("There's no {0} {1}.".format(descriptor, area))
-        elif matches == 1:
-            return entities.pop()
+        elif num_matches == 1:
+            return matches.pop()
         else:
             self.entity.tell("Which '{0}' do you mean?".format(descriptor))
             targets = []
-            for index, entity in enumerate(entities):
+            for index, entity in enumerate(matches):
                 position = 'in inventory' if entity.Positioned.container == self.entity else 'nearby'
                 self.entity.tell(indent('{0}. {1.name} ({2})'.format(index + 1, entity, position)))
                 targets.append(entity.id)
-            raise AmbiguousDescriptor(descriptor, targets)
+            # raise AmbiguousDescriptor(descriptor, targets)
 
     def pick_nearby(self, descriptor):
         return self.pick_interactively(descriptor, self.nearby(), area='nearby')
@@ -124,8 +125,7 @@ class Positioned(Aspect):
     def store(self, entity):
         Positioned.move(entity, self.entity)
 
-    # TODO: Rename to drop (but collides with action of same name)
-    def remove(self, entity):
+    def unstore(self, entity):
         Positioned.move(entity, self.container)
 
     @property
@@ -156,6 +156,14 @@ class Positioned(Aspect):
             destination = to_entity(destination)
             destination.Positioned._exits[back_direction] = self.entity.id
 
+    def unlink(self, direction, destination, back_direction=None):
+        # NOTE: This depends on _to_id not transforming values like . or ..
+        destination_id = to_id(destination)
+        self._exits.pop(direction, None)
+        if back_direction and not destination in ('.', '..'):
+            destination = to_entity(destination)
+            destination.Positioned._exits.pop(back_direction, None)
+
     #########################
     # Communication
     #########################
@@ -182,7 +190,7 @@ class Positioned(Aspect):
     def tell_surroundings(self):
         room = self.container
 
-        messages = [room.name.title(), room.desc]
+        messages = [string.capwords(room.name), room.desc]
 
         exits = room.Positioned.exits()
         if exits:
@@ -190,7 +198,7 @@ class Positioned(Aspect):
             for direction, destination in exits.items():
                 messages.append(indent('{0}: {1}'.format(direction, destination.name)))
 
-        entities_nearby = [e for e in self.nearby() if not e.Positioned.is_invisible]
+        entities_nearby = [e for e in self.nearby() if e.Positioned.is_visible]
         if entities_nearby:
             messages.append('Things nearby:')
             for entity in entities_nearby:
@@ -249,7 +257,7 @@ class Positioned(Aspect):
 
         event.actor.tell('Contents:')
 
-        contents = [e for e in event.target.Positioned.contents() if not e.Positioned.is_invisible]
+        contents = [e for e in event.target.Positioned.contents() if e.Positioned.is_visible]
         if contents:
             for item in contents:
                 event.actor.tell(indent('{0.name}'.format(item)))
@@ -388,7 +396,7 @@ class Positioned(Aspect):
         if event.prevented:
             return
 
-        event.actor.Positioned.remove(event.target)
+        event.actor.Positioned.unstore(event.target)
         event.actor.tell('You drop {0.name}.'.format(event.target))
         event.actor.Positioned.emit('{0.Name} drops {1.name}.'.format(event.actor, event.target), exclude=event.target)
         event.target.tell('{0.Name} drops you.'.format(event.actor))
@@ -492,3 +500,27 @@ class Positioned(Aspect):
     @action('^w(?:est)?$')
     def go_west(event):
         return event.actor.perform('go west')
+
+    @action('^(?:ne|northeast)?$')
+    def go_northeast(event):
+        return event.actor.perform('go northeast')
+
+    @action('^(?:nw|northwest)?$')
+    def go_northwest(event):
+        return event.actor.perform('go northwest')
+
+    @action('^(?:se|southeast)?$')
+    def go_southeast(event):
+        return event.actor.perform('go southeast')
+
+    @action('^(?:sw|southwest)?$')
+    def go_southwest(event):
+        return event.actor.perform('go southwest')
+
+    @action('^u(?:p)?$')
+    def go_up(event):
+        return event.actor.perform('go up')
+
+    @action('^d(?:own)?$')
+    def go_down(event):
+        return event.actor.perform('go down')

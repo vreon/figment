@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from flask import Flask, Response, render_template, jsonify, request, abort
-from schema import Zone, Entity, redis
+from schema import Zone, Entity
 from example.aspects import *
 import random
 import json
@@ -24,7 +24,8 @@ def command():
     id = request.args.get('id', '')
     command = request.args.get('command', '')
 
-    redis.rpush('zone:default:incoming', ' '.join((id, command)))
+    zone = Zone.from_config('default')
+    zone.enqueue_command(id, command)
 
     return None, 204
 
@@ -38,20 +39,19 @@ def register():
         [Positioned(is_container=True, container_id='startroom'), Emotes()]
     )
 
-    zone.schedule_import(player.to_dict())
+    zone.enqueue_import(player)
 
     return jsonify(id=player.id)
 
-def _listen(id):
+def _listen(zone, id):
     print "Subscribing to %s" % id
-    pubsub = redis.pubsub()
-    pubsub.subscribe('entity:%s:messages' % id)
-    for message in pubsub.listen():
-        yield 'data: %s\n\n' % json.dumps({"type": "message", "content": message['data']})
+    for message in zone.listen(id):
+        yield 'data: %s\n\n' % json.dumps({"type": "message", "content": message})
 
 @app.route('/listen/<id>')
 def listen(id):
-    return Response(_listen(id), mimetype='text/event-stream')
+    zone = Zone.from_config('default')
+    return Response(_listen(zone, id), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)

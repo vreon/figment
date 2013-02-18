@@ -8,23 +8,28 @@ from aspects import *
 
 log.setLevel(logging.DEBUG)
 
-def add_pigeon(room, destinations):
-    pigeon = Entity(
-        'a pigeon',
-        'Hard to believe this thing descended from dinosaurs.',
-        [
-            Positioned(),
-            Bird(noise='coo'),
-            Pest(),
-            Wandering(wanderlust=0.03, destinations=destinations)
-        ],
-        zone=room.zone,
-    )
-    room.Positioned.store(pigeon)
-
 if __name__ == '__main__':
     zone = Zone.from_config('default')
     zone.load_aspects()
+
+    # For convenience
+    def room(name, desc):
+        return Entity(name, desc, [Positioned(is_container=True)], zone=zone)
+
+    def add_pigeon(room_, destinations):
+        pigeon = Entity(
+            'a pigeon',
+            'Hard to believe this thing descended from dinosaurs.',
+            [
+                Positioned(is_carriable=True),
+                Bird(noise='coo'),
+                Pest(),
+                Wandering(wanderlust=0.03, destinations=destinations)
+            ],
+            zone=zone,
+        )
+        room_.Positioned.store(pigeon)
+
 
     log.info('Bootstrapping new entity set.')
 
@@ -35,25 +40,23 @@ if __name__ == '__main__':
         zone=zone
     )
 
-    street_north = Entity(
+    ##### Ground level
+
+    ### The High Street
+
+    street_north = room(
         'The High Street - North',
         'The scent of coffee wafts in on the breeze.',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
 
-    street_northwest = Entity(
+    street_northwest = room(
         'The High Street - Northwest',
         'The nearby antique store and public library make fitting neighbors.',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
 
-    street_northeast = Entity(
+    street_northeast = room(
         'The High Street - Northeast',
         'An upscale shoe store with stone facade stands next to the brick Fire Station building.',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
 
     street_south = Entity(
@@ -64,18 +67,14 @@ if __name__ == '__main__':
         zone=zone,
     )
 
-    street_southwest = Entity(
+    street_southwest = room(
         'The High Street - Southwest',
         'The post office, tailor, and Liara\'s Steakhouse (with outdoor seating) are here.',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
 
-    street_southeast = Entity(
+    street_southeast = room(
         'The High Street - Southeast',
         'Raucous music and laughter emanates from the tavern to the south.',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
 
     street_south.Positioned.store(admin)
@@ -100,43 +99,33 @@ if __name__ == '__main__':
 
     # Police station
 
-    police_station = Entity(
+    police_station = room(
         'Police Station - Front Desk',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     police_station.Positioned.link('south', street_northwest, 'northwest')
 
-    police_offices = Entity(
+    police_offices = room(
         'Police Station - Offices',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     police_offices.Positioned.link('south', police_station, 'north')
 
-    police_interview = Entity(
+    police_interview = room(
         'Police Station - Interview Room',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     police_interview.Positioned.link('east', police_offices, 'west')
 
-    police_locker_room = Entity(
+    police_locker_room = room(
         'Police Station - Locker Room',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     police_locker_room.Positioned.link('west', police_offices, 'east')
 
-    police_cells = Entity(
+    police_cells = room(
         'Police Station - Holding Cells',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     police_cells.Positioned.link('south', police_offices, 'north')
 
@@ -167,21 +156,17 @@ if __name__ == '__main__':
 
     # Antique store
 
-    antique_store = Entity(
+    antique_store = room(
         "Ye O' Antique Shoppe",
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     antique_store.Positioned.link('south', street_north, 'north')
 
     # Library
 
-    library = Entity(
+    library = room(
         'Public Library',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     library.Positioned.link('south', street_north, 'northeast')
 
@@ -189,31 +174,25 @@ if __name__ == '__main__':
 
     # Cafe
 
-    cafe = Entity(
+    cafe = room(
         "Baboman's Cafe",
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     cafe.Positioned.link('south', street_north, 'northwest')
 
     # Museum
 
-    museum = Entity(
+    museum = room(
         'The Museum - Rotunda',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     museum.Positioned.link('south', street_north, 'north')
 
     # Gift shop
 
-    gift_shop = Entity(
+    gift_shop = room(
         'The Museum - Gift Shop',
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     gift_shop.Positioned.link('south', street_north, 'northeast')
 
@@ -223,13 +202,11 @@ if __name__ == '__main__':
 
     # Restaurant
 
-    steakhouse = Entity(
+    steakhouse_lobby = room(
         "Liara's Steakhouse",
         '...',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
-    steakhouse.Positioned.link('north', street_southwest, 'southwest')
+    steakhouse_lobby.Positioned.link('north', street_southwest, 'southwest')
 
     # Tailor
 
@@ -239,17 +216,69 @@ if __name__ == '__main__':
 
     # Park
 
-    park = Entity(
+    park = room(
         'High Street Park',
         'A wide, grassy area.',
-        [Positioned(is_container=True)],
-        zone=zone,
     )
     park.Positioned.link('north', street_south, 'south')
 
     ### Southeast side
 
     # Tavern
+
+    ##### Tall buildings
+
+    ### Southwest side
+
+    # Apartments
+
+    wards_1f_stairwell = room(
+        'The Wards - Stairwell',
+        'A concrete stairwell leading from the ground floor to the second.',
+    )
+    wards_2f_stairwell = room(
+        'The Wards - Stairwell',
+        'A concrete stairwell leading from the second floor to the third.',
+    )
+    wards_3f_stairwell = room(
+        'The Wards - Stairwell',
+        'A concrete stairwell leading from the third floor to the fourth.',
+    )
+    wards_4f_stairwell = room(
+        'The Wards - Stairwell',
+        'A concrete stairwell on the fourth floor. The stairs end at a door to the south.',
+    )
+
+    wards_2f = room(
+        'The Wards - Second Floor and Rental Office',
+        '...',
+    )
+
+    wards_3f = room(
+        'The Wards - Third Floor',
+        '...',
+    )
+
+    wards_4f = room(
+        'The Wards - Fourth Floor',
+        '...',
+    )
+
+    wards_elevator = Entity(
+        'The Wards - Elevator',
+        "It's out of order for now.",
+        [Positioned(is_container=True)],
+        zone=zone,
+    )
+
+    steakhouse_lobby.Positioned.link('east', wards_1f_stairwell, 'west')
+    steakhouse_lobby.Positioned.link('west', wards_elevator, 'east')
+    wards_1f_stairwell.Positioned.link('up', wards_2f_stairwell, 'down')
+    wards_2f_stairwell.Positioned.link('up', wards_3f_stairwell, 'down')
+    wards_3f_stairwell.Positioned.link('up', wards_4f_stairwell, 'down')
+    wards_2f_stairwell.Positioned.link('south', wards_2f, 'north')
+    wards_3f_stairwell.Positioned.link('south', wards_3f, 'north')
+    wards_4f_stairwell.Positioned.link('south', wards_4f, 'north')
 
     ### Assorted NPCs
 
@@ -259,11 +288,41 @@ if __name__ == '__main__':
         gift_shop,
     ]]
 
-    # TODO: gift shop manager should scowl at and shoo pigeons
+    gift_shop_manager = Entity(
+        'the gift shop manager',
+        '...',
+        [Positioned(), Emotes(), ShoosPests(direction='south')],
+        zone=zone,
+    )
+    gift_shop.Positioned.store(gift_shop_manager)
 
     add_pigeon(street_north, pigeon_destinations)
     add_pigeon(street_northwest, pigeon_destinations)
     add_pigeon(street_southeast, pigeon_destinations)
+
+    box = Entity(
+        'a cardboard box',
+        '...',
+        [Positioned(is_container=True, is_carriable=True, is_enterable=True)], # TODO: is_open
+        zone=zone,
+    )
+
+    ball = Entity(
+        'a rubber ball',
+        '...',
+        [Positioned(is_carriable=True)],
+        zone=zone,
+    )
+
+    cactus = Entity(
+        'a cactus',
+        '...',
+        [Positioned(is_carriable=True)],
+        zone=zone,
+    )
+    steakhouse_lobby.Positioned.store(box)
+    box.Positioned.store(ball)
+    box.Positioned.store(cactus)
 
     zone.save_snapshot()
 

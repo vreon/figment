@@ -20,6 +20,10 @@ General
     - Message templates (and action patterns) should use gettext for i18n
     - you should be able to use an exit by name
          - go (to) steakhouse
+    - Disambiguation (again)
+
+Viewer
+    - Backbone powered? For searching / filtering
 
 Action Flow
     - Trigger 'start' event
