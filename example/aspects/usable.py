@@ -11,8 +11,8 @@ class Usable(Aspect):
             event.actor.tell("You're unable to do that.")
             return
 
-        target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_nearby_inventory(event.descriptor)
+        if not event.target:
             return
 
         yield 'before'
@@ -25,12 +25,12 @@ class Usable(Aspect):
             event.actor.tell("You're unable to do that.")
             return
 
-        item = event.actor.Positioned.pick_nearby_inventory(event.item_descriptor)
-        if not item:
+        event.item = event.actor.Positioned.pick_nearby_inventory(event.item_descriptor)
+        if not event.item:
             return
 
-        target = event.actor.Positioned.pick_nearby_inventory(event.target_descriptor)
-        if not target:
+        event.target = event.actor.Positioned.pick_nearby_inventory(event.target_descriptor)
+        if not event.target:
             return
 
         yield 'before'

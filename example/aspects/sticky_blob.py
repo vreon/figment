@@ -10,10 +10,6 @@ class StickyBlob(Aspect):
     def to_dict(self):
         return {'stickiness': self.stickiness}
 
-    @classmethod
-    def from_dict(cls, dict_):
-        return cls(stickiness=dict_['stickiness'])
-
     @before(Positioned.drop)
     def stick(self, event):
         if self.entity == event.target and random.random() < self.stickiness:

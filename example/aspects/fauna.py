@@ -15,10 +15,6 @@ class ShoosPests(Aspect):
     def to_dict(self):
         return {'awareness': self.awareness, 'direction': self.direction}
 
-    @classmethod
-    def from_dict(cls, dict_):
-        return cls(direction=dict_['direction'], awareness=dict_['awareness'])
-
     def tick(self):
         if random.random() < self.awareness:
             if not self.entity.has_aspect(Positioned):
@@ -63,10 +59,6 @@ class Bird(Aspect):
 
     def to_dict(self):
         return {'noisiness': self.noisiness, 'noise': self.noise}
-
-    @classmethod
-    def from_dict(cls, dict_):
-        return cls(noisiness=dict_['noisiness'], noise=dict_['noise'])
 
     def tick(self):
         if random.random() < self.noisiness:

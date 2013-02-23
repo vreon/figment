@@ -14,10 +14,6 @@ class Wandering(Aspect):
             'destinations': self.destinations,
         }
 
-    @classmethod
-    def from_dict(cls, dict_):
-        return cls(wanderlust=dict_['wanderlust'], destinations=dict_['destinations'])
-
     def tick(self):
         if random.random() < self.wanderlust:
             if not self.entity.has_aspect(Positioned):

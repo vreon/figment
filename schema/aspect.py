@@ -49,7 +49,7 @@ class Aspect(object):
 
     @classmethod
     def from_dict(cls, dict_):
-        return cls()
+        return cls(**dict_)
 
     def attach(self, entity):
         self.entity = entity

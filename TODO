@@ -1,6 +1,6 @@
 Zones
     x Each instance of a runschema process can be a zone
-    - Entities can migrate to a new zone via serialization to Redis
+    x Entities can migrate to a new zone via serialization to Redis
     x Runschema processes should be wrapped in an exception handler
     x Ctrl+C should shutdown gracefully (dumping first)
 
@@ -10,6 +10,13 @@ Refactoring
 
 General
     - Define behaviors, actions, modes
+
+    ! An exit is an entity, not a property
+        - It can be closed, locked, relinked, removed
+        - On attach, it should add itself to indexes in linked rooms
+            - Should update these indexes on unlink / relink
+        - Where should "go" logic live? On Door?
+            - Should Positioned be renamed to Container?
 
     ! An action is a generator
         x A generator can be thought of as a suspendable function
@@ -24,6 +31,7 @@ General
 
 Viewer
     - Backbone powered? For searching / filtering
+    - Or ember, I dunno
 
 Action Flow
     - Trigger 'start' event
@@ -109,6 +117,7 @@ Stuff to think about
         - held items go in an open container
         - "a box, holding: ..."
     - need a room.unlink() for moving rooms
+    - doors
 
 Frontend improvements
     - Purge old messages

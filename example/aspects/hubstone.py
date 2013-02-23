@@ -7,19 +7,13 @@ class Hubstone(EntityPlugin):
     """A usable item that teleports you home."""
     includes = [Important]
 
-    def __init__(self):
-        self.home = None
+    def __init__(self, home):
+        self.home = home
 
     def to_dict(self):
         return {
             'home': self.home,
         }
-
-    @classmethod
-    def from_dict(cls, dict_):
-        e = cls()
-        e.home = dict_['home']
-        return e
 
     @before(Usable.use)
     def activate(self, actor, target):

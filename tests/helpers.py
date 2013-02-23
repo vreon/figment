@@ -46,12 +46,6 @@ class Colorful(Aspect):
     def to_dict(self):
         return {'color': self.color}
 
-    @classmethod
-    def from_dict(cls, dict_):
-        self = cls()
-        self.color = dict_['color']
-        return self
-
     @action(r'^color(?: of)? (?P<descriptor>.+)')
     def color_of(event):
         target = event.actor.zone.get(event.descriptor)

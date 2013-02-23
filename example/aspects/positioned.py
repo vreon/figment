@@ -1,5 +1,5 @@
 import string
-from schema import Aspect, action, redis
+from schema import Aspect, action
 from schema.utils import upper_first, indent, to_id, to_entity
 
 class Positioned(Aspect):
@@ -128,14 +128,17 @@ class Positioned(Aspect):
     def unstore(self, entity):
         Positioned.move(entity, self.container)
 
+    # TODO: This should be set at attach time
     @property
     def container(self):
         if self.container_id:
             return self.entity.zone.get(self.container_id)
 
+    # TODO: This should be set at attach time
     def contents(self):
         return set(self.entity.zone.get(id) for id in self._contents)
 
+    # TODO: This should be set at attach time
     def exits(self):
         resolved_exits = {}
         for name, descriptor in self._exits.items():
@@ -170,9 +173,8 @@ class Positioned(Aspect):
 
     def announce(self, message):
         """Send text to this entity's contents."""
-        channels = [listener.messages_key for listener in self.contents()]
-        for channel in channels:
-            redis.publish(channel, message)
+        for listener in self.contents():
+            listener.tell(message)
 
     def emit(self, sound, exclude=set()):
         """Send text to entities nearby this one."""
@@ -180,12 +182,11 @@ class Positioned(Aspect):
         try:
             exclude = set(exclude)
         except TypeError:
-            exclude = set((exclude,))
+            exclude = set([exclude])
         exclude.add(self.entity)
         listeners = nearby - exclude
-        channels = [listener.messages_key for listener in listeners]
-        for channel in channels:
-            redis.publish(channel, sound)
+        for listener in listeners:
+            listener.tell(sound)
 
     def tell_surroundings(self):
         room = self.container
