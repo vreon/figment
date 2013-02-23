@@ -4,7 +4,6 @@ import readline
 import logging
 from functools import wraps
 
-from schema import redis
 from schema.zone import Zone
 from schema.logger import log
 
@@ -43,7 +42,7 @@ def listen(args):
 
 @keyboard_interactive
 def run(args):
-    if args.debug:
+    if args.verbose:
         log.setLevel(logging.DEBUG)
     zone = Zone.from_config(args.zone, args.config)
 
@@ -106,7 +105,7 @@ def cli():
 
     parser_run = subparsers.add_parser('run', help='run a schema zone server')
     parser_run.add_argument(
-        '-d', '--debug', action='store_true',
+        '-v', '--verbose', action='store_true',
         help='show debug output'
     )
     parser_run.add_argument(

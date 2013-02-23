@@ -2,7 +2,6 @@ import random
 import string
 import collections
 
-from schema import redis
 from schema.logger import log
 
 class AmbiguousDescriptor(Exception):
@@ -137,11 +136,19 @@ class Entity(object):
 
     @property
     def messages_key(self):
-        return 'entity:%s:messages' % self.id
+        return self.messages_key_from_id(self.id)
+
+    @classmethod
+    def messages_key_from_id(cls, id):
+        return 'entity:%s:messages' % id
 
     @property
     def hints_key(self):
-        return 'entity:%s:hints' % self.id
+        return self.hints_key_from_id(self.id)
+
+    @classmethod
+    def hints_key_from_id(cls, id):
+        return 'entity:%s:hints' % id
 
     def to_dict(self):
         mode_dict = self.mode.to_dict()
@@ -205,11 +212,11 @@ class Entity(object):
 
     def tell(self, message):
         """Send text to this entity."""
-        redis.publish(self.messages_key, message)
+        self.zone.redis.publish(self.messages_key, message)
 
     def hint(self, type_, content):
         """Send a client hint to this entity."""
-        redis.publish(self.hints_key, json.dumps({'type': type_, 'content': content}))
+        self.zone.redis.publish(self.hints_key, json.dumps({'type': type_, 'content': content}))
 
 
 from schema.utils import upper_first

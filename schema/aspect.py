@@ -27,7 +27,7 @@ class AspectMeta(type):
                             .setdefault(hooked_function, [])\
                             .append(getattr(new_class, method_name))
 
-        log.info('Registered aspect: %s' % name)
+        log.debug('Registered aspect: %s' % name)
         Aspect.ALL[name] = new_class
         return new_class
 

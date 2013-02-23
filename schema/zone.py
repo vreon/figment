@@ -7,10 +7,10 @@ import json
 import traceback
 from time import sleep
 
-from schema import redis
+from redis import StrictRedis
+from redis.connection import ConnectionError
 from schema.entity import Entity
 from schema.logger import log
-
 
 def fatal(message):
     log.error('Fatal: %s' % message)
@@ -24,6 +24,7 @@ class Zone(object):
         self.ticking_entities = set()
         self.tick_every = 1
         self.running = False
+        self.redis = None
 
     @classmethod
     def from_config(cls, id, config_path='config.json'):
@@ -57,7 +58,7 @@ class Zone(object):
         except EnvironmentError:
             fatal("couldn't read configuration file")
         except ValueError as e:
-            fatal("error in configuration file:\n%s" % e)
+            fatal("error in configuration file: %s" % e.message)
 
         if not self.id in config['zones']:
             fatal("undefined zone '%s'" % self.id)
@@ -78,6 +79,9 @@ class Zone(object):
 
         self.config = config
         self.working_dir = os.path.dirname(path)
+
+        # TODO: Read redis connection params from config
+        self.redis = StrictRedis()
 
     @property
     def snapshot_path(self):
@@ -126,11 +130,16 @@ class Zone(object):
         __import__(self.config.get('aspects', {}).get('path', 'aspects'))
 
     def start(self):
+        try:
+            self.redis.ping()
+        except ConnectionError as e:
+            fatal("Redis error: %s" % e.message)
+
         self.running = True
         log.info('Listening.')
 
         # Clear any existing tick events
-        redis.ltrim(self.tick_key, 0, 0)
+        self.redis.ltrim(self.tick_key, 0, 0)
         try:
             while self.running:
                 self.process_one_event()
@@ -151,22 +160,21 @@ class Zone(object):
         self.running = False
 
     def start_ticker(self):
-        log.info('Ticking.')
+        log.info('Ticking every %ss.' % self.tick_every)
         while True:
             log.debug('Tick.')
             # TODO: timestamp here instead of True, for debugging?
-            redis.rpush(self.tick_key, True)
+            self.redis.rpush(self.tick_key, True)
             sleep(self.tick_every)
 
     def listen(self, entity_id):
-        entity = self.get(entity_id)
-        pubsub = redis.pubsub()
-        pubsub.subscribe(entity.messages_key)
+        pubsub = self.redis.pubsub()
+        pubsub.subscribe(Entity.messages_key_from_id(entity_id))
         for message in pubsub.listen():
             yield message['data']
 
     def process_one_event(self):
-        key, value = redis.blpop([self.import_key, self.tick_key, self.incoming_key])
+        key, value = self.redis.blpop([self.import_key, self.tick_key, self.incoming_key])
 
         if key == self.import_key:
             self.perform_import(json.loads(value))
@@ -179,10 +187,10 @@ class Zone(object):
     def enqueue_import(self, entities):
         if isinstance(entities, Entity):
             entities = [entities]
-        redis.rpush(self.import_key, json.dumps([e.to_dict() for e in entities]))
+        self.redis.rpush(self.import_key, json.dumps([e.to_dict() for e in entities]))
 
     def enqueue_command(self, entity_id, command):
-        redis.rpush(self.incoming_key, ' '.join([entity_id, command]))
+        self.redis.rpush(self.incoming_key, ' '.join([entity_id, command]))
 
     def perform_import(self, entity_dicts):
         # TODO: assumes entity IDs are globally unique

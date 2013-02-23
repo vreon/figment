@@ -1,6 +1,3 @@
-from redis import StrictRedis
-redis = StrictRedis()
-
 from schema.logger import log
 from schema.entity import Entity
 from schema.aspect import Aspect, action, before, after
