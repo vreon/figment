@@ -50,13 +50,13 @@ class Zone(object):
         return 'zone:%s:imports' % self.id
 
     def load_config(self, path):
-        path = os.path.abspath(os.path.expanduser(path))
+        full_path = os.path.abspath(os.path.expanduser(path))
 
         try:
-            with open(path) as f:
+            with open(full_path) as f:
                 config = json.loads(f.read())
         except EnvironmentError:
-            fatal("couldn't read configuration file")
+            fatal("couldn't read configuration file %s" % path)
         except ValueError as e:
             fatal("error in configuration file: %s" % e.message)
 
@@ -78,7 +78,7 @@ class Zone(object):
             fatal("unrecognized persistence mode '%s'" % persistence['mode'])
 
         self.config = config
-        self.working_dir = os.path.dirname(path)
+        self.working_dir = os.path.dirname(full_path)
 
         # TODO: Read redis connection params from config
         self.redis = StrictRedis()
