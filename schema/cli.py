@@ -42,16 +42,27 @@ def listen(args):
 
 @keyboard_interactive
 def run(args):
-    if args.verbose:
+    if args.verbose or args.debug:
         log.setLevel(logging.DEBUG)
-    zone = Zone.from_config(args.zone, args.config)
 
-    if args.ticker:
-        zone.start_ticker()
-    else:
-        zone.load_aspects()
-        zone.load_snapshot()
-        zone.start()
+    try:
+        zone = Zone.from_config(args.zone, args.config)
+
+        if args.ticker:
+            zone.start_ticker()
+        else:
+            zone.load_aspects()
+            zone.load_snapshot()
+            zone.start()
+    except Exception as e:
+        if args.debug:
+            import pdb
+            import sys
+            import traceback
+            log.critical(traceback.format_exc())
+            pdb.post_mortem(sys.exc_info()[2])
+        else:
+            raise
 
 
 def cli():
@@ -106,7 +117,11 @@ def cli():
     parser_run = subparsers.add_parser('run', help='run a schema zone server')
     parser_run.add_argument(
         '-v', '--verbose', action='store_true',
-        help='show debug output'
+        help='show verbose output'
+    )
+    parser_run.add_argument(
+        '-d', '--debug', action='store_true',
+        help='run pdb if schema crashes'
     )
     parser_run.add_argument(
         '-t', '--ticker', action='store_true',
