@@ -9,7 +9,9 @@ Refactoring
         x Make it possible to run tests without polluting the entity space
 
 General
-    - Define behaviors, actions, modes
+    - In Inform 7, there are a few built-in assertion verbs
+        - to be, to have, to carry, to wear, to contain, and to support
+        - these, or something like them, should be in figment core
 
     ! An exit is an entity, not a property
         - It can be closed, locked, relinked, removed
@@ -23,6 +25,7 @@ General
         x event.trigger('before') -> yield 'before'
         - This means hooks could live on the action?
 
+    - "selector" is a better name than "descriptor"
     x schema listen needs graceful interrupt handling
     - Message templates (and action patterns) should use gettext for i18n
     - you should be able to use an exit by name
@@ -122,3 +125,6 @@ Stuff to think about
 Frontend improvements
     - Purge old messages
     - Command history
+    - Make it easier for clients to display messages
+        - Message annotations (whisper, shout, important, etc.)
+        - Return JSON objects rather than a stream of strings
