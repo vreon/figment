@@ -1,48 +1,64 @@
 # Figment
 
-Figment is an experimental engine with a component-based entity system that was
-built to scratch an intellectual itch. Inspired by text-based object
-manipulation environments like text adventure games and
-[SHRDLU](http://en.wikipedia.org/wiki/SHRDLU), the goal is to create a virtual
-world populated by objects that can interact with each other in interesting and
-unexpected ways.
+A framework for creating multiplayer, text-based worlds.
 
-It's still in the weekend-project state, so don't go using it for anything
-remotely critical -- but it *is* complete enough to be mildly amusing. :)
+## Installation
 
-## Planned features
+    $ pip install figment
 
-* Autonomous entities
-* Wearable/equippable entities
-* Other frontends (web-based? graphical?)
-* Persistence
-* Multiplayer support (maybe)
-* Sound-emitting entities (with realistic inverse-square falloff)
-* Better position system, maybe room-oriented / MUD-style
+## Usage
+
+### Developing a world
+
+API documentation is available in the docs directory -- or, at least, it will
+be once the API is more stable!
+
+### Running a server
+
+Figment is more of a framework than an engine, and it doesn't make many
+assumptions about your world, so there's not much to run out-of-the-box.
+
+If you've already created a world (try figment-examples), ensure Redis is
+running, then:
+
+    $ cd /path/to/world
+    $ figment run
+
+### Running a client
+
+Eventually, Figment will support multiple frontend adapters, like Websockets
+(see figment-web) and Telnet.
+
+Currently, you can use the CLI to spy on the message stream received by an
+entity, and to interactively issue commands as an entity. Using both of these
+streams simultaneously (in separate windows or a terminal multiplexer) results
+in a makeshift client:
+
+    $ figment listen entity_id
+    $ figment prompt entity_id
+
+## Background
+
+Figment was created to explore the application of the entity-component-system
+pattern to the realm of MUDs. It allows you, as a worldbuilder, to describe
+components and attach them to entities to control how they behave and react.
+
+When used properly, components can be very powerful. Imagine:
+
+* Fire spreading to nearby objects with the Flammable component
+* NPCs with the Vigilante component attacking thieves
+* Armor with a Healing component that gradually restores health when worn
+* Doors with a Breakable component that can be knocked down
+* Switches that can only be weighed down by entities with the Heavy component
+
+Figment ships with some basic components that are common to many MUDs. The
+Positioned component, for example, handles entities' visibility, placement, and
+movement between containers, inventories, and rooms. Use of the built-in
+components is optional; if your game involves spaceships moving through a
+continuous 3D volume, the "room/container" paradigm probably doesn't apply, and
+you can easily substitute your own spatial positioning logic.
 
 ## License
 
-Figment is made available under the terms of the Expat/MIT license, reproduced
-below.
-
-```
-Copyright (C) 2011 by Jesse Dubay
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-```
+Figment is made available under the terms of the Expat/MIT license. See LICENSE
+for details.
