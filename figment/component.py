@@ -1,8 +1,6 @@
-import logging
 import inspect
 
 from figment.logger import log
-from figment.event import Event
 
 HOOK_TYPES = []
 

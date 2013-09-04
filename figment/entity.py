@@ -4,23 +4,6 @@ import collections
 
 from figment.logger import log
 
-class AmbiguousDescriptor(Exception):
-    pass
-
-# def action(pattern):
-#     def decorator(f):
-#         def wrapper(self, *args):
-#             try:
-#                 return f(self, *[CommandArgument(i, v) for i, v in enumerate(args)])
-#             except AmbiguousDescriptor as ex:
-#                 descriptor, targets = ex.args
-#                 self.mode = DisambiguateMode(
-#                     self, self.mode, targets, f.__name__, args, descriptor.index
-#                 )
-#         ACTIONS[pattern] = wrapper
-#         return wrapper
-#     return decorator
-
 
 class ComponentStore(object):
     def __init__(self, entity):
@@ -213,10 +196,6 @@ class Entity(object):
     def tell(self, message):
         """Send text to this entity."""
         self.zone.redis.publish(self.messages_key, message)
-
-    def hint(self, type_, content):
-        """Send a client hint to this entity."""
-        self.zone.redis.publish(self.hints_key, json.dumps({'type': type_, 'content': content}))
 
 
 from figment.utils import upper_first
