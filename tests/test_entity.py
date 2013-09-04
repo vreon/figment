@@ -39,7 +39,7 @@ class TestEntity(object):
 
     def test_look_at_override(self):
         self.player.perform('look at %s' % self.bh.id)
-        assert self.player.saw('unable')
+        assert self.player.saw('unable to look directly')
 
     def test_color_of_uncolorful(self):
         self.player.perform('color of %s' % self.cow.id)
