@@ -57,7 +57,7 @@ Examples and Core Aspects
     - Includes the more broadly applicable aspects from the example pack
     - For looser coupling, has_aspect might need to accept a string instead of a class
         - e.g. aspect relies on Positioned, but you want to use it with your own Positioned aspect
-    - Create a figment-examples repo, move example/ there
+    x Create a figment-examples repo, move example/ there
 
 Registration
     - ???
