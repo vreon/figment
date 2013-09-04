@@ -123,11 +123,11 @@ class Zone(object):
             shutil.move(f.name, self.snapshot_path)
             os._exit(os.EX_OK)
 
-    def load_aspects(self):
+    def load_components(self):
         # HACK: add basedir of the config file to the import path
         sys.path.append(self.working_dir)
-        # As a side effect, Aspect.ALL gets populated with Aspect subclasses
-        __import__(self.config.get('aspects', {}).get('path', 'aspects'))
+        # As a side effect, Component.ALL gets populated with Component subclasses
+        __import__(self.config.get('components', {}).get('path', 'components'))
 
     def start(self):
         try:
@@ -204,10 +204,10 @@ class Zone(object):
 
     def perform_tick(self):
         for entity in self.ticking_entities:
-            # TODO: Somehow iterate over only ticking aspects
-            for aspect in entity.aspects:
-                if aspect.ticking:
-                    aspect.tick()
+            # TODO: Somehow iterate over only ticking components
+            for component in entity.components:
+                if component.ticking:
+                    component.tick()
 
     # Entity helpers
 

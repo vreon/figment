@@ -22,49 +22,49 @@ class AmbiguousDescriptor(Exception):
 #     return decorator
 
 
-class AspectStore(object):
+class ComponentStore(object):
     def __init__(self, entity):
         self.entity = entity
-        self.aspects = {}
+        self.components = {}
 
-    def add(self, aspects):
-        if not isinstance(aspects, collections.Iterable):
-            aspects = [aspects]
+    def add(self, components):
+        if not isinstance(components, collections.Iterable):
+            components = [components]
 
-        for aspect in aspects:
-            setattr(self.entity, aspect.__class__.__name__, aspect)
-            aspect.attach(self.entity)
-            self.aspects[aspect.__class__] = aspect
+        for component in components:
+            setattr(self.entity, component.__class__.__name__, component)
+            component.attach(self.entity)
+            self.components[component.__class__] = component
 
         if self.entity.zone and self.entity.ticking:
             self.entity.zone.ticking_entities.add(self.entity)
 
-    def remove(self, aspect_classes):
-        if not isinstance(aspect_classes, collections.Iterable):
-            aspect_classes = [aspect_classes]
+    def remove(self, component_classes):
+        if not isinstance(component_classes, collections.Iterable):
+            component_classes = [component_classes]
 
-        for aspect_class in aspect_classes:
-            getattr(self.entity, aspect_class.__name__).detach()
-            delattr(self.entity, aspect_class.__name__)
-            self.aspects.pop(aspect_class, None)
+        for component_class in component_classes:
+            getattr(self.entity, component_class.__name__).detach()
+            delattr(self.entity, component_class.__name__)
+            self.components.pop(component_class, None)
 
         if self.entity.zone and self.entity in self.entity.zone.ticking_entities and not self.entity.ticking:
             self.entity.zone.ticking_entities.remove(self.entity)
 
-    def has(self, aspect_classes):
-        if not isinstance(aspect_classes, collections.Iterable):
-            aspect_classes = [aspect_classes]
+    def has(self, component_classes):
+        if not isinstance(component_classes, collections.Iterable):
+            component_classes = [component_classes]
 
-        for aspect_class in aspect_classes:
-            if not aspect_class in self.aspects:
+        for component_class in component_classes:
+            if not component_class in self.components:
                 return False
         return True
 
     def purge(self):
-        self.remove(self.aspects.keys())
+        self.remove(self.components.keys())
 
     def __iter__(self):
-        return self.aspects.values().__iter__()
+        return self.components.values().__iter__()
 
 
 class CommandArgument(object):
@@ -84,17 +84,17 @@ class CommandArgument(object):
 
 
 class Entity(object):
-    def __init__(self, name, desc, aspects=None, id=None, zone=None):
+    def __init__(self, name, desc, components=None, id=None, zone=None):
         self.id = id or Entity.create_id()
         self.name = name
         self.desc = desc
         self.mode = ExploreMode(self)
-        self.aspects = AspectStore(self)
+        self.components = ComponentStore(self)
         self._zone = None
         self.zone = zone
 
-        if aspects:
-            self.aspects.add(aspects)
+        if components:
+            self.components.add(components)
 
         log.debug('Created entity: [%s] %s' % (self.id, self.name))
 
@@ -128,7 +128,7 @@ class Entity(object):
 
     @property
     def ticking(self):
-        return any(a.ticking for a in self.aspects)
+        return any(c.ticking for c in self.components)
 
     @staticmethod
     def create_id():
@@ -158,8 +158,8 @@ class Entity(object):
             'name': self.name,
             'desc': self.desc,
             'mode': mode_dict,
-            'aspects': dict(
-                (a.__class__.__name__, a.to_dict()) for a in self.aspects
+            'components': dict(
+                (c.__class__.__name__, c.to_dict()) for c in self.components
             )
         }
 
@@ -172,26 +172,26 @@ class Entity(object):
         entity.mode = Mode.class_from_name(mode_name).from_dict(entity, mode_dict)
         entity.zone = zone
 
-        aspects = []
-        for aspect_name, aspect_dict in dict_.get('aspects', {}).items():
-            aspect = Aspect.class_from_name(aspect_name).from_dict(aspect_dict)
-            aspects.append(aspect)
+        components = []
+        for component_name, component_dict in dict_.get('components', {}).items():
+            component = Component.class_from_name(component_name).from_dict(component_dict)
+            components.append(component)
 
-        entity.aspects.add(aspects)
+        entity.components.add(components)
 
         return entity
 
-    def has_aspect(self, *args, **kwargs):
-        return self.aspects.has(*args, **kwargs)
+    def has_component(self, *args, **kwargs):
+        return self.components.has(*args, **kwargs)
 
     def destroy(self):
-        self.aspects.purge()
+        self.components.purge()
         self.zone = None
 
     def clone(self):
         clone = Entity(self.name, self.desc)
 
-        # TODO: aspects should have a clone method that returns a dict
+        # TODO: components should have a clone method that returns a dict
         # TODO: that way they can determine whether or not to deep copy
 
         # TODO: Copy properties
@@ -221,4 +221,4 @@ class Entity(object):
 
 from figment.utils import upper_first
 from figment.modes import Mode, ExploreMode, DisambiguateMode
-from figment.aspect import Aspect
+from figment.component import Component

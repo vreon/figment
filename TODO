@@ -40,11 +40,11 @@ Action Flow
     - Trigger 'start' event
     - Was the event prevented?
     - Ensure that the actor can take this action
-        - Does it have the required aspects?
+        - Does it have the required components?
     - Resolve descriptors into entities
         - Add the resolved entities to the event, for hooks
     - Ensure that all targets can be acted upon
-        - Do the targets have the required aspects?
+        - Do the targets have the required components?
     - Trigger 'before' event
     - Was the event prevented?
     - Actually carry out the action
@@ -52,11 +52,11 @@ Action Flow
         - Tell targets that the action was carried out on them
     - Trigger 'after' event
 
-Examples and Core Aspects
-    - Have an optional "core" aspect package that can be imported
-    - Includes the more broadly applicable aspects from the example pack
-    - For looser coupling, has_aspect might need to accept a string instead of a class
-        - e.g. aspect relies on Positioned, but you want to use it with your own Positioned aspect
+Examples and Core Components
+    - Have an optional "core" component package that can be imported
+    - Includes the more broadly applicable components from the example pack
+    - For looser coupling, has_component might need to accept a string instead of a class
+        - e.g. component relies on Positioned, but you want to use it with your own Positioned component
     x Create a figment-examples repo, move example/ there
 
 Registration

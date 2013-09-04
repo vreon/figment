@@ -49,13 +49,13 @@ class TestEntity(object):
         self.player.perform('paint %s orange' % self.cow.id)
         assert self.player.saw('cannot be painted')
 
-    def test_add_aspect(self):
-        self.cow.aspects.add(Colorful(color='green'))
+    def test_add_component(self):
+        self.cow.components.add(Colorful(color='green'))
         self.player.perform('color of %s' % self.cow.id)
         assert self.player.saw('green')
 
-    def test_remove_aspect(self):
-        self.ball.aspects.remove(Colorful)
+    def test_remove_component(self):
+        self.ball.components.remove(Colorful)
         self.player.perform('color of %s' % self.ball.id)
         assert self.player.saw('no particular')
 

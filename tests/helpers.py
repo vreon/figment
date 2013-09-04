@@ -1,4 +1,4 @@
-from figment import Aspect, action, before
+from figment import Component, action, before
 
 
 def tell(self, msg):
@@ -19,10 +19,10 @@ def saw(self, msg):
     raise AssertionError('%r not found in %r' % (msg, mems))
 
 
-class Visible(Aspect):
+class Visible(Component):
     """
-    A simplified version of Positioned, from the example aspects. It doesn't do
-    descriptor resolution (you have to use the entity ID).
+    A simplified position component. It doesn't do descriptor resolution (you
+    have to use the entity ID).
     """
 
     @action(r'^l(?:ook)?(?: at)? (?P<descriptor>.+)')
@@ -37,8 +37,8 @@ class Visible(Aspect):
             event.actor.tell(target.desc)
 
 
-class Colorful(Aspect):
-    """An example aspect that includes state and actions."""
+class Colorful(Component):
+    """A test component that includes state and actions."""
 
     def __init__(self, color='blue'):
         self.color = color
@@ -53,7 +53,7 @@ class Colorful(Aspect):
             event.actor.tell('No such entity %r.' % event.descriptor)
             return
 
-        if not target.has_aspect(Colorful):
+        if not target.has_component(Colorful):
             event.actor.tell("{0.Name} has no particular color.".format(target))
             return
 
@@ -68,7 +68,7 @@ class Colorful(Aspect):
             event.actor.tell('No such entity %r.' % event.descriptor)
             return
 
-        if not target.has_aspect(Colorful):
+        if not target.has_component(Colorful):
             event.actor.tell("{0.Name} cannot be painted.".format(target))
             return
 
@@ -78,8 +78,8 @@ class Colorful(Aspect):
             event.actor.tell('{0.Name} is now {0.Colorful.color}.'.format(target))
 
 
-class BlackHole(Aspect):
-    """An example aspect that overrides actions from another."""
+class BlackHole(Component):
+    """A test component that overrides actions from another."""
     @before(Colorful.paint)
     def absorb_paint(self, event):
         if self.entity.id == event.descriptor:

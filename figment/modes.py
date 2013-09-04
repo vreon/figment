@@ -1,6 +1,6 @@
 import re
 import random
-from figment.aspect import Aspect
+from figment.component import Component
 from figment.event import Event
 from figment.utils import int_or_none
 
@@ -48,7 +48,7 @@ class ExploreMode(Mode):
         if isinstance(command_or_action, basestring):
             command = ' '.join(command_or_action.strip().split())
             matches = {}
-            for pattern, action in Aspect.ACTIONS.items():
+            for pattern, action in Component.ACTIONS.items():
                 match = re.match(pattern, command)
                 if match:
                     matches[pattern] = (action, match.groupdict())
@@ -76,14 +76,14 @@ class ExploreMode(Mode):
             else:
                 hook_type, witnesses = hook_point
 
-            # TODO: This iterates over every aspect... but we know (or
-            # should know) which aspects hook which actions. We should only
-            # iterate over those aspect instances
+            # TODO: This iterates over every component... but we know (or
+            # should know) which components hook which actions. We should only
+            # iterate over those component instances
             for witness in witnesses:
-                for aspect in witness.aspects:
-                    hooks = aspect.HOOKS.get(hook_type, {}).get(action, [])
+                for component in witness.components:
+                    hooks = component.HOOKS.get(hook_type, {}).get(action, [])
                     for hook in hooks:
-                        hook(aspect, event)
+                        hook(component, event)
 
 
 class DisambiguateMode(Mode):

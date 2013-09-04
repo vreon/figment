@@ -6,10 +6,10 @@ from figment.event import Event
 
 HOOK_TYPES = []
 
-class AspectMeta(type):
+class ComponentMeta(type):
     def __new__(cls, name, bases, dict_):
-        new_class = super(AspectMeta, cls).__new__(cls, name, bases, dict_)
-        if name == 'Aspect':
+        new_class = super(ComponentMeta, cls).__new__(cls, name, bases, dict_)
+        if name == 'Component':
             return new_class
 
         new_class.HOOKS = {}
@@ -17,7 +17,7 @@ class AspectMeta(type):
             if hasattr(method, '_action_regex'):
                 # XXX: black magic
                 setattr(new_class, method_name, staticmethod(method.im_func))
-                Aspect.ACTIONS[method._action_regex] = getattr(new_class, method_name)
+                Component.ACTIONS[method._action_regex] = getattr(new_class, method_name)
 
             for hook_type in HOOK_TYPES:
                 hook_type_attr = '_hook_%s' % hook_type
@@ -27,13 +27,13 @@ class AspectMeta(type):
                             .setdefault(hooked_function, [])\
                             .append(getattr(new_class, method_name))
 
-        log.debug('Registered aspect: %s' % name)
-        Aspect.ALL[name] = new_class
+        log.debug('Registered component: %s' % name)
+        Component.ALL[name] = new_class
         return new_class
 
 
-class Aspect(object):
-    __metaclass__ = AspectMeta
+class Component(object):
+    __metaclass__ = ComponentMeta
     ALL = {}
     ACTIONS = {}
 
