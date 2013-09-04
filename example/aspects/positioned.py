@@ -1,6 +1,6 @@
 import string
-from schema import Aspect, action
-from schema.utils import upper_first, indent, to_id, to_entity
+from figment import Aspect, action
+from figment.utils import upper_first, indent, to_id, to_entity
 
 class Positioned(Aspect):
     def __init__(self, container_id=None, is_container=False, is_carriable=False, is_enterable=False, is_visible=True):

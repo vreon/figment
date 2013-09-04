@@ -1,4 +1,4 @@
-from schema.entity import Entity
+from figment.entity import Entity
 
 def int_or_none(value):
     try:

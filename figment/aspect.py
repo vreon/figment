@@ -1,8 +1,8 @@
 import logging
 import inspect
 
-from schema.logger import log
-from schema.event import Event
+from figment.logger import log
+from figment.event import Event
 
 HOOK_TYPES = []
 

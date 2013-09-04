@@ -1,4 +1,4 @@
-from schema import EntityPlugin, before, after
+from figment import EntityPlugin, before, after
 from .positioned import Positioned
 from .important import Important
 from .usable import Usable

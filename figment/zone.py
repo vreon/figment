@@ -9,8 +9,8 @@ from time import sleep
 
 from redis import StrictRedis
 from redis.connection import ConnectionError
-from schema.entity import Entity
-from schema.logger import log
+from figment.entity import Entity
+from figment.logger import log
 
 def fatal(message):
     log.error('Fatal: %s' % message)

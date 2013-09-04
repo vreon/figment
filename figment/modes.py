@@ -1,8 +1,8 @@
 import re
 import random
-from schema.aspect import Aspect
-from schema.event import Event
-from schema.utils import int_or_none
+from figment.aspect import Aspect
+from figment.event import Event
+from figment.utils import int_or_none
 
 # For Python 3 compatibility
 try:

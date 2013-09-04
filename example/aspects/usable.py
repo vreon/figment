@@ -1,4 +1,4 @@
-from schema import Aspect, action
+from figment import Aspect, action
 from . import Positioned
 
 

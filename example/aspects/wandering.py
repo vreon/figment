@@ -1,4 +1,4 @@
-from schema import Aspect
+from figment import Aspect
 from . import Positioned
 import random
 

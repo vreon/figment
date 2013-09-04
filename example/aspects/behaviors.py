@@ -1,4 +1,4 @@
-from schema.entity import Entity, start_room
+from figment.entity import Entity, start_room
 import random
 
 class Behavior(Entity):

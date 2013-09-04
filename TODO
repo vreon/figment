@@ -1,7 +1,7 @@
 Zones
-    x Each instance of a runschema process can be a zone
+    x Each instance of a runfigment process can be a zone
     x Entities can migrate to a new zone via serialization to Redis
-    x Runschema processes should be wrapped in an exception handler
+    x Runfigment processes should be wrapped in an exception handler
     x Ctrl+C should shutdown gracefully (dumping first)
 
 Refactoring
@@ -26,7 +26,7 @@ General
         - This means hooks could live on the action?
 
     - "selector" is a better name than "descriptor"
-    x schema listen needs graceful interrupt handling
+    x figment listen needs graceful interrupt handling
     - Message templates (and action patterns) should use gettext for i18n
     - you should be able to use an exit by name
          - go (to) steakhouse

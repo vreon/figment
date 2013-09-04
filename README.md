@@ -1,6 +1,6 @@
-# Schema
+# Figment
 
-Schema is an experimental engine with a component-based entity system that was
+Figment is an experimental engine with a component-based entity system that was
 built to scratch an intellectual itch. Inspired by text-based object
 manipulation environments like text adventure games and
 [SHRDLU](http://en.wikipedia.org/wiki/SHRDLU), the goal is to create a virtual
@@ -22,7 +22,7 @@ remotely critical -- but it *is* complete enough to be mildly amusing. :)
 
 ## License
 
-Schema is made available under the terms of the Expat/MIT license, reproduced
+Figment is made available under the terms of the Expat/MIT license, reproduced
 below.
 
 ```

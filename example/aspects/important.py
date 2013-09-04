@@ -1,4 +1,4 @@
-from schema import Aspect, before, after
+from figment import Aspect, before, after
 from aspects import Positioned
 
 class Important(Aspect):

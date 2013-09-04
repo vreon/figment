@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from flask import Flask, Response, render_template, jsonify, request, abort
-from schema import Zone, Entity
+from figment import Zone, Entity
 from example.aspects import *
 import random
 import json

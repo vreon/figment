@@ -3,7 +3,7 @@
 import random
 import logging
 
-from schema import Entity, Zone, log
+from figment import Entity, Zone, log
 from aspects import *
 
 log.setLevel(logging.DEBUG)

@@ -1,4 +1,4 @@
-from schema.entity import Entity
+from figment.entity import Entity
 
 class Event(object):
     def __init__(self, **kwargs):

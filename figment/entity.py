@@ -2,7 +2,7 @@ import random
 import string
 import collections
 
-from schema.logger import log
+from figment.logger import log
 
 class AmbiguousDescriptor(Exception):
     pass
@@ -219,6 +219,6 @@ class Entity(object):
         self.zone.redis.publish(self.hints_key, json.dumps({'type': type_, 'content': content}))
 
 
-from schema.utils import upper_first
-from schema.modes import Mode, ExploreMode, DisambiguateMode
-from schema.aspect import Aspect
+from figment.utils import upper_first
+from figment.modes import Mode, ExploreMode, DisambiguateMode
+from figment.aspect import Aspect

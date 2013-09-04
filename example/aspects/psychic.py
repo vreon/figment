@@ -1,4 +1,4 @@
-from schema import Aspect, Event, before
+from figment import Aspect, Event, before
 from . import Positioned
 
 class Psychic(Aspect):

@@ -1,4 +1,4 @@
-from schema import Entity, Event, Zone
+from figment import Entity, Event, Zone
 from tests.helpers import tell, saw, Visible, Colorful, BlackHole
 
 

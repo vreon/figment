@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = 'schema',
+    name = 'figment',
     version = '0.0.1',
     author = 'Jesse Dubay',
     author_email = 'jesse@thefortytwo.net',
@@ -19,7 +19,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'schema = schema.cli:cli',
+            'figment = figment.cli:cli',
         ],
     }
 )

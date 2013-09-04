@@ -4,7 +4,7 @@
     <link href="{{ url_for('static', filename='css/dark.css') }}" rel="stylesheet" type="text/css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script>
-        var Schema = (function($){
+        var Figment = (function($){
             var my = {};
 
             my.id = null;
@@ -28,11 +28,11 @@
                 $.getJSON('/register', function(data){
                     if(data.id) {
                         my.id = data.id;
-                        Schema.addMessage('Connected.');
-                        Schema.addMessage('Your login ID is <strong>' + my.id + '</strong>.');
-                        Schema.addMessage('Please pick a name, e.g. <strong>name Joe</strong>.');
-                        Schema.addMessage('Then try <strong>look</strong>.');
-                        Schema.listen(my.id);
+                        Figment.addMessage('Connected.');
+                        Figment.addMessage('Your login ID is <strong>' + my.id + '</strong>.');
+                        Figment.addMessage('Please pick a name, e.g. <strong>name Joe</strong>.');
+                        Figment.addMessage('Then try <strong>look</strong>.');
+                        Figment.listen(my.id);
                     }
                 });
             };
@@ -41,10 +41,10 @@
                 $.getJSON('/login', {id: id}, function(data){
                     if(data.ok) {
                         my.id = id;
-                        Schema.addMessage('Connected.');
-                        Schema.listen(my.id);
+                        Figment.addMessage('Connected.');
+                        Figment.listen(my.id);
                     } else {
-                        Schema.addMessage('There is no player with that ID.');
+                        Figment.addMessage('There is no player with that ID.');
                     }
                 });
             };
@@ -61,16 +61,16 @@
             $("#input input").bind('keyup', function(e){
                 if (e.which == 13) {
                     var val = $(this).val();
-                    Schema.addMessage('<span class="dim">&gt; ' + val + '</span>');
+                    Figment.addMessage('<span class="dim">&gt; ' + val + '</span>');
 
-                    if (!Schema.id) {
+                    if (!Figment.id) {
                         if(val == 'register') {
-                            Schema.register();
+                            Figment.register();
                         } else {
-                            Schema.authenticate(val);
+                            Figment.authenticate(val);
                         }
                     } else {
-                        Schema.command(val);
+                        Figment.command(val);
                     }
 
                     $(this).val('');

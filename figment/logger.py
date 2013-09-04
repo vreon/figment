@@ -27,7 +27,7 @@ class ColoredFormatter(logging.Formatter):
         ])
 
 def create_logger():
-    log = logging.getLogger('schema')
+    log = logging.getLogger('figment')
     log.setLevel(logging.INFO)
 
     handler = logging.StreamHandler()

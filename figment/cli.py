@@ -4,8 +4,8 @@ import readline
 import logging
 from functools import wraps
 
-from schema.zone import Zone
-from schema.logger import log
+from figment.zone import Zone
+from figment.logger import log
 
 
 def keyboard_interactive(f):
@@ -66,7 +66,7 @@ def run(args):
 
 
 def cli():
-    parser = argparse.ArgumentParser(description='Manipulates a Schema world.')
+    parser = argparse.ArgumentParser(description='Manipulates a Figment world.')
 
     parser.add_argument(
         '-z', '--zone', type=str, default='default',
@@ -114,14 +114,14 @@ def cli():
 
     # Run parser
 
-    parser_run = subparsers.add_parser('run', help='run a schema zone server')
+    parser_run = subparsers.add_parser('run', help='run a Figment zone server')
     parser_run.add_argument(
         '-v', '--verbose', action='store_true',
         help='show verbose output'
     )
     parser_run.add_argument(
         '-d', '--debug', action='store_true',
-        help='run pdb if schema crashes'
+        help='run pdb if Figment crashes'
     )
     parser_run.add_argument(
         '-t', '--ticker', action='store_true',

@@ -1,4 +1,4 @@
-from schema import Aspect, action, before
+from figment import Aspect, action, before
 
 
 def tell(self, msg):
