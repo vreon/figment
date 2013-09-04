@@ -5,10 +5,7 @@ setup(
     version = '0.0.1',
     author = 'Jesse Dubay',
     author_email = 'jesse@thefortytwo.net',
-    description = (
-        'An interactive, text-based MUD engine based on '
-        'an entity-component system.'
-    ),
+    description = 'A framework for creating multiplayer, text-based worlds.',
     license = 'MIT',
     keywords = 'game engine mud',
     packages=find_packages(),
