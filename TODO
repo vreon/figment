@@ -1,0 +1,131 @@
+Zones
+    x Each instance of a runfigment process can be a zone
+    x Entities can migrate to a new zone via serialization to Redis
+    x Runfigment processes should be wrapped in an exception handler
+    x Ctrl+C should shutdown gracefully (dumping first)
+
+Refactoring
+    - Get rid of as much global state as you can
+        x Make it possible to run tests without polluting the entity space
+
+General
+    - In Inform 7, there are a few built-in assertion verbs
+        - to be, to have, to carry, to wear, to contain, and to support
+        - these, or something like them, should be in figment core
+
+    ! An exit is an entity, not a property
+        - It can be closed, locked, relinked, removed
+        - On attach, it should add itself to indexes in linked rooms
+            - Should update these indexes on unlink / relink
+        - Where should "go" logic live? On Door?
+            - Should Positioned be renamed to Container?
+
+    ! An action is a generator
+        x A generator can be thought of as a suspendable function
+        x event.trigger('before') -> yield 'before'
+        - This means hooks could live on the action?
+
+    - "selector" is a better name than "descriptor"
+    x figment listen needs graceful interrupt handling
+    - Message templates (and action patterns) should use gettext for i18n
+    - you should be able to use an exit by name
+         - go (to) steakhouse
+    - Disambiguation (again)
+
+Viewer
+    - Backbone powered? For searching / filtering
+    - Or ember, I dunno
+
+Action Flow
+    - Trigger 'start' event
+    - Was the event prevented?
+    - Ensure that the actor can take this action
+        - Does it have the required components?
+    - Resolve descriptors into entities
+        - Add the resolved entities to the event, for hooks
+    - Ensure that all targets can be acted upon
+        - Do the targets have the required components?
+    - Trigger 'before' event
+    - Was the event prevented?
+    - Actually carry out the action
+        - Tell the actor they carried out the action
+        - Tell targets that the action was carried out on them
+    - Trigger 'after' event
+
+Examples and Core Components
+    - Have an optional "core" component package that can be imported
+    - Includes the more broadly applicable components from the example pack
+    - For looser coupling, has_component might need to accept a string instead of a class
+        - e.g. component relies on Positioned, but you want to use it with your own Positioned component
+    x Create a figment-examples repo, move example/ there
+
+Registration
+    - ???
+    - Accounts have a username, password, list of controllable entities
+    - The connection should have some state (account ID, entity logged in as)
+        - So the client doesn't have to send entity ID with every command
+
+Persistence
+    x Fork, then dump a JSON list of entities
+    x On start, check for a dump.json
+        x If it exists, load it
+        x Otherwise, create the world
+
+Combat
+    - Single letters
+    - Hotkeys! (1234 etc)
+    - Schedule actions for the next tick
+
+Conversations
+    - Modal
+    - Mutes surroundings (?)
+    - Broadcasts when engaged / disengaged
+    - Should be able to leave at any time, Skyrim-style
+
+Test items
+    - A key that opens a door
+    - A keycard bound to a particular owner
+    - A bomb that, when used, counts down to 0 and explodes, damaging nearby stuff
+    - Signs, books, walls you can write on/in
+
+Modal interactions
+    - Explore mode: arbitrary commands
+    - Disambiguation mode
+        x should return the entity to the previous mode
+    - Conversation mode: preset convo options
+    - Combat mode: scheduler based
+        - or, mostly turn based with 20 sec forfeit?
+    - Shop mode?
+
+Instances
+    - Copies of rooms, NPCs can be created for parties
+    - Have a function that creates a list of entities and an instance start room
+    - Store the entities in a redis list and tear them down when the party leaves / wins
+
+Flags
+    - is_dark (would this be better as a behavior?)
+    - is_open (for containers)
+    - is_closable "
+    - is_lockable "
+    - is_flexible (volume is sum of volume of contained objects)
+    - is_visible (for stuff like spawners)
+    - is_writable
+
+Stuff to think about
+    - names and capitalization
+    - chairs, beds, vehicles(?)
+    - stacks of objects / inventory management / gold
+    - equipment
+    - holding items
+        - inventory is a closed container
+        - held items go in an open container
+        - "a box, holding: ..."
+    - need a room.unlink() for moving rooms
+    - doors
+
+Frontend improvements
+    - Purge old messages
+    - Command history
+    - Make it easier for clients to display messages
+        - Message annotations (whisper, shout, important, etc.)
+        - Return JSON objects rather than a stream of strings
