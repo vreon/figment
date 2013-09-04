@@ -18,7 +18,7 @@ be once the API is more stable!
 Figment is more of a framework than an engine, and it doesn't make many
 assumptions about your world, so there's not much to run out-of-the-box.
 
-If you've already created a world (try figment-examples), ensure Redis is
+If you've already created a world (see figment-examples), ensure Redis is
 running, then:
 
     $ cd /path/to/world
@@ -50,13 +50,6 @@ When used properly, components can be very powerful. Imagine:
 * Armor with a Healing component that gradually restores health when worn
 * Doors with a Breakable component that can be knocked down
 * Switches that can only be weighed down by entities with the Heavy component
-
-Figment ships with some basic components that are common to many MUDs. The
-Positioned component, for example, handles entities' visibility, placement, and
-movement between containers, inventories, and rooms. Use of the built-in
-components is optional; if your game involves spaceships moving through a
-continuous 3D volume, the "room/container" paradigm probably doesn't apply, and
-you can easily substitute your own spatial positioning logic.
 
 ## License
 
