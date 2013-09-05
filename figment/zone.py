@@ -127,7 +127,7 @@ class Zone(object):
         # HACK: add basedir of the config file to the import path
         sys.path.append(self.working_dir)
         # As a side effect, Component.ALL gets populated with Component subclasses
-        __import__(self.config.get('components', {}).get('path', 'components'))
+        __import__('components')
 
     def start(self):
         try:
