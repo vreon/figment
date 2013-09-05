@@ -2,6 +2,8 @@ from __future__ import print_function
 import argparse
 import readline
 import logging
+import os
+import shutil
 from functools import wraps
 
 from figment.zone import Zone
@@ -17,6 +19,15 @@ def keyboard_interactive(f):
         except (EOFError, KeyboardInterrupt):
             print()
     return wrapper
+
+
+def new(args):
+    skel_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        os.path.pardir,
+        'skel'
+    )
+    shutil.copytree(skel_path, args.name)
 
 
 def command(args):
@@ -78,6 +89,16 @@ def cli():
     )
 
     subparsers = parser.add_subparsers(dest='command')
+
+    # New parser
+
+    parser_new = subparsers.add_parser(
+        'new', help='create a new world'
+    )
+    parser_new.add_argument(
+        'name', type=str, help='world name (must be a valid directory name)'
+    )
+    parser_new.set_defaults(func=new)
 
     # Listen parser
 
