@@ -150,12 +150,6 @@ class Zone(object):
 
         self.save_snapshot()
 
-    def restart(self):
-        # TODO: Make sure this actually works
-        log.info('Restarting.')
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
-
     def stop(self):
         self.running = False
 
