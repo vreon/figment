@@ -161,11 +161,13 @@ class Zone(object):
 
     def start_ticker(self):
         log.info('Ticking every %ss.' % self.tick_interval)
+        tock = False
         while True:
-            log.debug('Tick.')
+            log.debug('Tock.' if tock else 'Tick.')
             # TODO: timestamp here instead of True, for debugging?
             self.redis.rpush(self.tick_key, True)
             sleep(self.tick_interval)
+            tock = not tock
 
     def listen(self, entity_id):
         pubsub = self.redis.pubsub()
