@@ -40,7 +40,7 @@ class YAMLSerializer(Serializer):
     @staticmethod
     def serialize(data):
         import yaml
-        return yaml.serialize(data)
+        return yaml.dump(data)
 
     @staticmethod
     def unserialize(data):
@@ -48,7 +48,7 @@ class YAMLSerializer(Serializer):
         return yaml.safe_load(data)
 
 
-SERIALIZERS = [
-    JSONSerializer,
-    YAMLSerializer,
-]
+SERIALIZERS = {
+    'json': JSONSerializer,
+    'yaml': YAMLSerializer,
+}

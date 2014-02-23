@@ -57,7 +57,7 @@ class Zone(object):
 
         config = None
 
-        for serializer in SERIALIZERS:
+        for serializer in SERIALIZERS.values():
             config_filename = 'config.%s' % serializer.extension
             config_path = os.path.join(base_path, config_filename)
 
@@ -71,7 +71,7 @@ class Zone(object):
 
         if config is None:
             fatal('unable to read config.{%s} from %s' % (
-                ','.join(s.extension for s in SERIALIZERS), base_path
+                ','.join(s.extension for s in SERIALIZERS.values()), base_path
             ))
 
         if not self.id in config['zones']:
@@ -108,6 +108,13 @@ class Zone(object):
             os.path.expanduser(snapshot_path)
         )
 
+    @property
+    def snapshot_serializer(self):
+        extension = self.config['persistence'].get('format')
+        if not extension:
+            extension = os.path.splitext(self.snapshot_path)[1][1:]
+        return SERIALIZERS[extension]
+
     def load_snapshot(self):
         if not os.path.exists(self.snapshot_path):
             return False
@@ -117,7 +124,7 @@ class Zone(object):
             snapshot = f.read()
             # if self.config['persistence'].get('compressed'):
             #     snapshot = zlib.decompress(snapshot)
-            snapshot = json.loads(snapshot)
+            snapshot = self.snapshot_serializer.unserialize(snapshot)
             for entity_dict in snapshot['entities']:
                 entity = Entity.from_dict(entity_dict, zone=self)
 
@@ -129,7 +136,7 @@ class Zone(object):
 
         if not child_pid:
             f = tempfile.NamedTemporaryFile(delete=False)
-            snapshot = json.dumps({
+            snapshot = self.snapshot_serializer.serialize({
                 'entities': [e.to_dict() for e in self.all()]
             })
             # if self.config['persistence'].get('compressed'):
