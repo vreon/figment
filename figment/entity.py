@@ -67,7 +67,7 @@ class CommandArgument(object):
 
 
 class Entity(object):
-    def __init__(self, name, desc, components=None, id=None, zone=None):
+    def __init__(self, name, desc, components=None, id=None, zone=None, hearing=False):
         self.id = id or Entity.create_id()
         self.name = name
         self.desc = desc
@@ -75,6 +75,7 @@ class Entity(object):
         self.components = ComponentStore(self)
         self._zone = None
         self.zone = zone
+        self.hearing = hearing
 
         if components:
             self.components.add(components)
@@ -141,6 +142,7 @@ class Entity(object):
             'name': self.name,
             'desc': self.desc,
             'mode': mode_dict,
+            'hearing': self.hearing,
             'components': dict(
                 (c.__class__.__name__, c.to_dict()) for c in self.components
             )
@@ -148,7 +150,12 @@ class Entity(object):
 
     @classmethod
     def from_dict(cls, dict_, zone=None):
-        entity = cls(dict_['name'], dict_['desc'], id=dict_['id'])
+        entity = cls(
+            dict_['name'],
+            dict_['desc'],
+            id=dict_['id'],
+            hearing=dict_['hearing'],
+        )
 
         mode_dict = dict_['mode']
         mode_name = mode_dict.pop('name')
@@ -195,7 +202,8 @@ class Entity(object):
 
     def tell(self, message):
         """Send text to this entity."""
-        self.zone.redis.publish(self.messages_key, message)
+        if self.hearing:
+            self.zone.redis.publish(self.messages_key, message)
 
 
 from figment.utils import upper_first
