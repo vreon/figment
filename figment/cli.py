@@ -84,7 +84,7 @@ def cli():
         help='name of the target zone'
     )
     parser.add_argument(
-        '-w', '--world', type=str, default='.',
+        '-w', '--world', type=str, default='',
         help='path to the world'
     )
 

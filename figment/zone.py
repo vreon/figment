@@ -22,7 +22,7 @@ def fatal(message):
 class Zone(object):
     def __init__(self):
         self.id = None
-        self.world_path = '.'
+        self.world_path = ''
         self.entities = {}
         self.ticking_entities = set()
         self.tick_interval = 1
