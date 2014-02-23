@@ -50,22 +50,6 @@ class ComponentStore(object):
         return self.components.values().__iter__()
 
 
-class CommandArgument(object):
-    """
-    An 'intelligent parameter' that knows its position in the player
-    command. This is so ambiguities can be resolved later.
-    """
-    def __init__(self, index, value):
-        self.index = index
-        self.value = value
-
-    def __str__(self):
-        return self.value
-
-    def __repr__(self):
-        return 'CommandArgument(%r, %r)' % (self.index, self.value)
-
-
 class Entity(object):
     def __init__(self, name, desc, components=None, id=None, zone=None, hearing=False):
         self.id = id or Entity.create_id()
