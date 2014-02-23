@@ -22,7 +22,7 @@ class Zone(object):
         self.id = None
         self.entities = {}
         self.ticking_entities = set()
-        self.tick_every = 1
+        self.tick_interval = 1
         self.running = False
         self.redis = None
 
@@ -63,8 +63,8 @@ class Zone(object):
         if not self.id in config['zones']:
             fatal("undefined zone '%s'" % self.id)
 
-        tick_every = config['zones'][self.id].get('tick', 1)
-        self.tick_every = tick_every
+        tick_interval = config['zones'][self.id].get('tick', 1)
+        self.tick_interval = tick_interval
 
         # TODO: per-zone persistence settings
 
@@ -160,12 +160,12 @@ class Zone(object):
         self.running = False
 
     def start_ticker(self):
-        log.info('Ticking every %ss.' % self.tick_every)
+        log.info('Ticking every %ss.' % self.tick_interval)
         while True:
             log.debug('Tick.')
             # TODO: timestamp here instead of True, for debugging?
             self.redis.rpush(self.tick_key, True)
-            sleep(self.tick_every)
+            sleep(self.tick_interval)
 
     def listen(self, entity_id):
         pubsub = self.redis.pubsub()
