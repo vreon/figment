@@ -21,15 +21,15 @@ def saw(self, msg):
 
 class Visible(Component):
     """
-    A simplified position component. It doesn't do descriptor resolution (you
+    A simplified position component. It doesn't do selector resolution (you
     have to use the entity ID).
     """
 
-    @action(r'^l(?:ook)?(?: at)? (?P<descriptor>.+)')
+    @action(r'^l(?:ook)?(?: at)? (?P<selector>.+)')
     def look_at(event):
-        target = event.actor.zone.get(event.descriptor)
+        target = event.actor.zone.get(event.selector)
         if not target:
-            event.actor.tell('No such entity %r.' % event.descriptor)
+            event.actor.tell('No such entity %r.' % event.selector)
             return
 
         yield 'before', event.actor.zone.all()
@@ -46,11 +46,11 @@ class Colorful(Component):
     def to_dict(self):
         return {'color': self.color}
 
-    @action(r'^color(?: of)? (?P<descriptor>.+)')
+    @action(r'^color(?: of)? (?P<selector>.+)')
     def color_of(event):
-        target = event.actor.zone.get(event.descriptor)
+        target = event.actor.zone.get(event.selector)
         if not target:
-            event.actor.tell('No such entity %r.' % event.descriptor)
+            event.actor.tell('No such entity %r.' % event.selector)
             return
 
         if not target.has_component(Colorful):
@@ -61,11 +61,11 @@ class Colorful(Component):
         if not event.prevented:
             event.actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
 
-    @action(r'^paint (?P<descriptor>.+) (?P<color>.+)')
+    @action(r'^paint (?P<selector>.+) (?P<color>.+)')
     def paint(event):
-        target = event.actor.zone.get(event.descriptor)
+        target = event.actor.zone.get(event.selector)
         if not target:
-            event.actor.tell('No such entity %r.' % event.descriptor)
+            event.actor.tell('No such entity %r.' % event.selector)
             return
 
         if not target.has_component(Colorful):
@@ -82,11 +82,11 @@ class BlackHole(Component):
     """A test component that overrides actions from another."""
     @before(Colorful.paint)
     def absorb_paint(self, event):
-        if self.entity.id == event.descriptor:
+        if self.entity.id == event.selector:
             event.color = 'black'
 
     @before(Visible.look_at)
     def prevent_look_at(self, event):
-        if self.entity.id == event.descriptor:
+        if self.entity.id == event.selector:
             event.actor.tell("You're unable to look directly at {0.name}.".format(self.entity))
             event.prevent_default()

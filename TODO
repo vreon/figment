@@ -25,7 +25,7 @@ General
         x event.trigger('before') -> yield 'before'
         - This means hooks could live on the action?
 
-    - "selector" is a better name than "descriptor"
+    x "selector" is a better name than "descriptor"
     x figment listen needs graceful interrupt handling
     - Message templates (and action patterns) should use gettext for i18n
     - you should be able to use an exit by name

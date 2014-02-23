@@ -60,5 +60,5 @@ class TestEntity(object):
         assert self.player.saw('no particular')
 
     def test_perform_with_action_and_event(self):
-        self.player.perform(Visible.look_at, descriptor=self.ball.id)
+        self.player.perform(Visible.look_at, selector=self.ball.id)
         assert self.player.saw('rubber')
