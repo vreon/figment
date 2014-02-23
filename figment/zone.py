@@ -20,6 +20,7 @@ def fatal(message):
 class Zone(object):
     def __init__(self):
         self.id = None
+        self.world_path = '.'
         self.entities = {}
         self.ticking_entities = set()
         self.tick_interval = 1
@@ -27,13 +28,13 @@ class Zone(object):
         self.redis = None
 
     @classmethod
-    def from_config(cls, id, config_path='config.json'):
+    def from_config(cls, id, world_path):
         self = cls()
 
         self.id = id
-        self.working_dir = '.'
+        self.world_path = world_path
 
-        self.load_config(config_path)
+        self.load_config()
 
         return self
 
@@ -49,16 +50,19 @@ class Zone(object):
     def import_key(self):
         return 'zone:%s:imports' % self.id
 
-    def load_config(self, path):
-        full_path = os.path.abspath(os.path.expanduser(path))
+    def load_config(self):
+        config_path = os.path.join(
+            os.path.abspath(os.path.expanduser(self.world_path)),
+            'config.json'
+        )
 
         try:
-            with open(full_path) as f:
+            with open(config_path) as f:
                 config = json.loads(f.read())
         except EnvironmentError:
-            fatal("couldn't read configuration file %s" % path)
+            fatal("couldn't read configuration file %s" % config_path)
         except ValueError as e:
-            fatal("error in configuration file: %s" % e.message)
+            fatal('error in configuration file: %s' % e.message)
 
         if not self.id in config['zones']:
             fatal("undefined zone '%s'" % self.id)
@@ -78,7 +82,6 @@ class Zone(object):
             fatal("unrecognized persistence mode '%s'" % persistence['mode'])
 
         self.config = config
-        self.working_dir = os.path.dirname(full_path)
 
         # TODO: Read redis connection params from config
         self.redis = StrictRedis()
@@ -87,10 +90,13 @@ class Zone(object):
     def snapshot_path(self):
         snapshot_path = self.config['persistence']['file']
         try:
-            snapshot_path = snapshot_path % self.id
+            snapshot_path = snapshot_path.format(id=self.id)
         except TypeError:
             pass
-        return os.path.expanduser(snapshot_path)
+        return os.path.join(
+            self.world_path,
+            os.path.expanduser(snapshot_path)
+        )
 
     def load_snapshot(self):
         if not os.path.exists(self.snapshot_path):
@@ -124,8 +130,7 @@ class Zone(object):
             os._exit(os.EX_OK)
 
     def load_components(self):
-        # HACK: add basedir of the config file to the import path
-        sys.path.append(self.working_dir)
+        sys.path.append(self.world_path)
         # As a side effect, Component.ALL gets populated with Component subclasses
         __import__('components')
 

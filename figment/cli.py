@@ -31,13 +31,13 @@ def new(args):
 
 
 def command(args):
-    zone = Zone.from_config(args.zone, args.config)
+    zone = Zone.from_config(args.zone, args.world)
     zone.enqueue_command(args.entity_id, args.command)
 
 
 @keyboard_interactive
 def prompt(args):
-    zone = Zone.from_config(args.zone, args.config)
+    zone = Zone.from_config(args.zone, args.world)
     command = raw_input('> ')
     while command and not command == 'quit':
         zone.enqueue_command(args.entity_id, command)
@@ -46,7 +46,7 @@ def prompt(args):
 
 @keyboard_interactive
 def listen(args):
-    zone = Zone.from_config(args.zone, args.config)
+    zone = Zone.from_config(args.zone, args.world)
     for message in zone.listen(args.entity_id):
         print(message)
 
@@ -57,7 +57,7 @@ def run(args):
         log.setLevel(logging.DEBUG)
 
     try:
-        zone = Zone.from_config(args.zone, args.config)
+        zone = Zone.from_config(args.zone, args.world)
 
         if args.ticker:
             zone.start_ticker()
@@ -84,8 +84,8 @@ def cli():
         help='name of the target zone'
     )
     parser.add_argument(
-        '-c', '--config', type=str, default='config.json',
-        help='path to the config file'
+        '-w', '--world', type=str, default='.',
+        help='path to the world'
     )
 
     subparsers = parser.add_subparsers(dest='command')
