@@ -11,6 +11,8 @@ from redis import StrictRedis
 from redis.connection import ConnectionError
 from figment.entity import Entity
 from figment.logger import log
+from figment.serializers import SERIALIZERS
+
 
 def fatal(message):
     log.error('Fatal: %s' % message)
@@ -51,18 +53,26 @@ class Zone(object):
         return 'zone:%s:imports' % self.id
 
     def load_config(self):
-        config_path = os.path.join(
-            os.path.abspath(os.path.expanduser(self.world_path)),
-            'config.json'
-        )
+        base_path = os.path.abspath(os.path.expanduser(self.world_path))
 
-        try:
-            with open(config_path) as f:
-                config = json.loads(f.read())
-        except EnvironmentError:
-            fatal("couldn't read configuration file %s" % config_path)
-        except ValueError as e:
-            fatal('error in configuration file: %s' % e.message)
+        config = None
+
+        for serializer in SERIALIZERS:
+            config_filename = 'config.%s' % serializer.extension
+            config_path = os.path.join(base_path, config_filename)
+
+            try:
+                with open(config_path) as f:
+                    config = serializer.unserialize(f.read())
+            except EnvironmentError:
+                continue
+            except Exception as e:  # TODO: UnserializeError
+                fatal('error while reading %s: %s' % (config_path, e))
+
+        if config is None:
+            fatal('unable to read config.{%s} from %s' % (
+                ','.join(s.extension for s in SERIALIZERS), base_path
+            ))
 
         if not self.id in config['zones']:
             fatal("undefined zone '%s'" % self.id)
