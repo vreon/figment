@@ -121,7 +121,7 @@ class Zone(object):
         if not os.path.exists(self.snapshot_path):
             return False
 
-        log.info('Loading entities from snapshot.')
+        log.info('Loading snapshot: %s' % self.snapshot_path)
         with open(self.snapshot_path, 'r') as f:
             snapshot = f.read()
             # if self.config['persistence'].get('compressed'):
