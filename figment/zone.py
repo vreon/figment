@@ -93,8 +93,10 @@ class Zone(object):
 
         self.config = config
 
-        # TODO: Read redis connection params from config
-        self.redis = StrictRedis()
+        self.redis = StrictRedis(
+            config['redis']['host'],
+            config['redis']['port'],
+        )
 
     @property
     def snapshot_path(self):
