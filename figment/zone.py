@@ -237,6 +237,10 @@ class Zone(object):
     def all(self):
         return self.entities.values()
 
+    def spawn(self, *args, **kwargs):
+        kwargs['zone'] = self
+        return Entity(*args, **kwargs)
+
     def purge(self):
         log.info('Purging all entities.')
         # TODO: Modifies the dict while iterating; is this ok?
