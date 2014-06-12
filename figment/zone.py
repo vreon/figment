@@ -15,7 +15,7 @@ from figment.serializers import SERIALIZERS
 
 
 def fatal(message):
-    log.error('Fatal: %s' % message)
+    log.critical(message)
     sys.exit(1)
 
 
@@ -67,15 +67,15 @@ class Zone(object):
             except EnvironmentError:
                 continue
             except Exception as e:  # TODO: UnserializeError
-                fatal('error while reading %s: %s' % (config_path, e))
+                fatal('Error while reading %s: %s' % (config_path, e))
 
         if config is None:
-            fatal('unable to read config.{%s} from %s' % (
+            fatal('Unable to read config.{%s} from %s' % (
                 ','.join(s.extension for s in SERIALIZERS.values()), base_path
             ))
 
         if not self.id in config['zones']:
-            fatal("undefined zone '%s'" % self.id)
+            fatal("Undefined zone '%s'" % self.id)
 
         tick_interval = config['zones'][self.id].get('tick', 1)
         self.tick_interval = tick_interval
@@ -84,12 +84,12 @@ class Zone(object):
 
         persistence = config.get('persistence')
         if not persistence:
-            fatal('unspecified persistence settings')
+            fatal('Unspecified persistence settings')
 
         # TODO: alternate persistence modes
 
         if not persistence['mode'] == 'snapshot':
-            fatal("unrecognized persistence mode '%s'" % persistence['mode'])
+            fatal("Unrecognized persistence mode '%s'" % persistence['mode'])
 
         self.config = config
 
@@ -168,7 +168,7 @@ class Zone(object):
             while self.running:
                 self.process_one_event()
         except Exception as e:
-            log.error(traceback.format_exc())
+            log.critical(traceback.format_exc())
         except BaseException as e:
             pass
 
