@@ -14,6 +14,13 @@ setup(
         "Topic :: Games/Entertainment :: Multi-User Dungeons (MUD)",
         "License :: OSI Approved :: MIT License",
     ],
+    install_requires=[
+        'redis==2.10.3',
+        'termcolor==1.1.0',
+    ],
+    extras_require={
+        'YAML': 'PyYAML==3.11',
+    },
     entry_points={
         'console_scripts': [
             'figment = figment.cli:cli',
