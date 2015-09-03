@@ -129,3 +129,6 @@ Frontend improvements
     - Make it easier for clients to display messages
         - Message annotations (whisper, shout, important, etc.)
         - Return JSON objects rather than a stream of strings
+
+Examples
+    - Add an example that uses continuous coordinates for entity position

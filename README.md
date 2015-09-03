@@ -18,8 +18,8 @@ be once the API is more stable!
 Figment is more of a framework than an engine, and it doesn't make many
 assumptions about your world, so there's not much to run out-of-the-box.
 
-If you've already created a world (see figment-examples), ensure Redis is
-running, then:
+If you've already created a world (see the `examples` directory for
+inspiration), ensure Redis is running, then:
 
     $ cd /path/to/world
     $ figment run
