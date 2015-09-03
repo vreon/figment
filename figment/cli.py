@@ -4,6 +4,7 @@ import readline
 import logging
 import os
 import shutil
+import sys
 from functools import wraps
 
 from figment.zone import Zone
@@ -107,6 +108,10 @@ def cli():
         .arg('-v', '--verbose', action='store_true', help='show verbose output')\
         .arg('-d', '--debug', action='store_true', help='run pdb if Figment crashes')\
         .arg('-t', '--ticker', action='store_true', help='run as a tick event generator')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
 
     args = parser.parse_args()
     args.func(args)
