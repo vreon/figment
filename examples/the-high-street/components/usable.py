@@ -16,8 +16,10 @@ class Usable(Component):
             return
 
         yield 'before'
-        if not event.prevented:
-            event.actor.tell("You can't use that.")
+        if event.data.get('prevented'):
+            return
+
+        event.actor.tell("You can't use that.")
 
     @action(r'^use (?P<item_selector>.+) on (?P<target_selector>.+)')
     def use_on(event):
@@ -34,5 +36,7 @@ class Usable(Component):
             return
 
         yield 'before'
-        if not event.prevented:
-            event.actor.tell('Nothing happens.')
+        if event.data.get('prevented'):
+            return
+
+        event.actor.tell('Nothing happens.')

@@ -33,8 +33,10 @@ class Visible(Component):
             return
 
         yield 'before', event.actor.zone.all()
-        if not event.prevented:
-            event.actor.tell(target.desc)
+        if event.data.get('prevented'):
+            return
+
+        event.actor.tell(target.desc)
 
 
 class Colorful(Component):
@@ -58,8 +60,10 @@ class Colorful(Component):
             return
 
         yield 'before', event.actor.zone.all()
-        if not event.prevented:
-            event.actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
+        if event.data.get('prevented'):
+            return
+
+        event.actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
 
     @action(r'^paint (?P<selector>.+) (?P<color>.+)')
     def paint(event):
@@ -73,9 +77,11 @@ class Colorful(Component):
             return
 
         yield 'before', event.actor.zone.all()
-        if not event.prevented:
-            target.Colorful.color = event.color
-            event.actor.tell('{0.Name} is now {0.Colorful.color}.'.format(target))
+        if event.data.get('prevented'):
+            return
+
+        target.Colorful.color = event.color
+        event.actor.tell('{0.Name} is now {0.Colorful.color}.'.format(target))
 
 
 class BlackHole(Component):
@@ -89,4 +95,4 @@ class BlackHole(Component):
     def prevent_look_at(self, event):
         if self.entity.id == event.selector:
             event.actor.tell("You're unable to look directly at {0.name}.".format(self.entity))
-            event.prevent_default()
+            event.data['prevented'] = True

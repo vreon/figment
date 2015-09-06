@@ -234,9 +234,11 @@ class Position(Component):
             message += '.'
 
         yield 'before', event.actor.Position.nearby()
-        if not event.prevented:
-            event.actor.tell('You say: "{0}"'.format(message))
-            event.actor.Position.emit('{0.Name} says: "{1}"'.format(event.actor, message))
+        if event.data.get('prevented'):
+            return
+
+        event.actor.tell('You say: "{0}"'.format(message))
+        event.actor.Position.emit('{0.Name} says: "{1}"'.format(event.actor, message))
 
     @action(r'^l(?:ook)?(?: around)?$')
     def look(event):
@@ -245,9 +247,11 @@ class Position(Component):
             return
 
         yield 'before'
-        if not event.prevented:
-            event.actor.Position.emit('{0.Name} looks around.'.format(event.actor))
-            event.actor.Position.tell_surroundings()
+        if event.data.get('prevented'):
+            return
+
+        event.actor.Position.emit('{0.Name} looks around.'.format(event.actor))
+        event.actor.Position.tell_surroundings()
 
     @action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<selector>.+)$')
     def look_in(event):
@@ -264,7 +268,7 @@ class Position(Component):
             return
 
         yield 'before'
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         event.actor.tell('Contents:')
@@ -287,7 +291,7 @@ class Position(Component):
             return
 
         yield 'before'
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         event.actor.tell(event.target.desc)
@@ -313,7 +317,7 @@ class Position(Component):
             return
 
         yield 'before'
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         event.actor.tell('You pick up {0.name}.'.format(event.target))
@@ -352,7 +356,7 @@ class Position(Component):
             return
 
         yield 'before'
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         event.actor.tell('You take {0.name} from {1.name}.'.format(event.target, event.container))
@@ -384,7 +388,7 @@ class Position(Component):
             return
 
         yield 'before'
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         event.actor.tell('You put {0.name} in {1.name}.'.format(event.target, event.container))
@@ -405,7 +409,7 @@ class Position(Component):
 
         # TODO: other nearby stuff
         yield 'before', [event.target]
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         event.actor.Position.unstore(event.target)
@@ -447,7 +451,7 @@ class Position(Component):
             return
 
         yield 'before'
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         event.actor.tell('You travel {0}.'.format(event.direction))

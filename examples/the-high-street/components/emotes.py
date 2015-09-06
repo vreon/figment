@@ -23,7 +23,7 @@ class Emotes(Component):
             return
 
         yield 'before'
-        if event.prevented:
+        if event.data.get('prevented'):
             return
 
         if join:

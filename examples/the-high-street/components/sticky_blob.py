@@ -14,4 +14,4 @@ class StickyBlob(Component):
     def stick(self, event):
         if self.entity == event.target and random.random() < self.stickiness:
             event.actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(self.entity))
-            event.prevent_default()
+            event.data['prevented'] = True
