@@ -110,14 +110,6 @@ class Entity(object):
     def messages_key_from_id(cls, id):
         return 'entity:%s:messages' % id
 
-    @property
-    def hints_key(self):
-        return self.hints_key_from_id(self.id)
-
-    @classmethod
-    def hints_key_from_id(cls, id):
-        return 'entity:%s:hints' % id
-
     def to_dict(self):
         if self.mode:
             mode_dict = self.mode.to_dict()
