@@ -156,7 +156,7 @@ class Entity(object):
 
         return entity
 
-    def has_component(self, *args, **kwargs):
+    def is_(self, *args, **kwargs):
         return self.components.has(*args, **kwargs)
 
     def destroy(self):

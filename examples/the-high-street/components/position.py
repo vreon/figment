@@ -228,7 +228,7 @@ class Position(Component):
 def say(actor, message):
     from components import Psychic
 
-    if not actor.has_component(Position):
+    if not actor.is_(Position):
         actor.tell("You're unable to do that.")
         return
 
@@ -238,7 +238,7 @@ def say(actor, message):
         message += '.'
 
     for witness in actor.Position.nearby():
-        if witness.has_component(Position) and witness.has_component(Psychic):
+        if witness.is_(Position) and witness.is_(Psychic):
             witness.perform(Position.say, message=message)
 
     actor.tell('You say: "{0}"'.format(message))
@@ -249,11 +249,11 @@ def say(actor, message):
 def look(actor):
     from components import Dark
 
-    if not actor.has_component(Position):
+    if not actor.is_(Position):
         actor.tell("You're unable to do that.")
         return
 
-    if actor.Position.container.has_component(Dark):
+    if actor.Position.container.is_(Dark):
         actor.tell("It's too dark to see anything here.")
         return
 
@@ -265,7 +265,7 @@ def look(actor):
 def look_in(event, selector):
     from components import Dark
 
-    if not actor.has_component(Position):
+    if not actor.is_(Position):
         actor.tell("You're unable to do that.")
         return
 
@@ -273,11 +273,11 @@ def look_in(event, selector):
     if not target:
         return
 
-    if not target.has_component(Position) or not target.Position.is_container:
+    if not target.is_(Position) or not target.Position.is_container:
         actor.tell("You can't look inside of that.")
         return
 
-    if target.has_component(Dark):
+    if target.is_(Dark):
         actor.tell("It's too dark in there to see anything.")
         return
 
@@ -295,11 +295,11 @@ def look_in(event, selector):
 def look_at(actor, selector):
     from components import Dark
 
-    if not actor.has_component(Position):
+    if not actor.is_(Position):
         actor.tell("You're unable to do that.")
         return
 
-    if actor.Position.container.has_component(Dark):
+    if actor.Position.container.is_(Dark):
         actor.tell("It's too dark to see anything here.")
         return
 
@@ -316,7 +316,7 @@ def look_at(actor, selector):
 def get(actor, selector):
     from components import Important
 
-    if not actor.has_component(Position) or not actor.Position.is_container:
+    if not actor.is_(Position) or not actor.Position.is_container:
         actor.tell("You're unable to do that.")
         return
 
@@ -328,11 +328,11 @@ def get(actor, selector):
         actor.tell("You can't put yourself in your inventory.")
         return
 
-    if not target.has_component(Position) or not target.Position.is_carriable:
+    if not target.is_(Position) or not target.Position.is_carriable:
         actor.tell("That can't be carried.")
         return
 
-    if target.has_component(Important):
+    if target.is_(Important):
         actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
         return
 
@@ -346,7 +346,7 @@ def get(actor, selector):
 def get_from(actor, target_selector, container_selector):
     from components import Important
 
-    if not actor.has_component(Position) or not actor.Position.is_container:
+    if not actor.is_(Position) or not actor.Position.is_container:
         actor.tell("You're unable to hold items.")
         return
 
@@ -358,7 +358,7 @@ def get_from(actor, target_selector, container_selector):
         actor.tell("You can't get things from your inventory, they'd just go right back in!")
         return
 
-    if not container.has_component(Position) or not container.Position.is_container:
+    if not container.is_(Position) or not container.Position.is_container:
         actor.tell("{0.Name} can't hold items.".format(container))
         return
 
@@ -370,11 +370,11 @@ def get_from(actor, target_selector, container_selector):
         actor.tell("You can't put yourself in your inventory.")
         return
 
-    if not target.has_component(Position):
+    if not target.is_(Position):
         actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
         return
 
-    if target.has_component(Important):
+    if target.is_(Important):
         actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
         return
 
@@ -389,7 +389,7 @@ def get_from(actor, target_selector, container_selector):
 def put_in(actor, target_selector, container_selector):
     from components import Important
 
-    if not actor.has_component(Position) or not actor.Position.is_container:
+    if not actor.is_(Position) or not actor.Position.is_container:
         actor.tell("You're unable to hold things.")
         return
 
@@ -397,11 +397,11 @@ def put_in(actor, target_selector, container_selector):
     if not target:
         return
 
-    if not target.has_component(Position):
+    if not target.is_(Position):
         actor.tell("You can't put {0.name} into anything.")
         return
 
-    if target.has_component(Important):
+    if target.is_(Important):
         actor.tell("You shouldn't get rid of this; it's very important.")
         return
 
@@ -409,7 +409,7 @@ def put_in(actor, target_selector, container_selector):
     if not container:
         return
 
-    if not container.has_component(Position) or not container.Position.is_container:
+    if not container.is_(Position) or not container.Position.is_container:
         actor.tell("{0.Name} can't hold things.".format(container))
         return
 
@@ -424,7 +424,7 @@ def put_in(actor, target_selector, container_selector):
 def drop(actor, selector):
     from components import Sticky, Important
 
-    if not actor.has_component(Position):
+    if not actor.is_(Position):
         actor.tell("You're unable to drop things.")
         return
 
@@ -434,11 +434,11 @@ def drop(actor, selector):
 
     # TODO: other nearby stuff
 
-    if target.has_component(Important):
+    if target.is_(Important):
         actor.tell("You shouldn't get rid of this; it's very important.")
         return
 
-    if target.has_component(Sticky) and not target.Sticky.roll_for_drop():
+    if target.is_(Sticky) and not target.Sticky.roll_for_drop():
         actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(target))
         return
 
@@ -450,14 +450,14 @@ def drop(actor, selector):
 
 @ActionMode.action('^(?:w(?:alk)?|go) (?P<direction>.+)$')
 def walk(actor, direction):
-    if not actor.has_component(Position):
+    if not actor.is_(Position):
         actor.tell("You're unable to move.")
         return
 
     room = actor.Position.container
 
     # Actor is hanging out at the top level, or room is in a bad state
-    if not room or not room.has_component(Position):
+    if not room or not room.is_(Position):
         actor.tell("You're unable to leave this place.")
         return
 
@@ -477,7 +477,7 @@ def walk(actor, direction):
     destination = exits[direction]
 
     # Ensure the destination is still a container
-    if not destination or not destination.has_component(Position) or not destination.Position.is_container:
+    if not destination or not destination.is_(Position) or not destination.Position.is_container:
         actor.tell("You're unable to go that way.")
         return
 
@@ -491,14 +491,14 @@ def walk(actor, direction):
 
 @ActionMode.action(r'^enter (?P<selector>.+)$')
 def enter(actor, selector):
-    if not actor.has_component(Position):
+    if not actor.is_(Position):
         actor.tell("You're unable to move.")
         return
 
     room = actor.Position.container
 
     # Actor is hanging out at the top level, or room is in a bad state
-    if not room or not room.has_component(Position):
+    if not room or not room.is_(Position):
         actor.tell("You're unable to leave this place.")
         return
 
@@ -506,7 +506,7 @@ def enter(actor, selector):
     if not container:
         return
 
-    if not container.has_component(Position) or not container.Position.is_container or not container.Position.is_enterable:
+    if not container.is_(Position) or not container.Position.is_container or not container.Position.is_enterable:
         actor.tell("You can't enter that.")
         return
 

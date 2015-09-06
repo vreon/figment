@@ -19,11 +19,11 @@ class ShoosPests(Component):
         if random.random() >= self.awareness:
             return
 
-        if not self.entity.has_component([position.Position, emotes.Emotes]):
+        if not self.entity.is_([position.Position, emotes.Emotes]):
             return
 
         room = self.entity.Position.container
-        pests = set(e for e in room.Position.contents() if e.has_component(Pest))
+        pests = set(e for e in room.Position.contents() if e.is_(Pest))
 
         if not pests:
             return
@@ -79,7 +79,7 @@ class Bird(Component):
         ])
         self.entity.tell('You {1}.'.format(self.entity, second_verb))
 
-        if not self.entity.has_component(position.Position):
+        if not self.entity.is_(position.Position):
             return
 
         self.entity.Position.emit('{0.Name} {1}.'.format(self.entity, third_verb))

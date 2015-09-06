@@ -100,7 +100,7 @@ def look_at(actor, selector):
         actor.tell('No such entity %r.' % selector)
         return
 
-    if target.has_component(BlackHole):
+    if target.is_(BlackHole):
         actor.tell("You're unable to look directly at {0.name}.".format(target))
         return
 
@@ -114,7 +114,7 @@ def color_of(actor, selector):
         actor.tell('No such entity %r.' % selector)
         return
 
-    if not target.has_component(Colorful):
+    if not target.is_(Colorful):
         actor.tell("{0.Name} has no particular color.".format(target))
         return
 
@@ -128,11 +128,11 @@ def paint(actor, selector, color):
         actor.tell('No such entity %r.' % selector)
         return
 
-    if not target.has_component(Colorful):
+    if not target.is_(Colorful):
         actor.tell("{0.Name} cannot be painted.".format(target))
         return
 
-    if target.has_component(BlackHole):
+    if target.is_(BlackHole):
         color = 'black'
 
     target.Colorful.color = color

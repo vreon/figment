@@ -16,7 +16,7 @@ class Wandering(Component):
 
     def tick(self):
         if random.random() < self.wanderlust:
-            if not self.entity.has_component(Position):
+            if not self.entity.is_(Position):
                 return
 
             room = self.entity.Position.container
