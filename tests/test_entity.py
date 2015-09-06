@@ -1,4 +1,4 @@
-from figment import Entity, Event, Zone, ExploreMode
+from figment import Entity, Zone, ExploreMode
 from tests.helpers import tell, saw, Visible, Colorful, BlackHole
 
 

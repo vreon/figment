@@ -1,4 +1,4 @@
-from figment import Component, Event, before
+from figment import Component, before
 from components import Position
 
 class Psychic(Component):
