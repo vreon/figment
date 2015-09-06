@@ -3,7 +3,7 @@
 import random
 import logging
 
-from figment import Entity, Zone, log, ExploreMode
+from figment import Entity, Zone, log, ActionMode
 from components import *
 
 log.setLevel(logging.DEBUG)
@@ -27,7 +27,7 @@ if __name__ == '__main__':
                 Wandering(wanderlust=0.03, destinations=destinations)
             ],
             zone=zone,
-            mode=ExploreMode(),
+            mode=ActionMode(),
         )
         room_.Position.store(pigeon)
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         [Position(is_container=True), Emotes()],
         zone=zone,
         hearing=True,
-        mode=ExploreMode()
+        mode=ActionMode()
     )
 
     ##### Ground level
@@ -264,7 +264,7 @@ if __name__ == '__main__':
         '...',
         [Position(), Emotes(), ShoosPests(direction='south')],
         zone=zone,
-        mode=ExploreMode(),
+        mode=ActionMode(),
     )
     gift_shop.Position.store(gift_shop_manager)
 

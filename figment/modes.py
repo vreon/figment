@@ -36,7 +36,7 @@ class Mode(object):
         raise NotImplementedError
 
 
-class ExploreMode(Mode):
+class ActionMode(Mode):
     def perform(self, entity, command_or_action, **kwargs):
         event = None
         action = None
@@ -93,7 +93,7 @@ class DebugMode(Mode):
     def perform(self, entity, command):
         if command == 'stop':
             entity.tell('OK.')
-            entity.mode = ExploreMode()
+            entity.mode = ActionMode()
         else:
             self.num_commands += 1
             entity.tell('You said: {} ({})'.format(command, self.num_commands))
