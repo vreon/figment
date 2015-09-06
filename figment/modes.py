@@ -62,7 +62,7 @@ class ExploreMode(Mode):
             event = Event(**kwargs)
 
         if not event:
-            entity.tell(random.choice(('What?', 'Eh?', 'Come again?', 'Unknown command.')))
+            entity.tell('Unknown command.')
             return
 
         event.actor = entity
