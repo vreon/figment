@@ -262,7 +262,7 @@ def look(actor):
 
 
 @ActionMode.action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<selector>.+)$')
-def look_in(event, selector):
+def look_in(actor, selector):
     from components import Dark
 
     if not actor.is_(Spatial):
