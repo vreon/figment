@@ -10,7 +10,7 @@ log.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     zone = Zone.from_config('default', '.')
-    zone.load_components()
+    zone.load_modules()
 
     # For convenience
     def room(name, desc):

@@ -12,6 +12,7 @@ from time import sleep
 from redis import StrictRedis
 from redis.connection import ConnectionError
 from figment.component import Component
+from figment.modes import Mode
 from figment.entity import Entity
 from figment.logger import log
 from figment.serializers import SERIALIZERS
@@ -152,16 +153,23 @@ class Zone(object):
             shutil.move(f.name, self.snapshot_path)
             os._exit(os.EX_OK)
 
-    def load_components(self):
+    def _import_subclasses(self, module_name, parent_class):
+        module = importlib.import_module(module_name)
+        return {
+            cls.__name__: cls
+            for name, cls in inspect.getmembers(module)
+            if inspect.isclass(cls) and issubclass(cls, parent_class)
+        }
+
+    def load_modules(self):
         sys.path.append(self.world_path)
-        components_module = importlib.import_module('components')
 
-        for name, cls in inspect.getmembers(components_module):
-            if not inspect.isclass(cls) or not issubclass(cls, Component):
-                continue
+        self.components = self._import_subclasses('components', Component)
+        self.modes = self._import_subclasses('modes', Mode)
 
-            log.debug('Registered component: %s' % name)
-            self.components[name] = cls
+        log.debug('Loaded %s component(s) and %s mode(s).' % (
+            len(self.components), len(self.modes)
+        ))
 
     def start(self):
         try:

@@ -148,7 +148,7 @@ class Entity(object):
         mode_dict = dict_['mode']
         if mode_dict:
             mode_name = mode_dict.pop('__class__')
-            mode = Mode.class_from_name(mode_name).from_dict(mode_dict)
+            mode = zone.modes[mode_name].from_dict(mode_dict)
         else:
             mode = None
 

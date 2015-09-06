@@ -9,22 +9,8 @@ try:
 except NameError:
     basestring = (str, bytes)
 
-class ModeMeta(type):
-    def __new__(cls, name, bases, dict_):
-        new_class = super(ModeMeta, cls).__new__(cls, name, bases, dict_)
-        if name != 'Mode':
-            Mode.ALL[name] = new_class
-        return new_class
-
 
 class Mode(object):
-    __metaclass__ = ModeMeta
-    ALL = {}
-
-    @classmethod
-    def class_from_name(cls, name):
-        return cls.ALL[name]
-
     @classmethod
     def from_dict(cls, dict_):
         return cls()

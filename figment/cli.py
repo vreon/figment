@@ -63,7 +63,7 @@ def run(args):
         if args.ticker:
             zone.start_ticker()
         else:
-            zone.load_components()
+            zone.load_modules()
             zone.load_snapshot()
             zone.start()
     except Exception as e:
