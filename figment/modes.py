@@ -25,22 +25,19 @@ class Mode(object):
     def class_from_name(cls, name):
         return cls.ALL[name]
 
-    def __init__(self, entity):
-        self.entity = entity
-
     @classmethod
-    def from_dict(cls, entity, dict_):
-        return cls(entity)
+    def from_dict(cls, dict_):
+        return cls()
 
     def to_dict(self):
         return {}
 
-    def perform(self, command):
+    def perform(self, entity, command):
         raise NotImplementedError
 
 
 class ExploreMode(Mode):
-    def perform(self, command_or_action, **kwargs):
+    def perform(self, entity, command_or_action, **kwargs):
         event = None
         action = None
 
@@ -65,10 +62,10 @@ class ExploreMode(Mode):
             event = Event(**kwargs)
 
         if not event:
-            self.entity.tell(random.choice(('What?', 'Eh?', 'Come again?', 'Unknown command.')))
+            entity.tell(random.choice(('What?', 'Eh?', 'Come again?', 'Unknown command.')))
             return
 
-        event.actor = self.entity
+        event.actor = entity
         for hook_point in action(event) or []:
             if isinstance(hook_point, basestring):
                 hook_type, witnesses = hook_point, []
@@ -83,3 +80,31 @@ class ExploreMode(Mode):
                     hooks = component.HOOKS.get(hook_type, {}).get(action, [])
                     for hook in hooks:
                         hook(component, event)
+
+
+class DebugMode(Mode):
+    """
+    A mode to test mode switching.
+    """
+    def __init__(self, num_commands=0):
+        super(DebugMode, self).__init__()
+        self.num_commands = num_commands
+
+    def perform(self, entity, command):
+        if command == 'stop':
+            entity.tell('OK.')
+            entity.mode = ExploreMode()
+        else:
+            self.num_commands += 1
+            entity.tell('You said: {} ({})'.format(command, self.num_commands))
+
+    def to_dict(self):
+        return {
+            'num_commands': self.num_commands
+        }
+
+    @classmethod
+    def from_dict(cls, dict_):
+        return cls(
+            num_commands=dict_['num_commands']
+        )

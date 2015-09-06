@@ -1,4 +1,4 @@
-from figment import Entity, Event, Zone
+from figment import Entity, Event, Zone, ExploreMode
 from tests.helpers import tell, saw, Visible, Colorful, BlackHole
 
 
@@ -11,7 +11,8 @@ class TestEntity(object):
     def setup(self):
         self.zone = z = Zone()
         self.player = Entity(
-            'Player', 'A player stands here.', [Visible()], zone=z
+            'Player', 'A player stands here.', [Visible()], zone=z,
+            mode=ExploreMode()
         )
         self.ball = Entity('a ball', 'A round rubber ball.', [
             Visible(), Colorful(color='red')

@@ -51,11 +51,11 @@ class ComponentStore(object):
 
 
 class Entity(object):
-    def __init__(self, name, desc, components=None, id=None, zone=None, hearing=False):
+    def __init__(self, name, desc, components=None, id=None, zone=None, hearing=False, mode=None):
         self.id = id or Entity.create_id()
         self.name = name
         self.desc = desc
-        self.mode = ExploreMode(self)
+        self.mode = mode
         self.components = ComponentStore(self)
         self._zone = None
         self.zone = zone
@@ -119,8 +119,12 @@ class Entity(object):
         return 'entity:%s:hints' % id
 
     def to_dict(self):
-        mode_dict = self.mode.to_dict()
-        mode_dict['name'] = self.mode.__class__.__name__
+        if self.mode:
+            mode_dict = self.mode.to_dict()
+            mode_dict['__class__'] = self.mode.__class__.__name__
+        else:
+            mode_dict = None
+
         return {
             'id': self.id,
             'name': self.name,
@@ -142,8 +146,13 @@ class Entity(object):
         )
 
         mode_dict = dict_['mode']
-        mode_name = mode_dict.pop('name')
-        entity.mode = Mode.class_from_name(mode_name).from_dict(entity, mode_dict)
+        if mode_dict:
+            mode_name = mode_dict.pop('__class__')
+            mode = Mode.class_from_name(mode_name).from_dict(mode_dict)
+        else:
+            mode = None
+
+        entity.mode = mode
         entity.zone = zone
 
         components = []
@@ -182,7 +191,12 @@ class Entity(object):
         return upper_first(self.name)
 
     def perform(self, *args, **kwargs):
-        self.mode.perform(*args, **kwargs)
+        if self.mode:
+            self.mode.perform(self, *args, **kwargs)
+        else:
+            log.warn('Entity [%s] tried to perform %r, but it has no mode' % (
+                self.id, (args, kwargs)
+            ))
 
     def tell(self, message):
         """Send text to this entity."""
