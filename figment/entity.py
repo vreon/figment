@@ -137,7 +137,7 @@ class Entity(object):
         }
 
     @classmethod
-    def from_dict(cls, dict_, zone=None):
+    def from_dict(cls, dict_, zone):
         entity = cls(
             dict_['name'],
             dict_['desc'],
@@ -157,7 +157,7 @@ class Entity(object):
 
         components = []
         for component_name, component_dict in dict_.get('components', {}).items():
-            component = Component.class_from_name(component_name).from_dict(component_dict)
+            component = zone.components[component_name].from_dict(component_dict)
             components.append(component)
 
         entity.components.add(components)

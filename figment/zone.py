@@ -5,10 +5,13 @@ import shutil
 # import zlib
 import json
 import traceback
+import importlib
+import inspect
 from time import sleep
 
 from redis import StrictRedis
 from redis.connection import ConnectionError
+from figment.component import Component
 from figment.entity import Entity
 from figment.logger import log
 from figment.serializers import SERIALIZERS
@@ -24,6 +27,7 @@ class Zone(object):
         self.id = None
         self.world_path = ''
         self.entities = {}
+        self.components = {}
         self.ticking_entities = set()
         self.tick_interval = 1
         self.running = False
@@ -128,7 +132,7 @@ class Zone(object):
             #     snapshot = zlib.decompress(snapshot)
             snapshot = self.snapshot_serializer.unserialize(snapshot)
             for entity_dict in snapshot['entities']:
-                entity = Entity.from_dict(entity_dict, zone=self)
+                entity = Entity.from_dict(entity_dict, self)
 
         return True
 
@@ -150,8 +154,14 @@ class Zone(object):
 
     def load_components(self):
         sys.path.append(self.world_path)
-        # As a side effect, Component.ALL gets populated with Component subclasses
-        __import__('components')
+        components_module = importlib.import_module('components')
+
+        for name, cls in inspect.getmembers(components_module):
+            if not inspect.isclass(cls) or not issubclass(cls, Component):
+                continue
+
+            log.debug('Registered component: %s' % name)
+            self.components[name] = cls
 
     def start(self):
         try:
@@ -215,7 +225,7 @@ class Zone(object):
     def perform_import(self, entity_dicts):
         # TODO: assumes entity IDs are globally unique
         for entity_dict in entity_dicts:
-            Entity.from_dict(entity_dict, zone=self)
+            Entity.from_dict(entity_dict, self)
 
     def perform_command(self, entity_id, command):
         entity = self.get(entity_id)

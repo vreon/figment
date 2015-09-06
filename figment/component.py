@@ -25,19 +25,12 @@ class ComponentMeta(type):
                             .setdefault(hooked_function, [])\
                             .append(getattr(new_class, method_name))
 
-        log.debug('Registered component: %s' % name)
-        Component.ALL[name] = new_class
         return new_class
 
 
 class Component(object):
     __metaclass__ = ComponentMeta
-    ALL = {}
     ACTIONS = {}
-
-    @classmethod
-    def class_from_name(cls, name):
-        return cls.ALL[name]
 
     def __init__(self):
         self.entity = None
