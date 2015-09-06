@@ -1,6 +1,6 @@
 from position import Position
 from dark import Dark
-from emotes import Emotes
+from emotive import Emotive
 from psychic import Psychic
 from sticky import Sticky
 from fauna import Bird, Pest, ShoosPests

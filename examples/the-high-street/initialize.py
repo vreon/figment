@@ -37,7 +37,7 @@ if __name__ == '__main__':
     admin = Entity(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
-        [Position(is_container=True), Emotes()],
+        [Position(is_container=True), Emotive()],
         zone=zone,
         hearing=True,
         mode=ActionMode()
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     gift_shop_manager = Entity(
         'the gift shop manager',
         '...',
-        [Position(), Emotes(), ShoosPests(direction='south')],
+        [Position(), Emotive(), ShoosPests(direction='south')],
         zone=zone,
         mode=ActionMode(),
     )

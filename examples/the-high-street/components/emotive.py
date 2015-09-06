@@ -2,14 +2,14 @@ from figment import Component
 from components import Position
 from modes import ActionMode
 
-class Emotes(Component):
+class Emotive(Component):
     """Enables an entity to emote."""
 
 def emote(actor, verb, plural=None, join=None, selector=None):
     if not plural:
         plural = verb + 's'
 
-    if not actor.is_([Position, Emotes]):
+    if not actor.is_([Position, Emotive]):
         actor.tell("You're unable to do that.")
         return
 

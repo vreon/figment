@@ -1,6 +1,6 @@
 import random
 from figment import Component
-from components import position, emotes
+from components import position, emotive
 
 
 class Pest(Component):
@@ -19,7 +19,7 @@ class ShoosPests(Component):
         if random.random() >= self.awareness:
             return
 
-        if not self.entity.is_([position.Position, emotes.Emotes]):
+        if not self.entity.is_([position.Position, emotive.Emotive]):
             return
 
         room = self.entity.Position.container
@@ -28,9 +28,9 @@ class ShoosPests(Component):
         if not pests:
             return
         elif len(pests) == 1:
-            self.entity.perform(emotes.scowl, selector=list(pests)[0].id)
+            self.entity.perform(emotive.scowl, selector=list(pests)[0].id)
         else:
-            self.entity.perform(emotes.scowl)
+            self.entity.perform(emotive.scowl)
 
         message = ', '.join([
             random.choice([
