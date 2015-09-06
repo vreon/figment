@@ -1,1 +1,1 @@
-from figment.modes import ActionMode
+from action import ActionMode

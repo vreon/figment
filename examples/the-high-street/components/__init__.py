@@ -1,5 +1,4 @@
 from position import Position
-from usable import Usable
 from dark import Dark
 from emotes import Emotes
 from psychic import Psychic

@@ -12,7 +12,5 @@ This world includes several components that can be reused or adapted for your ow
 - **Pest**, **ShoosPests**, and **Bird** are components for making entities act like, or react to, certain kinds of animals.
 - **Important** prevents an entity from being dropped or taken.
 - **Psychic** entities will say the same words as you... before you say them.
-- **Speaking** provides a base for conversations, though it's unused at present.
-- **StickyBlob** is a silly example of an entity that will randomly fail to be dropped.
-- **Usable** provides hooks for using entities and using entities on other entities.
+- **Sticky** is a silly example of an entity that will randomly fail to be dropped.
 - **Wandering** entities will meander randomly between the specified rooms.

@@ -197,5 +197,4 @@ class Entity(object):
 
 
 from figment.utils import upper_first
-from figment.modes import Mode
 from figment.component import Component

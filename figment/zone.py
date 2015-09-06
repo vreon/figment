@@ -12,7 +12,7 @@ from time import sleep
 from redis import StrictRedis
 from redis.connection import ConnectionError
 from figment.component import Component
-from figment.modes import Mode
+from figment.mode import Mode
 from figment.entity import Entity
 from figment.logger import log
 from figment.serializers import SERIALIZERS

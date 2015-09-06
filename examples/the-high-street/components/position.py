@@ -1,6 +1,7 @@
 import string
-from figment import Component, Entity, action
+from figment import Component, Entity
 from figment.utils import upper_first, indent
+from modes import ActionMode
 
 def to_id(entity_or_id):
     if isinstance(entity_or_id, Entity):
@@ -218,339 +219,349 @@ class Position(Component):
 
         self.entity.tell('\n'.join(messages))
 
-    #########################
-    # Actions
-    #########################
 
-    @action(r'^s(?:ay)? (?P<message>.+)$')
-    def say(event):
-        from components import Psychic
+#########################
+# Actions
+#########################
 
-        if not event.actor.has_component(Position):
-            event.actor.tell("You're unable to do that.")
-            return
+@ActionMode.action(r'^s(?:ay)? (?P<message>.+)$')
+def say(actor, message):
+    from components import Psychic
 
-        message = upper_first(event.message.strip().replace('"', "'"))
+    if not actor.has_component(Position):
+        actor.tell("You're unable to do that.")
+        return
 
-        if not message[-1] in ('.', '?', '!'):
-            message += '.'
+    message = upper_first(message.strip().replace('"', "'"))
 
-        witnesses = event.actor.Position.nearby()
-        for witness in event.actor.Position.nearby():
-            if witness.has_component(Position) and witness.has_component(Psychic):
-                witness.perform(Position.say, message=message)
-
-        event.actor.tell('You say: "{0}"'.format(message))
-        event.actor.Position.emit('{0.Name} says: "{1}"'.format(event.actor, message))
+    if not message[-1] in ('.', '?', '!'):
+        message += '.'
 
-    @action(r'^l(?:ook)?(?: around)?$')
-    def look(event):
-        from components import Dark
+    for witness in actor.Position.nearby():
+        if witness.has_component(Position) and witness.has_component(Psychic):
+            witness.perform(Position.say, message=message)
 
-        if not event.actor.has_component(Position):
-            event.actor.tell("You're unable to do that.")
-            return
+    actor.tell('You say: "{0}"'.format(message))
+    actor.Position.emit('{0.Name} says: "{1}"'.format(actor, message))
 
-        if event.actor.Position.container.has_component(Dark):
-            event.actor.tell("It's too dark to see anything here.")
-            return
 
-        event.actor.Position.emit('{0.Name} looks around.'.format(event.actor))
-        event.actor.Position.tell_surroundings()
+@ActionMode.action(r'^l(?:ook)?(?: around)?$')
+def look(actor):
+    from components import Dark
 
-    @action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<selector>.+)$')
-    def look_in(event):
-        from components import Dark
+    if not actor.has_component(Position):
+        actor.tell("You're unable to do that.")
+        return
 
-        if not event.actor.has_component(Position):
-            event.actor.tell("You're unable to do that.")
-            return
+    if actor.Position.container.has_component(Dark):
+        actor.tell("It's too dark to see anything here.")
+        return
 
-        event.target = event.actor.Position.pick_nearby_inventory(event.selector)
-        if not event.target:
-            return
+    actor.Position.emit('{0.Name} looks around.'.format(actor))
+    actor.Position.tell_surroundings()
 
-        if not event.target.has_component(Position) or not event.target.Position.is_container:
-            event.actor.tell("You can't look inside of that.")
-            return
 
-        if event.target.has_component(Dark):
-            event.actor.tell("It's too dark in there to see anything.")
-            return
-
-        event.actor.tell('Contents:')
-
-        contents = [e for e in event.target.Position.contents() if e.Position.is_visible]
-        if contents:
-            for item in contents:
-                event.actor.tell(indent('{0.name}'.format(item)))
-        else:
-            event.actor.tell(indent('nothing'))
+@ActionMode.action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<selector>.+)$')
+def look_in(event, selector):
+    from components import Dark
 
-    @action(r'^(?:ex(?:amine)?|l(?:ook)?) (?:at )?(?P<selector>.+)$')
-    def look_at(event):
-        from components import Dark
+    if not actor.has_component(Position):
+        actor.tell("You're unable to do that.")
+        return
 
-        if not event.actor.has_component(Position):
-            event.actor.tell("You're unable to do that.")
-            return
+    target = actor.Position.pick_nearby_inventory(selector)
+    if not target:
+        return
 
-        if event.actor.Position.container.has_component(Dark):
-            event.actor.tell("It's too dark to see anything here.")
-            return
+    if not target.has_component(Position) or not target.Position.is_container:
+        actor.tell("You can't look inside of that.")
+        return
 
-        event.target = event.actor.Position.pick_nearby_inventory(event.selector)
-        if not event.target:
-            return
+    if target.has_component(Dark):
+        actor.tell("It's too dark in there to see anything.")
+        return
 
-        event.actor.tell(event.target.desc)
-        event.actor.Position.emit('{0.Name} looks at {1}.'.format(event.actor, event.target.name), exclude=event.target)
-        event.target.tell('{0.Name} looks at you.'.format(event.actor))
+    actor.tell('Contents:')
 
-    @action('^(?:get|take|pick up) (?P<selector>.+)$')
-    def get(event):
-        from components import Important
-
-        if not event.actor.has_component(Position) or not event.actor.Position.is_container:
-            event.actor.tell("You're unable to do that.")
-            return
-
-        event.target = event.actor.Position.pick_nearby(event.selector)
-        if not event.target:
-            return
-
-        if event.target == event.actor:
-            event.actor.tell("You can't put yourself in your inventory.")
-            return
-
-        if not event.target.has_component(Position) or not event.target.Position.is_carriable:
-            event.actor.tell("That can't be carried.")
-            return
+    contents = [e for e in target.Position.contents() if e.Position.is_visible]
+    if contents:
+        for item in contents:
+            actor.tell(indent('{0.name}'.format(item)))
+    else:
+        actor.tell(indent('nothing'))
 
-        if event.target.has_component(Important):
-            event.actor.tell('{0.Name} resists your attempt to grab it.'.format(event.target))
-            return
 
-        event.actor.tell('You pick up {0.name}.'.format(event.target))
-        event.actor.Position.emit('{0.Name} picks up {1.name}.'.format(event.actor, event.target), exclude=event.target)
-        event.target.tell('{0.Name} picks you up.'.format(event.actor))
-        event.actor.Position.store(event.target)
-
-    @action('^(?:get|take|pick up) (?P<target_selector>.+) from (?P<container_selector>.+)$')
-    def get_from(event):
-        from components import Important
-
-        if not event.actor.has_component(Position) or not event.actor.Position.is_container:
-            event.actor.tell("You're unable to hold items.")
-            return
-
-        event.container = event.actor.Position.pick_nearby_inventory(event.container_selector)
-        if not event.container:
-            return
-
-        if event.container == event.actor:
-            event.actor.tell("You can't get things from your inventory, they'd just go right back in!")
-            return
-
-        if not event.container.has_component(Position) or not event.container.Position.is_container:
-            event.actor.tell("{0.Name} can't hold items.".format(event.container))
-            return
-
-        event.target = event.actor.Position.pick_from(event.target_selector, event.container)
-        if not event.target:
-            return
-
-        if event.target == event.actor:
-            event.actor.tell("You can't put yourself in your inventory.")
-            return
-
-        if not event.target.has_component(Position):
-            event.actor.tell("You can't take {0.name} from {1.name}.".format(event.target, event.container))
-            return
-
-        if event.target.has_component(Important):
-            event.actor.tell('{0.Name} resists your attempt to grab it.'.format(event.target))
-            return
-
-        event.actor.tell('You take {0.name} from {1.name}.'.format(event.target, event.container))
-        event.actor.Position.emit('{0.Name} takes {1.name} from {2.name}.'.format(event.actor, event.target, event.container), exclude=(event.target, event.container))
-        event.container.tell('{0.Name} takes {1.name} from you.'.format(event.actor, event.target))
-        event.target.tell('{0.Name} takes you from {1.name}.'.format(event.actor, event.container))
-        event.actor.Position.store(event.target)
-
-    @action(r'^put (?P<target_selector>.+) (?:in(?:to|side(?: of)?)?) (?P<container_selector>.+)$')
-    def put_in(event):
-        from components import Important
-
-        if not event.actor.has_component(Position) or not event.actor.Position.is_container:
-            event.actor.tell("You're unable to hold things.")
-            return
-
-        event.target = event.actor.Position.pick_nearby_inventory(event.target_selector)
-        if not event.target:
-            return
-
-        if not event.target.has_component(Position):
-            event.actor.tell("You can't put {0.name} into anything.")
-            return
-
-        if event.target.has_component(Important):
-            event.actor.tell("You shouldn't get rid of this; it's very important.")
-            return
-
-        event.container = event.actor.Position.pick_nearby_inventory(event.container_selector)
-        if not event.container:
-            return
-
-        if not event.container.has_component(Position) or not event.container.Position.is_container:
-            event.actor.tell("{0.Name} can't hold things.".format(event.container))
-            return
-
-        event.actor.tell('You put {0.name} in {1.name}.'.format(event.target, event.container))
-        event.actor.Position.emit('{0.Name} puts {1.name} in {2.name}.'.format(event.actor, event.target, event.container), exclude=(event.target, event.container))
-        event.container.tell('{0.Name} puts {1.name} in your inventory.'.format(event.actor, event.target))
-        event.target.tell('{0.Name} puts you in {1.name}.'.format(event.actor, event.container))
-        event.container.Position.store(event.target)
-
-    @action(r'^drop (?P<selector>.+)$')
-    def drop(event):
-        from components import Sticky, Important
-
-        if not event.actor.has_component(Position):
-            event.actor.tell("You're unable to drop things.")
-            return
-
-        event.target = event.actor.Position.pick_inventory(event.selector)
-        if not event.target:
-            return
-
-        # TODO: other nearby stuff
-
-        if event.target.has_component(Important):
-            event.actor.tell("You shouldn't get rid of this; it's very important.")
-            return
-
-        if event.target.has_component(Sticky) and not event.target.Sticky.roll_for_drop():
-            event.actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(event.target))
-            return
-
-        event.actor.Position.unstore(event.target)
-        event.actor.tell('You drop {0.name}.'.format(event.target))
-        event.actor.Position.emit('{0.Name} drops {1.name}.'.format(event.actor, event.target), exclude=event.target)
-        event.target.tell('{0.Name} drops you.'.format(event.actor))
-
-    @action('^(?:w(?:alk)?|go) (?P<direction>.+)$')
-    def walk(event):
-        if not event.actor.has_component(Position):
-            event.actor.tell("You're unable to move.")
-            return
-
-        room = event.actor.Position.container
-
-        # Actor is hanging out at the top level, or room is in a bad state
-        if not room or not room.has_component(Position):
-            event.actor.tell("You're unable to leave this place.")
-            return
-
-        exits = room.Position.exits()
-        if not exits:
-            event.actor.tell("There don't seem to be any exits here.")
-            return
-
-        for exit_name in exits:
-            if event.direction.lower() == exit_name.lower():
-                event.direction = exit_name
-                break
-        else:
-            event.actor.tell("You're unable to go that way.")
-            return
-
-        destination = exits[event.direction]
-
-        # Ensure the destination is still a container
-        if not destination or not destination.has_component(Position) or not destination.Position.is_container:
-            event.actor.tell("You're unable to go that way.")
-            return
-
-        event.actor.tell('You travel {0}.'.format(event.direction))
-        event.actor.Position.emit('{0.Name} travels {1} to {2.name}.'.format(event.actor, event.direction, destination))
-        destination.Position.announce('{0.Name} arrives from {1.name}.'.format(event.actor, room))
-        destination.Position.store(event.actor)
-
-        event.actor.Position.tell_surroundings()
-
-    @action(r'^enter (?P<selector>.+)$')
-    def enter(event):
-        if not event.actor.has_component(Position):
-            event.actor.tell("You're unable to move.")
-            return
-
-        room = event.actor.Position.container
-
-        # Actor is hanging out at the top level, or room is in a bad state
-        if not room or not room.has_component(Position):
-            event.actor.tell("You're unable to leave this place.")
-            return
-
-        event.container = event.actor.Position.pick_nearby(event.selector)
-        if not event.container:
-            return
-
-        if not event.container.has_component(Position) or not event.container.Position.is_container or not event.container.Position.is_enterable:
-            event.actor.tell("You can't enter that.")
-            return
-
-        event.actor.tell('You enter {0.name}.'.format(event.container))
-        event.actor.Position.emit('{0.Name} enters {1.name}.'.format(event.actor, event.container))
-        event.container.Position.announce('{0.Name} arrives from {1.name}.'.format(event.actor, room))
-        event.container.Position.store(event.actor)
-
-        event.actor.Position.tell_surroundings()
-
-    ##########################
-    # Aliases and shortcuts
-    ##########################
-
-    @action('^(?:i|inv|inventory)$')
-    def tell_inventory(event):
-        return event.actor.perform('look in self')
-
-    @action('^n(?:orth)?$')
-    def go_north(event):
-        return event.actor.perform('go north')
-
-    @action('^s(?:outh)?$')
-    def go_south(event):
-        return event.actor.perform('go south')
-
-    @action('^e(?:ast)?$')
-    def go_east(event):
-        return event.actor.perform('go east')
-
-    @action('^w(?:est)?$')
-    def go_west(event):
-        return event.actor.perform('go west')
-
-    @action('^(?:ne|northeast)?$')
-    def go_northeast(event):
-        return event.actor.perform('go northeast')
-
-    @action('^(?:nw|northwest)?$')
-    def go_northwest(event):
-        return event.actor.perform('go northwest')
-
-    @action('^(?:se|southeast)?$')
-    def go_southeast(event):
-        return event.actor.perform('go southeast')
-
-    @action('^(?:sw|southwest)?$')
-    def go_southwest(event):
-        return event.actor.perform('go southwest')
-
-    @action('^u(?:p)?$')
-    def go_up(event):
-        return event.actor.perform('go up')
-
-    @action('^d(?:own)?$')
-    def go_down(event):
-        return event.actor.perform('go down')
+@ActionMode.action(r'^(?:ex(?:amine)?|l(?:ook)?) (?:at )?(?P<selector>.+)$')
+def look_at(actor, selector):
+    from components import Dark
+
+    if not actor.has_component(Position):
+        actor.tell("You're unable to do that.")
+        return
+
+    if actor.Position.container.has_component(Dark):
+        actor.tell("It's too dark to see anything here.")
+        return
+
+    target = actor.Position.pick_nearby_inventory(selector)
+    if not target:
+        return
+
+    actor.tell(target.desc)
+    actor.Position.emit('{0.Name} looks at {1}.'.format(actor, target.name), exclude=target)
+    target.tell('{0.Name} looks at you.'.format(actor))
+
+
+@ActionMode.action('^(?:get|take|pick up) (?P<selector>.+)$')
+def get(actor, selector):
+    from components import Important
+
+    if not actor.has_component(Position) or not actor.Position.is_container:
+        actor.tell("You're unable to do that.")
+        return
+
+    target = actor.Position.pick_nearby(selector)
+    if not target:
+        return
+
+    if target == actor:
+        actor.tell("You can't put yourself in your inventory.")
+        return
+
+    if not target.has_component(Position) or not target.Position.is_carriable:
+        actor.tell("That can't be carried.")
+        return
+
+    if target.has_component(Important):
+        actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
+        return
+
+    actor.tell('You pick up {0.name}.'.format(target))
+    actor.Position.emit('{0.Name} picks up {1.name}.'.format(actor, target), exclude=target)
+    target.tell('{0.Name} picks you up.'.format(actor))
+    actor.Position.store(target)
+
+
+@ActionMode.action('^(?:get|take|pick up) (?P<target_selector>.+) from (?P<container_selector>.+)$')
+def get_from(actor, target_selector, container_selector):
+    from components import Important
+
+    if not actor.has_component(Position) or not actor.Position.is_container:
+        actor.tell("You're unable to hold items.")
+        return
+
+    container = actor.Position.pick_nearby_inventory(container_selector)
+    if not container:
+        return
+
+    if container == actor:
+        actor.tell("You can't get things from your inventory, they'd just go right back in!")
+        return
+
+    if not container.has_component(Position) or not container.Position.is_container:
+        actor.tell("{0.Name} can't hold items.".format(container))
+        return
+
+    target = actor.Position.pick_from(target_selector, container)
+    if not target:
+        return
+
+    if target == actor:
+        actor.tell("You can't put yourself in your inventory.")
+        return
+
+    if not target.has_component(Position):
+        actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
+        return
+
+    if target.has_component(Important):
+        actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
+        return
+
+    actor.tell('You take {0.name} from {1.name}.'.format(target, container))
+    actor.Position.emit('{0.Name} takes {1.name} from {2.name}.'.format(actor, target, container), exclude=(target, container))
+    container.tell('{0.Name} takes {1.name} from you.'.format(actor, target))
+    target.tell('{0.Name} takes you from {1.name}.'.format(actor, container))
+    actor.Position.store(target)
+
+
+@ActionMode.action(r'^put (?P<target_selector>.+) (?:in(?:to|side(?: of)?)?) (?P<container_selector>.+)$')
+def put_in(actor, target_selector, container_selector):
+    from components import Important
+
+    if not actor.has_component(Position) or not actor.Position.is_container:
+        actor.tell("You're unable to hold things.")
+        return
+
+    target = actor.Position.pick_nearby_inventory(target_selector)
+    if not target:
+        return
+
+    if not target.has_component(Position):
+        actor.tell("You can't put {0.name} into anything.")
+        return
+
+    if target.has_component(Important):
+        actor.tell("You shouldn't get rid of this; it's very important.")
+        return
+
+    container = actor.Position.pick_nearby_inventory(container_selector)
+    if not container:
+        return
+
+    if not container.has_component(Position) or not container.Position.is_container:
+        actor.tell("{0.Name} can't hold things.".format(container))
+        return
+
+    actor.tell('You put {0.name} in {1.name}.'.format(target, container))
+    actor.Position.emit('{0.Name} puts {1.name} in {2.name}.'.format(actor, target, container), exclude=(target, container))
+    container.tell('{0.Name} puts {1.name} in your inventory.'.format(actor, target))
+    target.tell('{0.Name} puts you in {1.name}.'.format(actor, container))
+    container.Position.store(target)
+
+
+@ActionMode.action(r'^drop (?P<selector>.+)$')
+def drop(actor, selector):
+    from components import Sticky, Important
+
+    if not actor.has_component(Position):
+        actor.tell("You're unable to drop things.")
+        return
+
+    target = actor.Position.pick_inventory(selector)
+    if not target:
+        return
+
+    # TODO: other nearby stuff
+
+    if target.has_component(Important):
+        actor.tell("You shouldn't get rid of this; it's very important.")
+        return
+
+    if target.has_component(Sticky) and not target.Sticky.roll_for_drop():
+        actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(target))
+        return
+
+    actor.Position.unstore(target)
+    actor.tell('You drop {0.name}.'.format(target))
+    actor.Position.emit('{0.Name} drops {1.name}.'.format(actor, target), exclude=target)
+    target.tell('{0.Name} drops you.'.format(actor))
+
+
+@ActionMode.action('^(?:w(?:alk)?|go) (?P<direction>.+)$')
+def walk(actor, direction):
+    if not actor.has_component(Position):
+        actor.tell("You're unable to move.")
+        return
+
+    room = actor.Position.container
+
+    # Actor is hanging out at the top level, or room is in a bad state
+    if not room or not room.has_component(Position):
+        actor.tell("You're unable to leave this place.")
+        return
+
+    exits = room.Position.exits()
+    if not exits:
+        actor.tell("There don't seem to be any exits here.")
+        return
+
+    for exit_name in exits:
+        if direction.lower() == exit_name.lower():
+            direction = exit_name
+            break
+    else:
+        actor.tell("You're unable to go that way.")
+        return
+
+    destination = exits[direction]
+
+    # Ensure the destination is still a container
+    if not destination or not destination.has_component(Position) or not destination.Position.is_container:
+        actor.tell("You're unable to go that way.")
+        return
+
+    actor.tell('You travel {0}.'.format(direction))
+    actor.Position.emit('{0.Name} travels {1} to {2.name}.'.format(actor, direction, destination))
+    destination.Position.announce('{0.Name} arrives from {1.name}.'.format(actor, room))
+    destination.Position.store(actor)
+
+    actor.Position.tell_surroundings()
+
+
+@ActionMode.action(r'^enter (?P<selector>.+)$')
+def enter(actor, selector):
+    if not actor.has_component(Position):
+        actor.tell("You're unable to move.")
+        return
+
+    room = actor.Position.container
+
+    # Actor is hanging out at the top level, or room is in a bad state
+    if not room or not room.has_component(Position):
+        actor.tell("You're unable to leave this place.")
+        return
+
+    container = actor.Position.pick_nearby(selector)
+    if not container:
+        return
+
+    if not container.has_component(Position) or not container.Position.is_container or not container.Position.is_enterable:
+        actor.tell("You can't enter that.")
+        return
+
+    actor.tell('You enter {0.name}.'.format(container))
+    actor.Position.emit('{0.Name} enters {1.name}.'.format(actor, container))
+    container.Position.announce('{0.Name} arrives from {1.name}.'.format(actor, room))
+    container.Position.store(actor)
+
+    actor.Position.tell_surroundings()
+
+
+##########################
+# Aliases and shortcuts
+##########################
+
+@ActionMode.action('^(?:i|inv|inventory)$')
+def tell_inventory(actor):
+    return actor.perform('look in self')
+
+@ActionMode.action('^n(?:orth)?$')
+def go_north(actor):
+    return actor.perform('go north')
+
+@ActionMode.action('^s(?:outh)?$')
+def go_south(actor):
+    return actor.perform('go south')
+
+@ActionMode.action('^e(?:ast)?$')
+def go_east(actor):
+    return actor.perform('go east')
+
+@ActionMode.action('^w(?:est)?$')
+def go_west(actor):
+    return actor.perform('go west')
+
+@ActionMode.action('^(?:ne|northeast)?$')
+def go_northeast(actor):
+    return actor.perform('go northeast')
+
+@ActionMode.action('^(?:nw|northwest)?$')
+def go_northwest(actor):
+    return actor.perform('go northwest')
+
+@ActionMode.action('^(?:se|southeast)?$')
+def go_southeast(actor):
+    return actor.perform('go southeast')
+
+@ActionMode.action('^(?:sw|southwest)?$')
+def go_southwest(actor):
+    return actor.perform('go southwest')
+
+@ActionMode.action('^u(?:p)?$')
+def go_up(actor):
+    return actor.perform('go up')
+
+@ActionMode.action('^d(?:own)?$')
+def go_down(actor):
+    return actor.perform('go down')

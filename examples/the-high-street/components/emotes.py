@@ -1,116 +1,116 @@
-from figment import Component, action
+from figment import Component
 from components import Position
+from modes import ActionMode
 
 class Emotes(Component):
     """Enables an entity to emote."""
 
-    @staticmethod
-    def emote(event, verb, plural=None, join=None):
-        if not plural:
-            plural = verb + 's'
+def emote(actor, verb, plural=None, join=None, selector=None):
+    if not plural:
+        plural = verb + 's'
 
-        if not event.actor.has_component([Position, Emotes]):
-            event.actor.tell("You're unable to do that.")
-            return
+    if not actor.has_component([Position, Emotes]):
+        actor.tell("You're unable to do that.")
+        return
 
-        if not event.selector:
-            event.actor.Position.emit('{0.Name} {1}.'.format(event.actor, plural))
-            event.actor.tell('You {0}.'.format(verb))
-            return
+    if not selector:
+        actor.Position.emit('{0.Name} {1}.'.format(actor, plural))
+        actor.tell('You {0}.'.format(verb))
+        return
 
-        event.target = event.actor.Position.pick_nearby(event.selector)
-        if not event.target:
-            return
+    target = actor.Position.pick_nearby(selector)
+    if not target:
+        return
 
-        if join:
-            event.actor.Position.emit('{0.Name} {1} {2} {3.name}.'.format(event.actor, plural, join, event.target), exclude=event.target)
-            event.actor.tell('You {0} {1} {2.name}.'.format(verb, join, event.target))
-            event.target.tell('{0.Name} {1} {2} you.'.format(event.actor, plural, join))
-        else:
-            event.actor.Position.emit('{0.Name} {1} {2.name}.'.format(event.actor, plural, event.target), exclude=event.target)
-            event.actor.tell('You {0} {1.name}.'.format(verb, event.target))
-            event.target.tell('{0.Name} {1} you.'.format(event.actor, plural))
+    if join:
+        actor.Position.emit('{0.Name} {1} {2} {3.name}.'.format(actor, plural, join, target), exclude=target)
+        actor.tell('You {0} {1} {2.name}.'.format(verb, join, target))
+        target.tell('{0.Name} {1} {2} you.'.format(actor, plural, join))
+    else:
+        actor.Position.emit('{0.Name} {1} {2.name}.'.format(actor, plural, target), exclude=target)
+        actor.tell('You {0} {1.name}.'.format(verb, target))
+        target.tell('{0.Name} {1} you.'.format(actor, plural))
 
-    @action(r'^dance(?: with (?P<selector>.+))?$')
-    def dance(event):
-        return Emotes.emote(event, 'dance', join='with')
+@ActionMode.action(r'^dance(?: with (?P<selector>.+))?$')
+def dance(actor, selector=None):
+    return emote(actor, 'dance', join='with', selector=selector)
 
-    @action(r'^laugh(?: at (?P<selector>.+))?$')
-    def laugh(event):
-        return Emotes.emote(event, 'laugh', join='at')
+@ActionMode.action(r'^laugh(?: at (?P<selector>.+))?$')
+def laugh(actor, selector=None):
+    return emote(actor, 'laugh', join='at', selector=selector)
 
-    @action(r'^lol$')
-    def lol(event):
-        return Emotes.emote(event, 'laugh')
+@ActionMode.action(r'^lol$')
+def lol(actor):
+    return emote(actor, 'laugh')
 
-    @action(r'^blink(?: at (?P<selector>.+))?$')
-    def blink(event):
-        return Emotes.emote(event, 'blink', join='at')
+@ActionMode.action(r'^blink(?: at (?P<selector>.+))?$')
+def blink(actor, selector=None):
+    return emote(actor, 'blink', join='at', selector=selector)
 
-    @action(r'^frown(?: at (?P<selector>.+))?$')
-    def frown(event):
-        return Emotes.emote(event, 'frown', join='at')
+@ActionMode.action(r'^frown(?: at (?P<selector>.+))?$')
+def frown(actor, selector=None):
+    return emote(actor, 'frown', join='at', selector=selector)
 
-    @action(r'^scowl(?: at (?P<selector>.+))?$')
-    def scowl(event):
-        return Emotes.emote(event, 'scowl', join='at')
+@ActionMode.action(r'^scowl(?: at (?P<selector>.+))?$')
+def scowl(actor, selector=None):
+    return emote(actor, 'scowl', join='at', selector=selector)
 
-    @action(r'^eyebrow(?: at (?P<selector>.+))?$')
-    def eyebrow(event):
-        return Emotes.emote(event, 'raise an eyebrow', 'raises an eyebrow', join='at')
+@ActionMode.action(r'^eyebrow(?: at (?P<selector>.+))?$')
+def eyebrow(actor, selector=None):
+    return emote(actor, 'raise an eyebrow', 'raises an eyebrow', join='at', selector=selector)
 
-    @action(r'^shrug(?: at (?P<selector>.+))?$')
-    def shrug(event):
-        return Emotes.emote(event, 'shrug', join='at')
+@ActionMode.action(r'^shrug(?: at (?P<selector>.+))?$')
+def shrug(actor, selector=None):
+    return emote(actor, 'shrug', join='at', selector=selector)
 
-    @action(r'^smile(?: at (?P<selector>.+))?$')
-    def smile(event):
-        return Emotes.emote(event, 'smile', join='at')
+@ActionMode.action(r'^smile(?: at (?P<selector>.+))?$')
+def smile(actor, selector=None):
+    return emote(actor, 'smile', join='at', selector=selector)
 
-    @action(r'^grin(?: at (?P<selector>.+))?$')
-    def grin(event):
-        return Emotes.emote(event, 'grin', join='at')
+@ActionMode.action(r'^grin(?: at (?P<selector>.+))?$')
+def grin(actor, selector=None):
+    return emote(actor, 'grin', join='at', selector=selector)
 
-    @action(r'^bow(?: to (?P<selector>.+))?$')
-    def bow(event):
-        return Emotes.emote(event, 'bow', join='to')
+@ActionMode.action(r'^bow(?: to (?P<selector>.+))?$')
+def bow(actor, selector=None):
+    return emote(actor, 'bow', join='to', selector=selector)
 
-    @action(r'^nod(?: (?P<join>at|to) (?P<selector>.+))?$')
-    def nod(event):
-        return Emotes.emote(event, 'nod', join=event.join)
+@ActionMode.action(r'^nod(?: (?P<join>at|to) (?P<selector>.+))?$')
+def nod(actor, join=None, selector=None):
+    return emote(actor, 'nod', join=join, selector=selector)
 
-    @action(r'^cheer(?: for (?P<selector>.+))?$')
-    def cheer(event):
-        return Emotes.emote(event, 'cheer', join='for')
+@ActionMode.action(r'^cheer(?: for (?P<selector>.+))?$')
+def cheer(actor, selector=None):
+    return emote(actor, 'cheer', join='for', selector=selector)
 
-    @action(r'^cough(?: (?P<join>on|at) (?P<selector>.+))?$')
-    def cough(event):
-        return Emotes.emote(event, 'cough', join=event.join)
+@ActionMode.action(r'^cough(?: (?P<join>on|at) (?P<selector>.+))?$')
+def cough(actor, join=None, selector=None):
+    return emote(actor, 'cough', join=join, selector=selector)
 
-    @action(r'^cry(?: on (?P<selector>.+))?$')
-    def cry(event):
-        return Emotes.emote(event, 'cry', 'cries', join='on')
+@ActionMode.action(r'^cry(?: on (?P<selector>.+))?$')
+def cry(actor, selector=None):
+    return emote(actor, 'cry', 'cries', join='on', selector=selector)
 
-    @action(r'^point(?: (?P<join>to|at) (?P<selector>.+))?$')
-    def point(event):
-        return Emotes.emote(event, 'point', join=event.join)
+@ActionMode.action(r'^point(?: (?P<join>to|at) (?P<selector>.+))?$')
+def point(actor, join=None, selector=None):
+    return emote(actor, 'point', join=join, selector=selector)
 
-    @action(r'^wave(?: (?P<join>to|at) (?P<selector>.+))?$')
-    def wave(event):
-        return Emotes.emote(event, 'wave', join=event.join)
+@ActionMode.action(r'^wave(?: (?P<join>to|at) (?P<selector>.+))?$')
+def wave(actor, join=None, selector=None):
+    return emote(actor, 'wave', join=join, selector=selector)
 
-    @action(r'^wink(?: (?P<join>to|at) (?P<selector>.+))?$')
-    def wink(event):
-        return Emotes.emote(event, 'wink', join=event.join)
+@ActionMode.action(r'^wink(?: (?P<join>to|at) (?P<selector>.+))?$')
+def wink(actor, join=None, selector=None):
+    return emote(actor, 'wink', join=join, selector=selector)
 
-    @action(r'^poke (?P<selector>.+)$')
-    def poke(event):
-        return Emotes.emote(event, 'poke')
+@ActionMode.action(r'^poke (?P<selector>.+)$')
+def poke(actor, selector):
+    return emote(actor, 'poke', selector=selector)
 
-    @action(r'^hug (?P<selector>.+)$')
-    def hug(event):
-        return Emotes.emote(event, 'hug')
+@ActionMode.action(r'^hug (?P<selector>.+)$')
+def hug(actor, selector):
+    return emote(actor, 'hug', selector=selector)
 
-    @action(r'^kiss (?P<selector>.+)$')
-    def kiss(event):
-        return Emotes.emote(event, 'kiss', 'kisses')
+@ActionMode.action(r'^kiss (?P<selector>.+)$')
+def kiss(actor, selector):
+    return emote(actor, 'kiss', 'kisses', selector=selector)
