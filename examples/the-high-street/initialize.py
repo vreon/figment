@@ -44,6 +44,14 @@ if __name__ == '__main__':
         mode=ActionMode()
     )
 
+    trinket = Entity(
+        'a shiny trinket',
+        'A small metallic gizmo of some kind.',
+        [Spatial(is_carriable=True), Important()],
+        zone=zone,
+    )
+    admin.Spatial.store(trinket)
+
     ##### Ground level
 
     ### The High Street
@@ -74,6 +82,14 @@ if __name__ == '__main__':
 
     street_south.Spatial.store(admin)
     street_north.Spatial.link('south', street_south, 'north')
+
+    statue = Entity(
+        'a large statue',
+        'A statue of the city founder, looking toward the horizon, rests on a large plinth.',
+        [Spatial()],
+        zone=zone,
+    )
+    street_south.Spatial.store(statue)
 
     ### North side
 
