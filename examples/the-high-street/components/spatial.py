@@ -137,6 +137,9 @@ class Spatial(Component):
     def store(self, entity):
         Spatial.move(entity, self.entity)
 
+    def store_in(self, entity):
+        Spatial.move(self.entity, entity)
+
     def unstore(self, entity):
         Spatial.move(entity, self.container)
 
