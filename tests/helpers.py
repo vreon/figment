@@ -128,11 +128,11 @@ def paint(actor, selector, color):
         actor.tell('No such entity %r.' % selector)
         return
 
-    if not target.is_(Colorful):
+    if not target.is_('Colorful'):
         actor.tell("{0.Name} cannot be painted.".format(target))
         return
 
-    if target.is_(BlackHole):
+    if target.is_('BlackHole'):
         color = 'black'
 
     target.Colorful.color = color

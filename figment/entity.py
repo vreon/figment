@@ -1,6 +1,7 @@
 import random
 import string
 import collections
+import inspect
 
 from figment.logger import log
 
@@ -17,29 +18,33 @@ class ComponentStore(object):
         for component in components:
             setattr(self.entity, component.__class__.__name__, component)
             component.attach(self.entity)
-            self.components[component.__class__] = component
+            self.components[component.__class__.__name__] = component
 
         if self.entity.zone and self.entity.ticking:
             self.entity.zone.ticking_entities.add(self.entity)
 
-    def remove(self, component_classes):
-        if not isinstance(component_classes, collections.Iterable):
-            component_classes = [component_classes]
+    def remove(self, component_names):
+        if isinstance(component_names, str) or not isinstance(component_names, collections.Iterable):
+            component_names = [component_names]
 
-        for component_class in component_classes:
-            getattr(self.entity, component_class.__name__).detach()
-            delattr(self.entity, component_class.__name__)
-            self.components.pop(component_class, None)
+        for component_name in component_names:
+            if inspect.isclass(component_name):
+                component_name = component_name.__name__
+            getattr(self.entity, component_name).detach()
+            delattr(self.entity, component_name)
+            self.components.pop(component_name, None)
 
         if self.entity.zone and self.entity in self.entity.zone.ticking_entities and not self.entity.ticking:
             self.entity.zone.ticking_entities.remove(self.entity)
 
-    def has(self, component_classes):
-        if not isinstance(component_classes, collections.Iterable):
-            component_classes = [component_classes]
+    def has(self, component_names):
+        if isinstance(component_names, str) or not isinstance(component_names, collections.Iterable):
+            component_names = [component_names]
 
-        for component_class in component_classes:
-            if not component_class in self.components:
+        for component_name in component_names:
+            if inspect.isclass(component_name):
+                component_name = component_name.__name__
+            if not component_name in self.components:
                 return False
         return True
 

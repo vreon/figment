@@ -229,8 +229,6 @@ class Spatial(Component):
 
 @ActionMode.action(r'^s(?:ay)? (?P<message>.+)$')
 def say(actor, message):
-    from components import Psychic
-
     if not actor.is_(Spatial):
         actor.tell("You're unable to do that.")
         return
@@ -241,7 +239,7 @@ def say(actor, message):
         message += '.'
 
     for witness in actor.Spatial.nearby():
-        if witness.is_(Spatial) and witness.is_(Psychic):
+        if witness.is_([Spatial, 'Psychic']):
             witness.perform(Spatial.say, message=message)
 
     actor.tell('You say: "{0}"'.format(message))
@@ -250,13 +248,11 @@ def say(actor, message):
 
 @ActionMode.action(r'^l(?:ook)?(?: around)?$')
 def look(actor):
-    from components import Dark
-
     if not actor.is_(Spatial):
         actor.tell("You're unable to do that.")
         return
 
-    if actor.Spatial.container.is_(Dark):
+    if actor.Spatial.container.is_('Dark'):
         actor.tell("It's too dark to see anything here.")
         return
 
@@ -266,8 +262,6 @@ def look(actor):
 
 @ActionMode.action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<selector>.+)$')
 def look_in(actor, selector):
-    from components import Dark
-
     if not actor.is_(Spatial):
         actor.tell("You're unable to do that.")
         return
@@ -280,7 +274,7 @@ def look_in(actor, selector):
         actor.tell("You can't look inside of that.")
         return
 
-    if target.is_(Dark):
+    if target.is_('Dark'):
         actor.tell("It's too dark in there to see anything.")
         return
 
@@ -296,13 +290,11 @@ def look_in(actor, selector):
 
 @ActionMode.action(r'^(?:ex(?:amine)?|l(?:ook)?) (?:at )?(?P<selector>.+)$')
 def look_at(actor, selector):
-    from components import Dark
-
     if not actor.is_(Spatial):
         actor.tell("You're unable to do that.")
         return
 
-    if actor.Spatial.container.is_(Dark):
+    if actor.Spatial.container.is_('Dark'):
         actor.tell("It's too dark to see anything here.")
         return
 
@@ -317,8 +309,6 @@ def look_at(actor, selector):
 
 @ActionMode.action('^(?:get|take|pick up) (?P<selector>.+)$')
 def get(actor, selector):
-    from components import Important
-
     if not actor.is_(Spatial) or not actor.Spatial.is_container:
         actor.tell("You're unable to do that.")
         return
@@ -335,7 +325,7 @@ def get(actor, selector):
         actor.tell("That can't be carried.")
         return
 
-    if target.is_(Important):
+    if target.is_('Important'):
         actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
         return
 
@@ -347,8 +337,6 @@ def get(actor, selector):
 
 @ActionMode.action('^(?:get|take|pick up) (?P<target_selector>.+) from (?P<container_selector>.+)$')
 def get_from(actor, target_selector, container_selector):
-    from components import Important
-
     if not actor.is_(Spatial) or not actor.Spatial.is_container:
         actor.tell("You're unable to hold items.")
         return
@@ -377,7 +365,7 @@ def get_from(actor, target_selector, container_selector):
         actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
         return
 
-    if target.is_(Important):
+    if target.is_('Important'):
         actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
         return
 
@@ -390,8 +378,6 @@ def get_from(actor, target_selector, container_selector):
 
 @ActionMode.action(r'^put (?P<target_selector>.+) (?:in(?:to|side(?: of)?)?) (?P<container_selector>.+)$')
 def put_in(actor, target_selector, container_selector):
-    from components import Important
-
     if not actor.is_(Spatial) or not actor.Spatial.is_container:
         actor.tell("You're unable to hold things.")
         return
@@ -404,7 +390,7 @@ def put_in(actor, target_selector, container_selector):
         actor.tell("You can't put {0.name} into anything.")
         return
 
-    if target.is_(Important):
+    if target.is_('Important'):
         actor.tell("You shouldn't get rid of this; it's very important.")
         return
 
@@ -425,8 +411,6 @@ def put_in(actor, target_selector, container_selector):
 
 @ActionMode.action(r'^drop (?P<selector>.+)$')
 def drop(actor, selector):
-    from components import Sticky, Important
-
     if not actor.is_(Spatial):
         actor.tell("You're unable to drop things.")
         return
@@ -437,11 +421,11 @@ def drop(actor, selector):
 
     # TODO: other nearby stuff
 
-    if target.is_(Important):
+    if target.is_('Important'):
         actor.tell("You shouldn't get rid of this; it's very important.")
         return
 
-    if target.is_(Sticky) and not target.Sticky.roll_for_drop():
+    if target.is_('Sticky') and not target.Sticky.roll_for_drop():
         actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(target))
         return
 
