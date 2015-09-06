@@ -224,6 +224,8 @@ class Position(Component):
 
     @action(r'^s(?:ay)? (?P<message>.+)$')
     def say(event):
+        from components import Psychic
+
         if not event.actor.has_component(Position):
             event.actor.tell("You're unable to do that.")
             return
@@ -233,21 +235,24 @@ class Position(Component):
         if not message[-1] in ('.', '?', '!'):
             message += '.'
 
-        yield 'before', event.actor.Position.nearby()
-        if event.data.get('prevented'):
-            return
+        witnesses = event.actor.Position.nearby()
+        for witness in event.actor.Position.nearby():
+            if witness.has_component(Position) and witness.has_component(Psychic):
+                witness.perform(Position.say, message=message)
 
         event.actor.tell('You say: "{0}"'.format(message))
         event.actor.Position.emit('{0.Name} says: "{1}"'.format(event.actor, message))
 
     @action(r'^l(?:ook)?(?: around)?$')
     def look(event):
+        from components import Dark
+
         if not event.actor.has_component(Position):
             event.actor.tell("You're unable to do that.")
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
+        if event.actor.Position.container.has_component(Dark):
+            event.actor.tell("It's too dark to see anything here.")
             return
 
         event.actor.Position.emit('{0.Name} looks around.'.format(event.actor))
@@ -255,6 +260,8 @@ class Position(Component):
 
     @action(r'^l(?:ook)? (?:in(?:to|side(?: of)?)?) (?P<selector>.+)$')
     def look_in(event):
+        from components import Dark
+
         if not event.actor.has_component(Position):
             event.actor.tell("You're unable to do that.")
             return
@@ -267,8 +274,8 @@ class Position(Component):
             event.actor.tell("You can't look inside of that.")
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
+        if event.target.has_component(Dark):
+            event.actor.tell("It's too dark in there to see anything.")
             return
 
         event.actor.tell('Contents:')
@@ -282,16 +289,18 @@ class Position(Component):
 
     @action(r'^(?:ex(?:amine)?|l(?:ook)?) (?:at )?(?P<selector>.+)$')
     def look_at(event):
+        from components import Dark
+
         if not event.actor.has_component(Position):
             event.actor.tell("You're unable to do that.")
             return
 
-        event.target = event.actor.Position.pick_nearby_inventory(event.selector)
-        if not event.target:
+        if event.actor.Position.container.has_component(Dark):
+            event.actor.tell("It's too dark to see anything here.")
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
+        event.target = event.actor.Position.pick_nearby_inventory(event.selector)
+        if not event.target:
             return
 
         event.actor.tell(event.target.desc)
@@ -300,6 +309,8 @@ class Position(Component):
 
     @action('^(?:get|take|pick up) (?P<selector>.+)$')
     def get(event):
+        from components import Important
+
         if not event.actor.has_component(Position) or not event.actor.Position.is_container:
             event.actor.tell("You're unable to do that.")
             return
@@ -316,8 +327,8 @@ class Position(Component):
             event.actor.tell("That can't be carried.")
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
+        if event.target.has_component(Important):
+            event.actor.tell('{0.Name} resists your attempt to grab it.'.format(event.target))
             return
 
         event.actor.tell('You pick up {0.name}.'.format(event.target))
@@ -327,6 +338,8 @@ class Position(Component):
 
     @action('^(?:get|take|pick up) (?P<target_selector>.+) from (?P<container_selector>.+)$')
     def get_from(event):
+        from components import Important
+
         if not event.actor.has_component(Position) or not event.actor.Position.is_container:
             event.actor.tell("You're unable to hold items.")
             return
@@ -355,8 +368,8 @@ class Position(Component):
             event.actor.tell("You can't take {0.name} from {1.name}.".format(event.target, event.container))
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
+        if event.target.has_component(Important):
+            event.actor.tell('{0.Name} resists your attempt to grab it.'.format(event.target))
             return
 
         event.actor.tell('You take {0.name} from {1.name}.'.format(event.target, event.container))
@@ -367,6 +380,8 @@ class Position(Component):
 
     @action(r'^put (?P<target_selector>.+) (?:in(?:to|side(?: of)?)?) (?P<container_selector>.+)$')
     def put_in(event):
+        from components import Important
+
         if not event.actor.has_component(Position) or not event.actor.Position.is_container:
             event.actor.tell("You're unable to hold things.")
             return
@@ -379,16 +394,16 @@ class Position(Component):
             event.actor.tell("You can't put {0.name} into anything.")
             return
 
+        if event.target.has_component(Important):
+            event.actor.tell("You shouldn't get rid of this; it's very important.")
+            return
+
         event.container = event.actor.Position.pick_nearby_inventory(event.container_selector)
         if not event.container:
             return
 
         if not event.container.has_component(Position) or not event.container.Position.is_container:
             event.actor.tell("{0.Name} can't hold things.".format(event.container))
-            return
-
-        yield 'before'
-        if event.data.get('prevented'):
             return
 
         event.actor.tell('You put {0.name} in {1.name}.'.format(event.target, event.container))
@@ -399,6 +414,8 @@ class Position(Component):
 
     @action(r'^drop (?P<selector>.+)$')
     def drop(event):
+        from components import Sticky, Important
+
         if not event.actor.has_component(Position):
             event.actor.tell("You're unable to drop things.")
             return
@@ -408,8 +425,13 @@ class Position(Component):
             return
 
         # TODO: other nearby stuff
-        yield 'before', [event.target]
-        if event.data.get('prevented'):
+
+        if event.target.has_component(Important):
+            event.actor.tell("You shouldn't get rid of this; it's very important.")
+            return
+
+        if event.target.has_component(Sticky) and not event.target.Sticky.roll_for_drop():
+            event.actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(event.target))
             return
 
         event.actor.Position.unstore(event.target)
@@ -450,10 +472,6 @@ class Position(Component):
             event.actor.tell("You're unable to go that way.")
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
-            return
-
         event.actor.tell('You travel {0}.'.format(event.direction))
         event.actor.Position.emit('{0.Name} travels {1} to {2.name}.'.format(event.actor, event.direction, destination))
         destination.Position.announce('{0.Name} arrives from {1.name}.'.format(event.actor, room))
@@ -480,10 +498,6 @@ class Position(Component):
 
         if not event.container.has_component(Position) or not event.container.Position.is_container or not event.container.Position.is_enterable:
             event.actor.tell("You can't enter that.")
-            return
-
-        yield 'before'
-        if event.prevented:
             return
 
         event.actor.tell('You enter {0.name}.'.format(event.container))

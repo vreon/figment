@@ -52,20 +52,7 @@ class ActionMode(Mode):
             return
 
         event.actor = entity
-        for hook_point in action(event) or []:
-            if isinstance(hook_point, basestring):
-                hook_type, witnesses = hook_point, []
-            else:
-                hook_type, witnesses = hook_point
-
-            # TODO: This iterates over every component... but we know (or
-            # should know) which components hook which actions. We should only
-            # iterate over those component instances
-            for witness in witnesses:
-                for component in witness.components:
-                    hooks = component.HOOKS.get(hook_type, {}).get(action, [])
-                    for hook in hooks:
-                        hook(component, event)
+        action(event)
 
 
 class DebugMode(Mode):

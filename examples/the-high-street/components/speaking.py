@@ -16,8 +16,4 @@ class Speaking(Component):
             event.actor.tell("{0.Name} doesn't seem very talkative at the moment.")
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
-            return
-
         event.actor.tell("{0.Name} doesn't seem very talkative at the moment.")

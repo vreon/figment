@@ -1,4 +1,4 @@
-from figment import Component, action, before
+from figment import Component, action
 
 
 def tell(self, msg):
@@ -32,8 +32,8 @@ class Visible(Component):
             event.actor.tell('No such entity %r.' % event.selector)
             return
 
-        yield 'before', event.actor.zone.all()
-        if event.data.get('prevented'):
+        if target.has_component(BlackHole):
+            event.actor.tell("You're unable to look directly at {0.name}.".format(target))
             return
 
         event.actor.tell(target.desc)
@@ -59,10 +59,6 @@ class Colorful(Component):
             event.actor.tell("{0.Name} has no particular color.".format(target))
             return
 
-        yield 'before', event.actor.zone.all()
-        if event.data.get('prevented'):
-            return
-
         event.actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
 
     @action(r'^paint (?P<selector>.+) (?P<color>.+)')
@@ -76,23 +72,12 @@ class Colorful(Component):
             event.actor.tell("{0.Name} cannot be painted.".format(target))
             return
 
-        yield 'before', event.actor.zone.all()
-        if event.data.get('prevented'):
-            return
+        if target.has_component(BlackHole):
+            event.color = 'black'
 
         target.Colorful.color = event.color
         event.actor.tell('{0.Name} is now {0.Colorful.color}.'.format(target))
 
 
 class BlackHole(Component):
-    """A test component that overrides actions from another."""
-    @before(Colorful.paint)
-    def absorb_paint(self, event):
-        if self.entity.id == event.selector:
-            event.color = 'black'
-
-    @before(Visible.look_at)
-    def prevent_look_at(self, event):
-        if self.entity.id == event.selector:
-            event.actor.tell("You're unable to look directly at {0.name}.".format(self.entity))
-            event.data['prevented'] = True
+    """A test component that affects how actions behave."""

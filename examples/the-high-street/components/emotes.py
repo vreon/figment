@@ -22,10 +22,6 @@ class Emotes(Component):
         if not event.target:
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
-            return
-
         if join:
             event.actor.Position.emit('{0.Name} {1} {2} {3.name}.'.format(event.actor, plural, join, event.target), exclude=event.target)
             event.actor.tell('You {0} {1} {2.name}.'.format(verb, join, event.target))

@@ -15,10 +15,6 @@ class Usable(Component):
         if not event.target:
             return
 
-        yield 'before'
-        if event.data.get('prevented'):
-            return
-
         event.actor.tell("You can't use that.")
 
     @action(r'^use (?P<item_selector>.+) on (?P<target_selector>.+)')
@@ -33,10 +29,6 @@ class Usable(Component):
 
         event.target = event.actor.Position.pick_nearby_inventory(event.target_selector)
         if not event.target:
-            return
-
-        yield 'before'
-        if event.data.get('prevented'):
             return
 
         event.actor.tell('Nothing happens.')
