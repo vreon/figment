@@ -1,5 +1,5 @@
 from figment import Component
-from components import Position
+from components import Spatial
 from modes import ActionMode
 
 class Emotive(Component):
@@ -9,25 +9,25 @@ def emote(actor, verb, plural=None, join=None, selector=None):
     if not plural:
         plural = verb + 's'
 
-    if not actor.is_([Position, Emotive]):
+    if not actor.is_([Spatial, Emotive]):
         actor.tell("You're unable to do that.")
         return
 
     if not selector:
-        actor.Position.emit('{0.Name} {1}.'.format(actor, plural))
+        actor.Spatial.emit('{0.Name} {1}.'.format(actor, plural))
         actor.tell('You {0}.'.format(verb))
         return
 
-    target = actor.Position.pick_nearby(selector)
+    target = actor.Spatial.pick_nearby(selector)
     if not target:
         return
 
     if join:
-        actor.Position.emit('{0.Name} {1} {2} {3.name}.'.format(actor, plural, join, target), exclude=target)
+        actor.Spatial.emit('{0.Name} {1} {2} {3.name}.'.format(actor, plural, join, target), exclude=target)
         actor.tell('You {0} {1} {2.name}.'.format(verb, join, target))
         target.tell('{0.Name} {1} {2} you.'.format(actor, plural, join))
     else:
-        actor.Position.emit('{0.Name} {1} {2.name}.'.format(actor, plural, target), exclude=target)
+        actor.Spatial.emit('{0.Name} {1} {2.name}.'.format(actor, plural, target), exclude=target)
         actor.tell('You {0} {1.name}.'.format(verb, target))
         target.tell('{0.Name} {1} you.'.format(actor, plural))
 

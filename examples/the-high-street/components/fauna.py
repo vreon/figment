@@ -1,6 +1,6 @@
 import random
 from figment import Component
-from components import position, emotive
+from components import spatial, emotive
 
 
 class Pest(Component):
@@ -19,11 +19,11 @@ class ShoosPests(Component):
         if random.random() >= self.awareness:
             return
 
-        if not self.entity.is_([position.Position, emotive.Emotive]):
+        if not self.entity.is_([spatial.Spatial, emotive.Emotive]):
             return
 
-        room = self.entity.Position.container
-        pests = set(e for e in room.Position.contents() if e.is_(Pest))
+        room = self.entity.Spatial.container
+        pests = set(e for e in room.Spatial.contents() if e.is_(Pest))
 
         if not pests:
             return
@@ -48,11 +48,11 @@ class ShoosPests(Component):
             'shouts obscenities',
         ])
 
-        self.entity.perform(position.say, message=message)
-        self.entity.Position.emit('{0.Name} {1}.'.format(self.entity, action))
+        self.entity.perform(spatial.say, message=message)
+        self.entity.Spatial.emit('{0.Name} {1}.'.format(self.entity, action))
 
         for pest in pests:
-            pest.perform(position.walk, direction=self.direction)
+            pest.perform(spatial.walk, direction=self.direction)
 
 
 class Bird(Component):
@@ -79,7 +79,7 @@ class Bird(Component):
         ])
         self.entity.tell('You {1}.'.format(self.entity, second_verb))
 
-        if not self.entity.is_(position.Position):
+        if not self.entity.is_(spatial.Spatial):
             return
 
-        self.entity.Position.emit('{0.Name} {1}.'.format(self.entity, third_verb))
+        self.entity.Spatial.emit('{0.Name} {1}.'.format(self.entity, third_verb))

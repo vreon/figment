@@ -1,4 +1,4 @@
-from position import Position
+from spatial import Spatial
 from dark import Dark
 from emotive import Emotive
 from psychic import Psychic

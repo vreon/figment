@@ -1,5 +1,5 @@
 from figment import Component
-from components import Position
+from components import spatial
 import random
 
 
@@ -15,19 +15,21 @@ class Wandering(Component):
         }
 
     def tick(self):
-        if random.random() < self.wanderlust:
-            if not self.entity.is_(Position):
-                return
+        if random.random() >= self.wanderlust:
+            return
 
-            room = self.entity.Position.container
+        if not self.entity.is_(spatial.Spatial):
+            return
 
-            valid_exits = set()
-            for direction, entity in room.Position.exits().items():
-                if entity.id in self.destinations:
-                    valid_exits.add(direction)
+        room = self.entity.Spatial.container
 
-            if not valid_exits:
-                return
+        valid_exits = set()
+        for direction, entity in room.Spatial.exits().items():
+            if entity.id in self.destinations:
+                valid_exits.add(direction)
 
-            direction = random.choice(list(valid_exits))
-            self.entity.perform(Position.walk, direction=direction)
+        if not valid_exits:
+            return
+
+        direction = random.choice(list(valid_exits))
+        self.entity.perform(spatial.walk, direction=direction)
