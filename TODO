@@ -1,12 +1,7 @@
-Zones
-    x Each instance of a runfigment process can be a zone
-    x Entities can migrate to a new zone via serialization to Redis
-    x Runfigment processes should be wrapped in an exception handler
-    x Ctrl+C should shutdown gracefully (dumping first)
-
 Refactoring
     - Get rid of as much global state as you can
-        x Make it possible to run tests without polluting the entity space
+    - current usage of entity.perform assumes the entity is in explore mode
+        - need a good way to check the mode of entities
 
 General
     - In Inform 7, there are a few built-in assertion verbs
@@ -20,21 +15,10 @@ General
         - Where should "go" logic live? On Door?
             - Should Positioned be renamed to Container?
 
-    ! An action is a generator
-        x A generator can be thought of as a suspendable function
-        x event.trigger('before') -> yield 'before'
-        - This means hooks could live on the action?
-
-    x "selector" is a better name than "descriptor"
-    x figment listen needs graceful interrupt handling
     - Message templates (and action patterns) should use gettext for i18n
     - you should be able to use an exit by name
          - go (to) steakhouse
     - Disambiguation (again)
-
-Viewer
-    - Backbone powered? For searching / filtering
-    - Or ember, I dunno
 
 Action Flow
     - Trigger 'start' event
@@ -57,19 +41,12 @@ Examples and Core Components
     - Includes the more broadly applicable components from the example pack
     - For looser coupling, has_component might need to accept a string instead of a class
         - e.g. component relies on Positioned, but you want to use it with your own Positioned component
-    x Create a figment-examples repo, move example/ there
 
 Registration
     - ???
     - Accounts have a username, password, list of controllable entities
     - The connection should have some state (account ID, entity logged in as)
         - So the client doesn't have to send entity ID with every command
-
-Persistence
-    x Fork, then dump a JSON list of entities
-    x On start, check for a dump.json
-        x If it exists, load it
-        x Otherwise, create the world
 
 Combat
     - Single letters
@@ -89,9 +66,8 @@ Test items
     - Signs, books, walls you can write on/in
 
 Modal interactions
-    - Explore mode: arbitrary commands
+    - Action mode: arbitrary commands
     - Disambiguation mode
-        x should return the entity to the previous mode
     - Conversation mode: preset convo options
     - Combat mode: scheduler based
         - or, mostly turn based with 20 sec forfeit?
@@ -122,13 +98,6 @@ Stuff to think about
         - "a box, holding: ..."
     - need a room.unlink() for moving rooms
     - doors
-
-Frontend improvements
-    - Purge old messages
-    - Command history
-    - Make it easier for clients to display messages
-        - Message annotations (whisper, shout, important, etc.)
-        - Return JSON objects rather than a stream of strings
 
 Examples
     - Add an example that uses continuous coordinates for entity position
