@@ -38,9 +38,10 @@ if __name__ == '__main__':
     admin = Entity(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
-        [Spatial(is_container=True), Emotive()],
+        [Spatial(is_container=True), Emotive(), Meta(), Admin()],
         zone=zone,
         hearing=True,
+        id='admin',
         mode=ActionMode()
     )
 
