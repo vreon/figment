@@ -21,10 +21,10 @@ class ActionMode(Mode):
         else:
             command = ' '.join(command_or_action.strip().split())
             matches = {}
-            for pattern, action in ActionMode.ACTIONS.items():
+            for pattern, matched_action in ActionMode.ACTIONS.items():
                 match = re.match(pattern, command)
                 if match:
-                    matches[pattern] = (action, match.groupdict())
+                    matches[pattern] = (matched_action, match.groupdict())
 
             # If multiple patterns match this command, pick the longest one
             if matches:
