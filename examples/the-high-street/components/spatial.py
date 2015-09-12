@@ -529,19 +529,19 @@ def go_east(actor):
 def go_west(actor):
     return actor.perform('go west')
 
-@ActionMode.action('^(?:ne|northeast)?$')
+@ActionMode.action('^(?:ne|northeast)$')
 def go_northeast(actor):
     return actor.perform('go northeast')
 
-@ActionMode.action('^(?:nw|northwest)?$')
+@ActionMode.action('^(?:nw|northwest)$')
 def go_northwest(actor):
     return actor.perform('go northwest')
 
-@ActionMode.action('^(?:se|southeast)?$')
+@ActionMode.action('^(?:se|southeast)$')
 def go_southeast(actor):
     return actor.perform('go southeast')
 
-@ActionMode.action('^(?:sw|southwest)?$')
+@ActionMode.action('^(?:sw|southwest)$')
 def go_southwest(actor):
     return actor.perform('go southwest')
 
