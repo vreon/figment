@@ -209,7 +209,8 @@ class Zone(object):
         pubsub = self.redis.pubsub()
         pubsub.subscribe(Entity.messages_key_from_id(entity_id))
         for message in pubsub.listen():
-            yield message['data']
+            if message['type'] == 'message':
+                yield message['data']
 
     def process_one_event(self):
         key, value = self.redis.blpop([self.import_key, self.tick_key, self.incoming_key])
