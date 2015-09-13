@@ -1,4 +1,4 @@
-from spatial import Spatial, Invisible
+from spatial import Spatial, Invisible, Enterable
 from dark import Dark
 from emotive import Emotive
 from psychic import Psychic

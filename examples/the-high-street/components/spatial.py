@@ -19,12 +19,15 @@ class Invisible(Component):
     pass
 
 
+class Enterable(Component):
+    pass
+
+
 class Spatial(Component):
-    def __init__(self, container_id=None, is_container=False, is_carriable=False, is_enterable=False):
+    def __init__(self, container_id=None, is_container=False, is_carriable=False):
         self.container_id = container_id
         self.is_container = is_container
         self.is_carriable = is_carriable
-        self.is_enterable = is_enterable
 
         self._contents = set()
         self._exits = {}
@@ -34,7 +37,6 @@ class Spatial(Component):
             'is_container': self.is_container,
             'container_id': self.container_id,
             'is_carriable': self.is_carriable,
-            'is_enterable': self.is_enterable,
             'contents': list(self._contents),
             'exits': self._exits,
         }
@@ -46,7 +48,6 @@ class Spatial(Component):
         self.container_id = dict_['container_id']
         self.is_container = dict_['is_container']
         self.is_carriable = dict_['is_carriable']
-        self.is_enterable = dict_['is_enterable']
         self._contents = set(dict_['contents'])
         self._exits = dict_['exits']
 
@@ -494,7 +495,7 @@ def enter(actor, selector):
     if not container:
         return
 
-    if not container.is_(Spatial) or not container.Spatial.is_container or not container.Spatial.is_enterable:
+    if not container.is_([Spatial, Enterable]) or not container.Spatial.is_container:
         actor.tell("You can't enter that.")
         return
 

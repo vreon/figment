@@ -129,19 +129,19 @@ if __name__ == '__main__':
     police_cell_a = Entity(
         'Cell A',
         '...',
-        [Spatial(is_container=True, is_enterable=True)],
+        [Spatial(is_container=True), Enterable()],
         zone=zone,
     )
     police_cell_b = Entity(
         'Cell B',
         '...',
-        [Spatial(is_container=True, is_enterable=True)],
+        [Spatial(is_container=True), Enterable()],
         zone=zone,
     )
     police_cell_c = Entity(
         'Cell C',
         '...',
-        [Spatial(is_container=True, is_enterable=True)],
+        [Spatial(is_container=True), Enterable()],
         zone=zone,
     )
     police_cell_a.Spatial.link('out', '..')
@@ -293,7 +293,7 @@ if __name__ == '__main__':
     box = Entity(
         'a cardboard box',
         '...',
-        [Spatial(is_container=True, is_carriable=True, is_enterable=True)], # TODO: is_open
+        [Spatial(is_container=True, is_carriable=True), Enterable()], # TODO: is_open
         zone=zone,
     )
 
