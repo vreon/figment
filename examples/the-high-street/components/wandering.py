@@ -24,7 +24,7 @@ class Wandering(Component):
         room = self.entity.Spatial.container
 
         valid_exits = set()
-        for direction, entity in room.Spatial.exits().items():
+        for direction, entity in room.Container.exits().items():
             if entity.id in self.destinations:
                 valid_exits.add(direction)
 

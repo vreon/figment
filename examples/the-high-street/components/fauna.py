@@ -19,11 +19,11 @@ class ShoosPests(Component):
         if random.random() >= self.awareness:
             return
 
-        if not self.entity.is_([spatial.Spatial, emotive.Emotive]):
+        if not self.entity.is_([spatial.Spatial, spatial.Container, emotive.Emotive]):
             return
 
         room = self.entity.Spatial.container
-        pests = set(e for e in room.Spatial.contents() if e.is_(Pest))
+        pests = set(e for e in room.Container.contents() if e.is_(Pest))
 
         if not pests:
             return

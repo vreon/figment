@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     # For convenience
     def room(name, desc):
-        return Entity(name, desc, [Spatial(is_container=True)], zone=zone)
+        return Entity(name, desc, [Spatial(), Container()], zone=zone)
 
     def add_pigeon(room_, destinations):
         pigeon = Entity(
@@ -31,7 +31,7 @@ if __name__ == '__main__':
             zone=zone,
             mode=ActionMode(),
         )
-        room_.Spatial.store(pigeon)
+        room_.Container.store(pigeon)
 
 
     log.info('Initializing zone.')
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     admin = Entity(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
-        [Spatial(is_container=True), Emotive(), Meta(), Admin()],
+        [Spatial(), Container(), Emotive(), Meta(), Admin()],
         zone=zone,
         hearing=True,
         id='admin',
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         [Spatial(), Carriable(), Important()],
         zone=zone,
     )
-    admin.Spatial.store(trinket)
+    admin.Container.store(trinket)
 
     ##### Ground level
 
@@ -77,13 +77,13 @@ if __name__ == '__main__':
             'Steakhouse (with outdoor seating). Raucous music and laughter '
             'emanates from the tavern to the east.'
         ),
-        [Spatial(is_container=True)],
+        [Spatial(), Container()],
         id='startroom',
         zone=zone,
     )
 
-    street_south.Spatial.store(admin)
-    street_north.Spatial.link('south', street_south, 'north')
+    street_south.Container.store(admin)
+    street_north.Container.link('south', street_south, 'north')
 
     statue = Entity(
         'a large statue',
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         [Spatial()],
         zone=zone,
     )
-    street_south.Spatial.store(statue)
+    street_south.Container.store(statue)
 
     ### North side
 
@@ -101,56 +101,56 @@ if __name__ == '__main__':
         'Police Station - Front Desk',
         '...',
     )
-    police_station.Spatial.link('south', street_north, 'northwest')
+    police_station.Container.link('south', street_north, 'northwest')
 
     police_offices = room(
         'Police Station - Offices',
         '...',
     )
-    police_offices.Spatial.link('south', police_station, 'north')
+    police_offices.Container.link('south', police_station, 'north')
 
     police_interview = room(
         'Police Station - Interview Room',
         '...',
     )
-    police_interview.Spatial.link('east', police_offices, 'west')
+    police_interview.Container.link('east', police_offices, 'west')
 
     police_locker_room = room(
         'Police Station - Locker Room',
         '...',
     )
-    police_locker_room.Spatial.link('west', police_offices, 'east')
+    police_locker_room.Container.link('west', police_offices, 'east')
 
     police_cells = room(
         'Police Station - Holding Cells',
         '...',
     )
-    police_cells.Spatial.link('south', police_offices, 'north')
+    police_cells.Container.link('south', police_offices, 'north')
 
     police_cell_a = Entity(
         'Cell A',
         '...',
-        [Spatial(is_container=True), Enterable()],
+        [Spatial(), Container(), Enterable()],
         zone=zone,
     )
     police_cell_b = Entity(
         'Cell B',
         '...',
-        [Spatial(is_container=True), Enterable()],
+        [Spatial(), Container(), Enterable()],
         zone=zone,
     )
     police_cell_c = Entity(
         'Cell C',
         '...',
-        [Spatial(is_container=True), Enterable()],
+        [Spatial(), Container(), Enterable()],
         zone=zone,
     )
-    police_cell_a.Spatial.link('out', '..')
-    police_cell_b.Spatial.link('out', '..')
-    police_cell_c.Spatial.link('out', '..')
-    police_cells.Spatial.store(police_cell_a)
-    police_cells.Spatial.store(police_cell_b)
-    police_cells.Spatial.store(police_cell_c)
+    police_cell_a.Container.link('out', '..')
+    police_cell_b.Container.link('out', '..')
+    police_cell_c.Container.link('out', '..')
+    police_cells.Container.store(police_cell_a)
+    police_cells.Container.store(police_cell_b)
+    police_cells.Container.store(police_cell_c)
 
     # Antique store
 
@@ -158,7 +158,7 @@ if __name__ == '__main__':
         "Ye O' Antique Shoppe",
         '...',
     )
-    antique_store.Spatial.link('south', street_north, 'north')
+    antique_store.Container.link('south', street_north, 'north')
 
     # Library
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         'Public Library',
         '...',
     )
-    library.Spatial.link('south', street_north, 'northeast')
+    library.Container.link('south', street_north, 'northeast')
 
     # Cafe
 
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         "Baboman's Cafe",
         '...',
     )
-    cafe.Spatial.link('south', street_north, 'northwest')
+    cafe.Container.link('south', street_north, 'northwest')
 
     # Museum
 
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         'The Museum - Rotunda',
         '...',
     )
-    museum.Spatial.link('south', street_north, 'north')
+    museum.Container.link('south', street_north, 'north')
 
     # Gift shop
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
         'The Museum - Gift Shop',
         '...',
     )
-    gift_shop.Spatial.link('south', street_north, 'northeast')
+    gift_shop.Container.link('south', street_north, 'northeast')
 
     ### South side
 
@@ -200,7 +200,7 @@ if __name__ == '__main__':
         "Steakhouse",
         '...',
     )
-    steakhouse_lobby.Spatial.link('north', street_south, 'southwest')
+    steakhouse_lobby.Container.link('north', street_south, 'southwest')
 
     # Tailor
 
@@ -212,7 +212,7 @@ if __name__ == '__main__':
         'High Street Park',
         'A wide, grassy area.',
     )
-    park.Spatial.link('north', street_south, 'south')
+    park.Container.link('north', street_south, 'south')
 
     ### South side
 
@@ -259,18 +259,18 @@ if __name__ == '__main__':
     apt_elevator = Entity(
         'The Apartments - Elevator',
         "It's out of order for now.",
-        [Spatial(is_container=True)],
+        [Spatial(), Container()],
         zone=zone,
     )
 
-    steakhouse_lobby.Spatial.link('east', apt_1f_stairwell, 'west')
-    steakhouse_lobby.Spatial.link('west', apt_elevator, 'east')
-    apt_1f_stairwell.Spatial.link('up', apt_2f_stairwell, 'down')
-    apt_2f_stairwell.Spatial.link('up', apt_3f_stairwell, 'down')
-    apt_3f_stairwell.Spatial.link('up', apt_4f_stairwell, 'down')
-    apt_2f_stairwell.Spatial.link('south', apt_2f, 'north')
-    apt_3f_stairwell.Spatial.link('south', apt_3f, 'north')
-    apt_4f_stairwell.Spatial.link('south', apt_4f, 'north')
+    steakhouse_lobby.Container.link('east', apt_1f_stairwell, 'west')
+    steakhouse_lobby.Container.link('west', apt_elevator, 'east')
+    apt_1f_stairwell.Container.link('up', apt_2f_stairwell, 'down')
+    apt_2f_stairwell.Container.link('up', apt_3f_stairwell, 'down')
+    apt_3f_stairwell.Container.link('up', apt_4f_stairwell, 'down')
+    apt_2f_stairwell.Container.link('south', apt_2f, 'north')
+    apt_3f_stairwell.Container.link('south', apt_3f, 'north')
+    apt_4f_stairwell.Container.link('south', apt_4f, 'north')
 
     ### Assorted NPCs
 
@@ -285,7 +285,7 @@ if __name__ == '__main__':
         zone=zone,
         mode=ActionMode(),
     )
-    gift_shop.Spatial.store(gift_shop_manager)
+    gift_shop.Container.store(gift_shop_manager)
 
     add_pigeon(street_north, pigeon_destinations)
     add_pigeon(street_north, pigeon_destinations)
@@ -294,7 +294,7 @@ if __name__ == '__main__':
     box = Entity(
         'a cardboard box',
         '...',
-        [Spatial(is_container=True), Carriable(), Enterable()], # TODO: is_open
+        [Spatial(), Container(), Carriable(), Enterable()], # TODO: is_open
         zone=zone,
     )
 
@@ -311,9 +311,9 @@ if __name__ == '__main__':
         [Spatial(), Carriable()],
         zone=zone,
     )
-    steakhouse_lobby.Spatial.store(box)
-    box.Spatial.store(ball)
-    box.Spatial.store(cactus)
+    steakhouse_lobby.Container.store(box)
+    box.Container.store(ball)
+    box.Container.store(cactus)
 
     zone.save_snapshot()
 
