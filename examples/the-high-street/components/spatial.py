@@ -15,13 +15,16 @@ def to_entity(entity_or_id):
     return Entity.get(entity_or_id)
 
 
+class Invisible(Component):
+    pass
+
+
 class Spatial(Component):
-    def __init__(self, container_id=None, is_container=False, is_carriable=False, is_enterable=False, is_visible=True):
+    def __init__(self, container_id=None, is_container=False, is_carriable=False, is_enterable=False):
         self.container_id = container_id
         self.is_container = is_container
         self.is_carriable = is_carriable
         self.is_enterable = is_enterable
-        self.is_visible = is_visible
 
         self._contents = set()
         self._exits = {}
@@ -32,7 +35,6 @@ class Spatial(Component):
             'container_id': self.container_id,
             'is_carriable': self.is_carriable,
             'is_enterable': self.is_enterable,
-            'is_visible': self.is_visible,
             'contents': list(self._contents),
             'exits': self._exits,
         }
@@ -45,7 +47,6 @@ class Spatial(Component):
         self.is_container = dict_['is_container']
         self.is_carriable = dict_['is_carriable']
         self.is_enterable = dict_['is_enterable']
-        self.is_visible = dict_['is_visible']
         self._contents = set(dict_['contents'])
         self._exits = dict_['exits']
 
@@ -86,7 +87,7 @@ class Spatial(Component):
         if selector.lower() in ('self', 'me', 'myself'):
             return set((self.entity,))
 
-        return set(e for e in entity_set if (selector.lower() in e.name.lower() or selector == e.id) and e.Spatial.is_visible)
+        return set(e for e in entity_set if (selector.lower() in e.name.lower() or selector == e.id) and not e.is_(Invisible))
 
     def pick_interactively(self, selector, entity_set, area='in that area'):
         """
@@ -214,7 +215,7 @@ class Spatial(Component):
             for direction, destination in exits.items():
                 messages.append(indent('{0}: {1}'.format(direction, destination.name)))
 
-        entities_nearby = [e for e in self.nearby() if e.Spatial.is_visible]
+        entities_nearby = [e for e in self.nearby() if not e.is_(Invisible)]
         if entities_nearby:
             messages.append('Things nearby:')
             for entity in entities_nearby:
@@ -280,7 +281,7 @@ def look_in(actor, selector):
 
     actor.tell('Contents:')
 
-    contents = [e for e in target.Spatial.contents() if e.Spatial.is_visible]
+    contents = [e for e in target.Spatial.contents() if not e.is_(Invisible)]
     if contents:
         for item in contents:
             actor.tell(indent('{0.name}'.format(item)))
