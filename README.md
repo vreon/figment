@@ -4,14 +4,44 @@ A framework for creating multiplayer, text-based worlds.
 
 ## Installation
 
-    $ pip install figment
+Figment will be available on PyPI when it is more stable. Until then, you can
+install Figment directly from this repository with Pip:
+
+    $ pip install git+git://github.com/vreon/figment.git
 
 ## Usage
 
 ### Developing a world
 
-API documentation is available in the docs directory -- or, at least, it will
-be once the API is more stable!
+To create a world, you'll need to familiarize yourself with some terminology:
+
+* An **Entity** is any thing that exists within your world. It doesn't need to
+  be physical or tangible.  
+  *Examples*: a sword, a room, a monster spawner, a player
+* A **Component** is like an adjective that can be attached to an Entity to
+  change its behavior and how other Entities behave toward it.  
+  *Examples*: a Component to describe the Entity's location in space, a
+  Component that causes the Entity to meander automatically from room to room,
+  a Component that allows the Entity to use worldbuilding commands
+* A **Mode** is the lens through which a textual command, like "go north", is
+  interpreted. An Entity has one Mode at any given time (or zero if it has no
+  agency). Commands issued by an Entity are passed through that Entity's Mode,
+  and the Mode is then responsible for updating the state of the world and
+  sending messages to any affected Entities.  
+  *Examples*: an action Mode for moving around within the world, a conversation
+  Mode for talking to NPCs, a setup Mode for character creation
+* A **Zone** is a slice of a world. It acts like an isolated space for a group
+  of Entities. You can use Zones as server shards or to run different logical
+  regions of the game at different tick speeds.
+
+By extending Figment's base classes (particularly `Component` and `Mode`), you
+define the vocabulary unique to your game world -- then construct your world's
+people, places, and things using that vocabulary.
+
+While your available vocabulary of Components and Modes cannot yet be changed
+during runtime, they _can_ be dynamically applied to Entities (that's the whole
+point, after all!) so you can even do a good chunk of worldbuilding from within
+the game.
 
 ### Running a server
 
