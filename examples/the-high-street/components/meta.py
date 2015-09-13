@@ -174,6 +174,7 @@ def spawn(actor, template=None):
     # TODO: handle templates
 
     entity = actor.zone.spawn('an entity', 'A nondescript thing.')
+    actor.perform(add_alias, alias='!s', entity_id=entity.id)
     actor.tell('Spawned [{0.id}] "{0.name}".'.format(entity))
 
 
