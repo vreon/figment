@@ -22,7 +22,8 @@ if __name__ == '__main__':
             'a pigeon',
             'Hard to believe this thing descended from dinosaurs.',
             [
-                Spatial(is_carriable=True),
+                Spatial(),
+                Carriable(),
                 Bird(noise='coo'),
                 Pest(),
                 Wandering(wanderlust=0.03, destinations=destinations)
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     trinket = Entity(
         'a shiny trinket',
         'A small metallic gizmo of some kind.',
-        [Spatial(is_carriable=True), Important()],
+        [Spatial(), Carriable(), Important()],
         zone=zone,
     )
     admin.Spatial.store(trinket)
@@ -293,21 +294,21 @@ if __name__ == '__main__':
     box = Entity(
         'a cardboard box',
         '...',
-        [Spatial(is_container=True, is_carriable=True), Enterable()], # TODO: is_open
+        [Spatial(is_container=True), Carriable(), Enterable()], # TODO: is_open
         zone=zone,
     )
 
     ball = Entity(
         'a rubber ball',
         '...',
-        [Spatial(is_carriable=True)],
+        [Spatial(), Carriable()],
         zone=zone,
     )
 
     cactus = Entity(
         'a cactus',
         '...',
-        [Spatial(is_carriable=True)],
+        [Spatial(), Carriable()],
         zone=zone,
     )
     steakhouse_lobby.Spatial.store(box)

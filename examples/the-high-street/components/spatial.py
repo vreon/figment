@@ -23,11 +23,14 @@ class Enterable(Component):
     pass
 
 
+class Carriable(Component):
+    pass
+
+
 class Spatial(Component):
-    def __init__(self, container_id=None, is_container=False, is_carriable=False):
+    def __init__(self, container_id=None, is_container=False):
         self.container_id = container_id
         self.is_container = is_container
-        self.is_carriable = is_carriable
 
         self._contents = set()
         self._exits = {}
@@ -36,7 +39,6 @@ class Spatial(Component):
         return {
             'is_container': self.is_container,
             'container_id': self.container_id,
-            'is_carriable': self.is_carriable,
             'contents': list(self._contents),
             'exits': self._exits,
         }
@@ -47,7 +49,6 @@ class Spatial(Component):
 
         self.container_id = dict_['container_id']
         self.is_container = dict_['is_container']
-        self.is_carriable = dict_['is_carriable']
         self._contents = set(dict_['contents'])
         self._exits = dict_['exits']
 
@@ -323,7 +324,7 @@ def get(actor, selector):
         actor.tell("You can't put yourself in your inventory.")
         return
 
-    if not target.is_(Spatial) or not target.Spatial.is_carriable:
+    if not target.is_([Spatial, Carriable]):
         actor.tell("That can't be carried.")
         return
 
@@ -363,7 +364,7 @@ def get_from(actor, target_selector, container_selector):
         actor.tell("You can't put yourself in your inventory.")
         return
 
-    if not target.is_(Spatial):
+    if not target.is_([Spatial, Carriable]):
         actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
         return
 
