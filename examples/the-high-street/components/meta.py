@@ -219,7 +219,7 @@ def list_aliases(actor):
         actor.tell("You're unable to do that.")
         return
 
-    for alias, entity_id in actor.Admin.aliases.items():
+    for alias, entity_id in sorted(actor.Admin.aliases.items()):
         entity = actor.zone.get(entity_id)
         if entity:
             actor.tell('{0}: [{1.id}] "{1.name}"'.format(alias, entity))
