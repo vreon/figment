@@ -194,7 +194,7 @@ def destroy(actor, entity_id):
     actor.tell('Destroyed [{0.id}] "{0.name}".'.format(entity))
 
 
-@ActionMode.action(r'^!a(?:lias)? (?:add|create) (?P<alias>.+) (?P<entity_id>.+)$')
+@ActionMode.action(r'^!a(?:lias)? (?:add|create|set) (?P<alias>.+) (?P<entity_id>.+)$')
 def add_alias(actor, alias, entity_id):
     if not actor.is_(Admin):
         actor.tell("You're unable to do that.")
@@ -203,7 +203,7 @@ def add_alias(actor, alias, entity_id):
     actor.Admin.aliases[alias] = entity_id
 
 
-@ActionMode.action(r'^!a(?:lias)? (rm|remove|del(ete)?) (?P<alias>.+)$')
+@ActionMode.action(r'^!a(?:lias)? (rm|remove|del(ete)?|unset) (?P<alias>.+)$')
 def remove_alias(actor, alias):
     if not actor.is_(Admin):
         actor.tell("You're unable to do that.")
