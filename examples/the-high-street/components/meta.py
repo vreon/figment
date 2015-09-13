@@ -201,7 +201,7 @@ def add_alias(actor, alias, entity_id):
         actor.tell("You're unable to do that.")
         return
 
-    actor.Admin.aliases[alias] = entity_id
+    actor.Admin.aliases[alias] = actor.Admin.aliases.get(entity_id, entity_id)
 
 
 @ActionMode.action(r'^!a(?:lias)? (rm|remove|del(ete)?|unset) (?P<alias>.+)$')
