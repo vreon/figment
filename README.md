@@ -32,16 +32,16 @@ To create a world, you'll need to familiarize yourself with some terminology:
   Mode for talking to NPCs, a setup Mode for character creation
 * A **Zone** is a slice of a world. It acts like an isolated space for a group
   of Entities. You can use Zones as server shards or to run different logical
-  regions of the game at different tick speeds.
+  regions of the world at different tick speeds.
 
 By extending Figment's base classes (particularly `Component` and `Mode`), you
-define the vocabulary unique to your game world -- then construct your world's
+define the vocabulary unique to your world -- then construct your world's
 people, places, and things using that vocabulary.
 
 While your available vocabulary of Components and Modes cannot yet be changed
 during runtime, they _can_ be dynamically applied to Entities (that's the whole
 point, after all!) so you can even do a good chunk of worldbuilding from within
-the game.
+the world itself.
 
 ### Running a server
 
