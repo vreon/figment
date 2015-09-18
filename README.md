@@ -1,11 +1,32 @@
 # Figment
 
-A framework for creating multiplayer, text-based worlds.
+Figment is a framework for creating multiplayer, text-based worlds. It was
+originally designed to explore the application of the "entity-component-system"
+architectural pattern to the realm of MUDs.
+
+## Philosophy
+
+Components, as Figment defines them, are little chunks of behavior that can be
+attached to any Entity. Composability is a powerful pattern, and Components are
+no exception. Here are some ways you can use them:
+
+* Fire that spreads to nearby entities with the Flammable Component
+* NPCs with a Vigilante Component who will attack criminals on sight
+* Armor with a Healing Component that gradually restores health when worn
+* Doors with a Breakable Component that can be knocked down
+* Switches that can only be weighed down by entities with the Heavy Component
+
+Figment is explicitly designed to empower worldbuilders to create dynamic
+environments populated by entities that interact with each other in intricate
+(and even unexpected) ways, so: experiment and have fun!
 
 ## Installation
 
-Figment will be available on PyPI when it is more stable. Until then, you can
-install Figment directly from this repository with Pip:
+Figment is under active development. You can install it from PyPI:
+
+    $ pip install figment
+
+Or directly from this repository (recommended, for now):
 
     $ pip install git+git://github.com/vreon/figment.git
 
@@ -34,6 +55,11 @@ To create a world, you'll need to familiarize yourself with some terminology:
   of Entities. You can use Zones as server shards or to run different logical
   regions of the world at different tick speeds.
 
+Run `figment new <world-name>` to create a directory and basic structure for
+your world's code, then start implementing the pieces as needed. (That's kind
+of vague, I know; you'll likely need to consult the example worlds for what
+this is supposed to look like.)
+
 By extending Figment's base classes (particularly `Component` and `Mode`), you
 define the vocabulary unique to your world -- then construct your world's
 people, places, and things using that vocabulary.
@@ -41,18 +67,24 @@ people, places, and things using that vocabulary.
 While your available vocabulary of Components and Modes cannot yet be changed
 during runtime, they _can_ be dynamically applied to Entities (that's the whole
 point, after all!) so you can even do a good chunk of worldbuilding from within
-the world itself.
+the world itself if you build the appropriate tools.
 
 ### Running a server
 
 Figment is more of a framework than an engine, and it doesn't make many
 assumptions about your world, so there's not much to run out-of-the-box.
 
-If you've already created a world (see the `examples` directory for
-inspiration), ensure Redis is running, then:
+If you have already created a world, or would like to run one of the examples:
 
     $ cd /path/to/world
     $ figment run
+
+(Make sure that the Redis instance referenced in your world's config is
+accessible from this host.)
+
+If the world contains ticking components, you'll also need to run a ticker:
+
+    $ figment run -t
 
 ### Running a client
 
@@ -69,20 +101,6 @@ windows or a terminal multiplexer) results in a makeshift client:
 
     $ figment listen entity_id
     $ figment prompt entity_id
-
-## Background
-
-Figment was created to explore the application of the entity-component-system
-pattern to the realm of MUDs. It allows you, as a worldbuilder, to describe
-components and attach them to entities to control how they behave and react.
-
-When used properly, components can be very powerful. Imagine:
-
-* Fire spreading to nearby objects with the Flammable component
-* NPCs with the Vigilante component attacking thieves
-* Armor with a Healing component that gradually restores health when worn
-* Doors with a Breakable component that can be knocked down
-* Switches that can only be weighed down by entities with the Heavy component
 
 ## License
 
