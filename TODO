@@ -22,6 +22,10 @@
         - are name and desc _really_ required?
             - can they be pushed into a metadata component without making
               format strings too complicated?
+        - entity IDs as random strings
+            - just use integers instead
+            - no "special" names like startroom/admin
+                - use a component instead
 
 1.0 blockers: examples
     - Continue dogfooding to find parts of API that suck
@@ -48,7 +52,18 @@
     - Running a frontend (registration, etc.)
     - Advanced topics
         - Rich message data
-        - Multiple zones / entity porting
+        - Multiple zones
+
+Crazy ideas for later versions
+    - Entity 'porting (importing, transporting, teleporting)
+        - copying a set of entities from one zone to another
+        - any referenced entities must be contained in the set
+        - all references must be updated by asking the zone for new IDs
+        - really, this is the same thing as cloning an entity
+        - how do we know what data is an entity reference?
+    - Register/unregister components and modes at runtime
+    - Script components (Lua?)
+    - Graphical example
 
 Related projects
     - Nice to have, but not blockers...
