@@ -15,38 +15,7 @@ General
         - Where should "go" logic live? On Door?
             - Should Positioned be renamed to Container?
 
-    - Message templates (and action patterns) should use gettext for i18n
-    - you should be able to use an exit by name
-         - go (to) steakhouse
     - Disambiguation (again)
-
-Action Flow
-    - Trigger 'start' event
-    - Was the event prevented?
-    - Ensure that the actor can take this action
-        - Does it have the required components?
-    - Resolve descriptors into entities
-        - Add the resolved entities to the event, for hooks
-    - Ensure that all targets can be acted upon
-        - Do the targets have the required components?
-    - Trigger 'before' event
-    - Was the event prevented?
-    - Actually carry out the action
-        - Tell the actor they carried out the action
-        - Tell targets that the action was carried out on them
-    - Trigger 'after' event
-
-Examples and Core Components
-    - Have an optional "core" component package that can be imported
-    - Includes the more broadly applicable components from the example pack
-    - For looser coupling, is_ might need to accept a string instead of a class
-        - e.g. component relies on Positioned, but you want to use it with your own Positioned component
-
-Registration
-    - ???
-    - Accounts have a username, password, list of controllable entities
-    - The connection should have some state (account ID, entity logged in as)
-        - So the client doesn't have to send entity ID with every command
 
 Combat
     - Single letters
@@ -75,17 +44,6 @@ Modal interactions
 
 Instances
     - Copies of rooms, NPCs can be created for parties
-    - Have a function that creates a list of entities and an instance start room
-    - Store the entities in a redis list and tear them down when the party leaves / wins
-
-Flags
-    - is_dark (would this be better as a behavior?)
-    - is_open (for containers)
-    - is_closable "
-    - is_lockable "
-    - is_flexible (volume is sum of volume of contained objects)
-    - is_visible (for stuff like spawners)
-    - is_writable
 
 Stuff to think about
     - names and capitalization
@@ -96,7 +54,6 @@ Stuff to think about
         - inventory is a closed container
         - held items go in an open container
         - "a box, holding: ..."
-    - need a room.unlink() for moving rooms
     - doors
 
 Examples
