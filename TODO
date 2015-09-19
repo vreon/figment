@@ -1,61 +1,99 @@
-Refactoring
-    - Get rid of as much global state as you can
-    - current usage of entity.perform assumes the entity is in explore mode
-        - need a good way to check the mode of entities
+1.0 blockers: engine
+    - entity messages should be JSON, not text
+        - Subsumes "client hints"; they're the same thing
+        - Allows client to control rendering
+            - Enables color based on type, sounds, images
+        - Message structure defined by developers
+            - Enables inline colors
+        - Have to remove `figment listen` and `figment prompt`
+            - one, they have to be run on the same host as the world :\
+            - two, `listen` can't make assumptions about message format
+    - remove the last vestiges of global state (are there any?)
+    - remove reference cycles where possible
+    - entity lifecycle hooks (?)
+        - I have a reference to this entity, but it was destroyed
+        - cannot be prevented, but can be reacted to
+    - fix things that are clunky
+        - world "initialization script"
+        - zone.setter
+        - managing __init__.py / magical component registration
+            - manually register components with the zone on startup
+            - does this mean the end of `figment run`?
+        - are name and desc _really_ required?
+            - can they be pushed into a metadata component without making
+              format strings too complicated?
 
-General
+1.0 blockers: examples
+    - Continue dogfooding to find parts of API that suck
+        - current usage of entity.perform assumes the entity is in ActionMode
+            - engine: need an API for checking the mode of entities
+    - Disambiguation
+    - Weapons and equipment
+    - Conversations
+    - Stacking items
+    - Combat
+    - Quests
+    - Simple in-game editing tools
+
+1.0 blockers: tests
+    - Existing tests are too simple/limited
+    - Worlds need their own tests
+
+1.0 blockers: docs
+    - Use Sphinx, autodoc, possibly napoleon
+    - Simple theme and logo :)
+    - Walk through building a simple world (TDD?)
+    - Writing tests for your world
+    - How to scale Figment
+    - Running a frontend (registration, etc.)
+    - Advanced topics
+        - Rich message data
+        - Multiple zones / entity porting
+
+Related projects
+    - Nice to have, but not blockers...
+    - Websocket server
+    - Visual zone editor
+    - Requires deep knowledge of world, but:
+        - Websocket client (interprets JSON messages)
+        - Registration and login server (creates player entities + attaches components)
+
+Notes and ideas
     - In Inform 7, there are a few built-in assertion verbs
         - to be, to have, to carry, to wear, to contain, and to support
-        - these, or something like them, should be in figment core
-
-    ! An exit is an entity, not a property
-        - It can be closed, locked, relinked, removed
-        - On attach, it should add itself to indexes in linked rooms
-            - Should update these indexes on unlink / relink
-        - Where should "go" logic live? On Door?
-            - Should Positioned be renamed to Container?
-
-    - Disambiguation (again)
-
-Combat
-    - Single letters
-    - Hotkeys! (1234 etc)
-    - Schedule actions for the next tick
-
-Conversations
-    - Modal
-    - Mutes surroundings (?)
-    - Broadcasts when engaged / disengaged
-    - Should be able to leave at any time, Skyrim-style
-
-Test items
-    - A key that opens a door
-    - A keycard bound to a particular owner
-    - A bomb that, when used, counts down to 0 and explodes, damaging nearby stuff
-    - Signs, books, walls you can write on/in
-
-Modal interactions
-    - Action mode: arbitrary commands
-    - Disambiguation mode
-    - Conversation mode: preset convo options
-    - Combat mode: scheduler based
-        - or, mostly turn based with 20 sec forfeit?
-    - Shop mode?
-
-Instances
-    - Copies of rooms, NPCs can be created for parties
-
-Stuff to think about
-    - names and capitalization
-    - chairs, beds, vehicles(?)
-    - stacks of objects / inventory management / gold
-    - equipment
-    - holding items
-        - inventory is a closed container
-        - held items go in an open container
-        - "a box, holding: ..."
-    - doors
-
-Examples
-    - Add an example that uses continuous coordinates for entity position
-    - Add an example that's not very MUD-like (a turn-based game?)
+        - consider including these in examples
+    - Combat
+        - Single letters
+        - Schedule actions for the next tick (?)
+    - Conversations
+        - Modal
+        - Mutes surroundings (?)
+        - Broadcasts when engaged / disengaged (?)
+        - Should be able to leave at any time, Skyrim-style
+    - Test items
+        - A key that opens a door
+        - A keycard bound to a particular owner
+        - A bomb that, when used, counts down to 0 and explodes, damaging nearby stuff
+        - Signs, books, walls you can write on/in
+    - Modes
+        - Action mode: arbitrary commands
+        - Disambiguation mode (?)
+        - Conversation mode: preset convo options
+        - Combat mode: scheduler based
+            - or, mostly turn based with 20 sec forfeit?
+        - Shop mode?
+    - Instances
+        - Copies of rooms, NPCs can be created for parties
+    - Misc concerns for example worlds
+        - The High Street
+            - names and capitalization
+            - chairs, beds, vehicles(?)
+            - stacks of objects / inventory management / gold
+            - equipment
+            - holding items
+                - inventory is a closed container
+                - held items go in an open container
+                - "a box, holding: ..."
+            - doors
+        - Continuous Coordinates example
+        - Non-MUD example (turn-based game?)
