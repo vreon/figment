@@ -168,20 +168,6 @@ class Entity(object):
         self.components.purge()
         self.zone = None
 
-    def clone(self):
-        clone = Entity(self.name, self.desc)
-
-        # TODO: components should have a clone method that returns a dict
-        # TODO: that way they can determine whether or not to deep copy
-
-        # TODO: Copy properties
-        # TODO: Copy behaviors
-        # TODO: Copy exits
-        # TODO: Clone (not copy) contents
-        # TODO: Add clone to clone.container_id's contents
-
-        return clone
-
     # Sacrificing Pythonic coding style here for convenience.
     @property
     def Name(self):

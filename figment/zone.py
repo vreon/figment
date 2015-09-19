@@ -53,10 +53,6 @@ class Zone(object):
     def incoming_key(self):
         return 'zone:%s:incoming' % self.id
 
-    @property
-    def import_key(self):
-        return 'zone:%s:imports' % self.id
-
     def load_config(self):
         base_path = os.path.abspath(os.path.expanduser(self.world_path))
 
@@ -213,28 +209,16 @@ class Zone(object):
                 yield message['data']
 
     def process_one_event(self):
-        key, value = self.redis.blpop([self.import_key, self.tick_key, self.incoming_key])
+        key, value = self.redis.blpop([self.tick_key, self.incoming_key])
 
-        if key == self.import_key:
-            self.perform_import(json.loads(value))
-        elif key == self.tick_key:
+        if key == self.tick_key:
             self.perform_tick()
         else:
             entity_id, _, command = value.partition(' ')
             self.perform_command(entity_id, command)
 
-    def enqueue_import(self, entities):
-        if isinstance(entities, Entity):
-            entities = [entities]
-        self.redis.rpush(self.import_key, json.dumps([e.to_dict() for e in entities]))
-
     def enqueue_command(self, entity_id, command):
         self.redis.rpush(self.incoming_key, ' '.join([entity_id, command]))
-
-    def perform_import(self, entity_dicts):
-        # TODO: assumes entity IDs are globally unique
-        for entity_dict in entity_dicts:
-            Entity.from_dict(entity_dict, self)
 
     def perform_command(self, entity_id, command):
         entity = self.get(entity_id)
