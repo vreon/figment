@@ -13,6 +13,9 @@
     - entity lifecycle hooks (?)
         - I have a reference to this entity, but it was destroyed
         - cannot be prevented, but can be reacted to
+        - Referenced component? alternative to lifecycle hooks?
+            - when component wants to reference entity, attach Referenced to it?
+            - on detach, call other components' funcs with arbitrary args?
     - fix things that are clunky
         - world "initialization script"
         - zone.setter
