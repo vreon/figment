@@ -191,7 +191,7 @@ def destroy(actor, entity_id):
         actor.tell('No such entity.')
         return
 
-    entity.destroy()
+    entity.zone.destroy(entity)
     actor.tell('Destroyed [{0.id}] "{0.name}".'.format(entity))
 
 

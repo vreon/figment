@@ -12,17 +12,17 @@ class TestEntity(object):
 
     def setup(self):
         self.zone = z = Zone()
-        self.player = Entity(
+        self.player = z.spawn(
             'Player', 'A player stands here.', [Visible()], zone=z,
             mode=ActionMode()
         )
-        self.ball = Entity('a ball', 'A round rubber ball.', [
+        self.ball = z.spawn('a ball', 'A round rubber ball.', [
             Visible(), Colorful(color='red')
         ], zone=z)
-        self.bh = Entity('black hole', 'This text should never appear.', [
+        self.bh = z.spawn('black hole', 'This text should never appear.', [
             Visible(), Colorful(color='black'), BlackHole()
         ], zone=z)
-        self.cow = Entity('a cow', 'A wild dairy cow.', [Visible()], zone=z)
+        self.cow = z.spawn('a cow', 'A wild dairy cow.', [Visible()], zone=z)
 
     def test_look_at(self):
         self.player.perform('look at %s' % self.ball.id)

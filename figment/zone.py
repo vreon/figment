@@ -254,12 +254,23 @@ class Zone(object):
     def all(self):
         return self.entities.values()
 
-    def spawn(self, *args, **kwargs):
-        kwargs['zone'] = self
-        return Entity(*args, **kwargs)
+    def spawn(self, name, desc, components=[], **kwargs):
+        entity = Entity(name, desc, **kwargs)
+        self.add(entity)
+        if components:
+            entity.components.add(components)
+        return entity
 
-    def purge(self):
-        log.info('Purging all entities.')
-        # TODO: Modifies the dict while iterating; is this ok?
-        for entity in self.entities.values():
-            entity.destroy()
+    def destroy(self, entity):
+        entity.components.purge()
+        self.remove(entity)
+
+    def add(self, entity):
+        log.debug('Added entity: [%s] %s' % (entity.id, entity.name))
+        self.entities[entity.id] = entity
+        entity.zone = self
+
+    def remove(self, entity):
+        log.debug('Removed entity: [%s] %s' % (entity.id, entity.name))
+        self.entities.pop(entity.id)
+        entity.zone = None

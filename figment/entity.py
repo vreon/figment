@@ -56,20 +56,14 @@ class ComponentStore(object):
 
 
 class Entity(object):
-    def __init__(self, name, desc, components=None, id=None, zone=None, hearing=False, mode=None):
+    def __init__(self, name, desc, id=None, zone=None, hearing=False, mode=None):
         self.id = id or Entity.create_id()
         self.name = name
         self.desc = desc
         self.mode = mode
         self.components = ComponentStore(self)
-        self._zone = None
         self.zone = zone
         self.hearing = hearing
-
-        if components:
-            self.components.add(components)
-
-        log.debug('Created entity: [%s] %s' % (self.id, self.name))
 
     def __eq__(self, other):
         if isinstance(other, Entity):
@@ -82,22 +76,6 @@ class Entity(object):
 
     def __hash__(self):
         return hash(self.id)
-
-    @property
-    def zone(self):
-        return self._zone
-
-    @zone.setter
-    def zone(self, value):
-        if self._zone is not None:
-            self._zone.entities.pop(self.id, None)
-            if self in self._zone.ticking_entities:
-                self._zone.ticking_entities.remove(self)
-        self._zone = value
-        if self._zone is not None:
-            self._zone.entities[self.id] = self
-            if self.ticking:
-                self._zone.ticking_entities.add(self)
 
     @property
     def ticking(self):
@@ -141,10 +119,8 @@ class Entity(object):
             id=dict_['id'],
             hearing=dict_['hearing'],
         )
-
-        entity.zone = zone
+        zone.add(entity)
         entity.attach_from_dict(dict_)
-
         return entity
 
     def attach_from_dict(self, dict_):
@@ -164,10 +140,6 @@ class Entity(object):
 
     def is_(self, *args, **kwargs):
         return self.components.has(*args, **kwargs)
-
-    def destroy(self):
-        self.components.purge()
-        self.zone = None
 
     # Sacrificing Pythonic coding style here for convenience.
     @property

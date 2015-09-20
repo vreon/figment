@@ -3,7 +3,7 @@
 import random
 import logging
 
-from figment import Entity, Zone, log
+from figment import Zone, log
 from components import *
 from modes import *
 
@@ -15,10 +15,10 @@ if __name__ == '__main__':
 
     # For convenience
     def room(name, desc):
-        return Entity(name, desc, [Spatial(), Container()], zone=zone)
+        return zone.spawn(name, desc, [Spatial(), Container()])
 
     def add_pigeon(room_, destination_ids):
-        pigeon = Entity(
+        pigeon = zone.spawn(
             'a pigeon',
             'Hard to believe this thing descended from dinosaurs.',
             [
@@ -28,17 +28,15 @@ if __name__ == '__main__':
                 Pest(),
                 Wandering(wanderlust=0.03, destination_ids=destination_ids)
             ],
-            zone=zone,
             mode=ActionMode(),
         )
         room_.Container.store(pigeon)
 
     def make_exit(source, direction, destination):
-        exit = Entity(
+        exit = zone.spawn(
             'an exit',
             'A portal from one location to another.',
             [Exit(direction=direction, destination_id=destination.id)],
-            zone=zone,
         )
 
         if not source.is_(Exitable):
@@ -54,21 +52,19 @@ if __name__ == '__main__':
 
     log.info('Initializing zone.')
 
-    admin = Entity(
+    admin = zone.spawn(
         'Player' + str(random.randint(1000, 9999)),
         'A fellow player.',
         [Spatial(), Container(), Emotive(), Meta(), Admin()],
-        zone=zone,
         hearing=True,
         id='admin',
         mode=ActionMode()
     )
 
-    trinket = Entity(
+    trinket = zone.spawn(
         'a shiny trinket',
         'A small metallic gizmo of some kind.',
         [Spatial(), Carriable(), Important()],
-        zone=zone,
     )
     admin.Container.store(trinket)
 
@@ -86,7 +82,7 @@ if __name__ == '__main__':
         ),
     )
 
-    street_south = Entity(
+    street_south = zone.spawn(
         'The High Street - South Side',
         (
             'A street lined with shops extends away from you in both '
@@ -96,17 +92,15 @@ if __name__ == '__main__':
             'High Street Park.'
         ),
         [Spatial(), Container()],
-        zone=zone,
     )
 
     street_south.Container.store(admin)
     link(street_north, 'south', street_south, 'north')
 
-    statue = Entity(
+    statue = zone.spawn(
         'a large statue',
         'A statue of the city founder, looking toward the horizon, rests on a large plinth.',
         [Spatial()],
-        zone=zone,
     )
     street_south.Container.store(statue)
 
@@ -197,11 +191,10 @@ if __name__ == '__main__':
         '...',
     )
 
-    apt_elevator = Entity(
+    apt_elevator = zone.spawn(
         'The Apartments - Elevator',
         "It's out of order for now.",
         [Spatial(), Container()],
-        zone=zone,
     )
 
     link(steakhouse_lobby, 'east', apt_1f_stairwell, 'west')
@@ -219,11 +212,10 @@ if __name__ == '__main__':
         street_north, street_south, gift_shop,
     ]]
 
-    gift_shop_manager = Entity(
+    gift_shop_manager = zone.spawn(
         'the gift shop manager',
         '...',
         [Spatial(), Emotive(), ShoosPests(direction='south')],
-        zone=zone,
         mode=ActionMode(),
     )
     gift_shop.Container.store(gift_shop_manager)
@@ -232,25 +224,22 @@ if __name__ == '__main__':
     add_pigeon(street_north, pigeon_destination_ids)
     add_pigeon(street_south, pigeon_destination_ids)
 
-    box = Entity(
+    box = zone.spawn(
         'a cardboard box',
         '...',
         [Spatial(), Container(), Carriable(), Enterable()],
-        zone=zone,
     )
 
-    ball = Entity(
+    ball = zone.spawn(
         'a rubber ball',
         '...',
         [Spatial(), Carriable()],
-        zone=zone,
     )
 
-    cactus = Entity(
+    cactus = zone.spawn(
         'a cactus',
         '...',
         [Spatial(), Carriable()],
-        zone=zone,
     )
     steakhouse_lobby.Container.store(box)
     box.Container.store(ball)
