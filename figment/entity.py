@@ -56,10 +56,8 @@ class ComponentStore(object):
 
 
 class Entity(object):
-    def __init__(self, name, desc, id=None, zone=None, hearing=False, mode=None):
+    def __init__(self, id=None, zone=None, hearing=False, mode=None):
         self.id = id or Entity.create_id()
-        self.name = name
-        self.desc = desc
         self.mode = mode
         self.components = ComponentStore(self)
         self.zone = zone
@@ -102,8 +100,6 @@ class Entity(object):
 
         return {
             'id': self.id,
-            'name': self.name,
-            'desc': self.desc,
             'mode': mode_dict,
             'hearing': self.hearing,
             'components': dict(
@@ -114,8 +110,6 @@ class Entity(object):
     @classmethod
     def from_dict(cls, dict_, zone):
         entity = cls(
-            dict_['name'],
-            dict_['desc'],
             id=dict_['id'],
             hearing=dict_['hearing'],
         )
@@ -140,11 +134,6 @@ class Entity(object):
 
     def is_(self, *args, **kwargs):
         return self.components.has(*args, **kwargs)
-
-    # Sacrificing Pythonic coding style here for convenience.
-    @property
-    def Name(self):
-        return upper_first(self.name)
 
     def perform(self, *args, **kwargs):
         if self.mode:

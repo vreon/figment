@@ -49,7 +49,7 @@ class ShoosPests(Component):
         ])
 
         self.entity.perform(spatial.say, message=message)
-        self.entity.Spatial.emit('{0.Name} {1}.'.format(self.entity, action))
+        self.entity.Spatial.emit('{0.Named.Name} {1}.'.format(self.entity, action))
 
         for pest in pests:
             pest.perform(spatial.walk, direction=self.direction)
@@ -82,4 +82,4 @@ class Bird(Component):
         if not self.entity.is_(spatial.Spatial):
             return
 
-        self.entity.Spatial.emit('{0.Name} {1}.'.format(self.entity, third_verb))
+        self.entity.Spatial.emit('{0.Named.Name} {1}.'.format(self.entity, third_verb))

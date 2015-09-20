@@ -169,7 +169,7 @@ class Spatial(Component):
 
         return set(
             e for e in entity_set
-            if (selector.lower() in e.name.lower() or selector == e.id)
+            if ((e.is_('Named') and selector.lower() in e.Named.name.lower()) or selector == e.id)
             and not e.is_(Invisible)
         )
 
@@ -189,7 +189,7 @@ class Spatial(Component):
             targets = []
             for index, entity in enumerate(matches):
                 location = 'in inventory' if entity.Spatial.container == self.entity else 'nearby'
-                self.entity.tell(indent('{0}. {1.name} ({2})'.format(index + 1, entity, location)))
+                self.entity.tell(indent('{0}. {1.Named.name} ({2})'.format(index + 1, entity, location)))
                 targets.append(entity.id)
             # raise AmbiguousSelector(selector, targets)
 
@@ -200,7 +200,7 @@ class Spatial(Component):
         return self.pick_interactively(selector, self.entity.Container.contents, area='in your inventory')
 
     def pick_from(self, selector, container):
-        return self.pick_interactively(selector, container.Container.contents, area='in {0.name}'.format(container))
+        return self.pick_interactively(selector, container.Container.contents, area='in {0.Named.name}'.format(container))
 
     def pick_nearby_inventory(self, selector):
         return self.pick_interactively(selector, self.entity.Container.contents | self.nearby(), area='nearby')
@@ -224,20 +224,32 @@ class Spatial(Component):
     def tell_surroundings(self):
         room = self.container
 
-        messages = [string.capwords(room.name), room.desc]
+        messages = []
+
+        if room.is_('Named'):
+            messages.extend([
+                string.capwords(room.Named.name),
+                room.Named.desc
+            ])
 
         if room.is_(Exitable):
             exits = room.Exitable.exits
             if exits:
                 messages.append('Exits:')
                 for exit in exits:
-                    messages.append(indent('{0}: {1}'.format(exit.Exit.direction, exit.Exit.destination.name)))
+                    name = 'elsewhere'
+                    if exit.Exit.destination.is_('Named'):
+                        name = exit.Exit.destination.Named.name
+                    messages.append(indent('{0}: {1}'.format(exit.Exit.direction, name)))
 
         entities_nearby = [e for e in self.nearby() if not e.is_(Invisible)]
         if entities_nearby:
             messages.append('Things nearby:')
             for entity in entities_nearby:
-                messages.append(indent(entity.name))
+                message = 'something unnamed'
+                if entity.is_('Named'):
+                    message = entity.Named.name
+                messages.append(indent(message))
 
         self.entity.tell('\n'.join(messages))
 
@@ -262,7 +274,7 @@ def say(actor, message):
             witness.perform(Spatial.say, message=message)
 
     actor.tell('You say: "{0}"'.format(message))
-    actor.Spatial.emit('{0.Name} says: "{1}"'.format(actor, message))
+    actor.Spatial.emit('{0.Named.Name} says: "{1}"'.format(actor, message))
 
 
 @ActionMode.action(r'^l(?:ook)?(?: around)?$')
@@ -275,7 +287,7 @@ def look(actor):
         actor.tell("It's too dark to see anything here.")
         return
 
-    actor.Spatial.emit('{0.Name} looks around.'.format(actor))
+    actor.Spatial.emit('{0.Named.Name} looks around.'.format(actor))
     actor.Spatial.tell_surroundings()
 
 
@@ -302,7 +314,7 @@ def look_in(actor, selector):
     contents = [e for e in target.Container.contents() if not e.is_(Invisible)]
     if contents:
         for item in contents:
-            actor.tell(indent('{0.name}'.format(item)))
+            actor.tell(indent('{0.Named.name}'.format(item)))
     else:
         actor.tell(indent('nothing'))
 
@@ -321,9 +333,9 @@ def look_at(actor, selector):
     if not target:
         return
 
-    actor.tell(target.desc)
-    actor.Spatial.emit('{0.Name} looks at {1}.'.format(actor, target.name), exclude=target)
-    target.tell('{0.Name} looks at you.'.format(actor))
+    actor.tell(target.Named.desc)
+    actor.Spatial.emit('{0.Named.Name} looks at {1.Named.name}.'.format(actor, target), exclude=target)
+    target.tell('{0.Named.Name} looks at you.'.format(actor))
 
 
 @ActionMode.action('^(?:get|take|pick up) (?P<selector>.+)$')
@@ -345,12 +357,12 @@ def get(actor, selector):
         return
 
     if target.is_('Important'):
-        actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
+        actor.tell('{0.Named.Name} resists your attempt to grab it.'.format(target))
         return
 
-    actor.tell('You pick up {0.name}.'.format(target))
-    actor.Spatial.emit('{0.Name} picks up {1.name}.'.format(actor, target), exclude=target)
-    target.tell('{0.Name} picks you up.'.format(actor))
+    actor.tell('You pick up {0.Named.name}.'.format(target))
+    actor.Spatial.emit('{0.Named.Name} picks up {1.Named.name}.'.format(actor, target), exclude=target)
+    target.tell('{0.Named.Name} picks you up.'.format(actor))
     actor.Container.store(target)
 
 
@@ -369,7 +381,7 @@ def get_from(actor, target_selector, container_selector):
         return
 
     if not container.is_([Spatial, Container]):
-        actor.tell("{0.Name} can't hold items.".format(container))
+        actor.tell("{0.Named.Name} can't hold items.".format(container))
         return
 
     target = actor.Spatial.pick_from(target_selector, container)
@@ -381,17 +393,17 @@ def get_from(actor, target_selector, container_selector):
         return
 
     if not target.is_([Spatial, Carriable]):
-        actor.tell("You can't take {0.name} from {1.name}.".format(target, container))
+        actor.tell("You can't take {0.Named.name} from {1.Named.name}.".format(target, container))
         return
 
     if target.is_('Important'):
-        actor.tell('{0.Name} resists your attempt to grab it.'.format(target))
+        actor.tell('{0.Named.Name} resists your attempt to grab it.'.format(target))
         return
 
-    actor.tell('You take {0.name} from {1.name}.'.format(target, container))
-    actor.Spatial.emit('{0.Name} takes {1.name} from {2.name}.'.format(actor, target, container), exclude=(target, container))
-    container.tell('{0.Name} takes {1.name} from you.'.format(actor, target))
-    target.tell('{0.Name} takes you from {1.name}.'.format(actor, container))
+    actor.tell('You take {0.Named.name} from {1.Named.name}.'.format(target, container))
+    actor.Spatial.emit('{0.Named.Name} takes {1.Named.name} from {2.Named.name}.'.format(actor, target, container), exclude=(target, container))
+    container.tell('{0.Named.Name} takes {1.Named.name} from you.'.format(actor, target))
+    target.tell('{0.Named.Name} takes you from {1.Named.name}.'.format(actor, container))
     actor.Container.store(target)
 
 
@@ -406,7 +418,7 @@ def put_in(actor, target_selector, container_selector):
         return
 
     if not target.is_(Spatial):
-        actor.tell("You can't put {0.name} into anything.")
+        actor.tell("You can't put {0.Named.name} into anything.")
         return
 
     if target.is_('Important'):
@@ -418,13 +430,13 @@ def put_in(actor, target_selector, container_selector):
         return
 
     if not container.is_([Spatial, Container]):
-        actor.tell("{0.Name} can't hold things.".format(container))
+        actor.tell("{0.Named.Name} can't hold things.".format(container))
         return
 
-    actor.tell('You put {0.name} in {1.name}.'.format(target, container))
-    actor.Spatial.emit('{0.Name} puts {1.name} in {2.name}.'.format(actor, target, container), exclude=(target, container))
-    container.tell('{0.Name} puts {1.name} in your inventory.'.format(actor, target))
-    target.tell('{0.Name} puts you in {1.name}.'.format(actor, container))
+    actor.tell('You put {0.Named.name} in {1.Named.name}.'.format(target, container))
+    actor.Spatial.emit('{0.Named.Name} puts {1.Named.name} in {2.Named.name}.'.format(actor, target, container), exclude=(target, container))
+    container.tell('{0.Named.Name} puts {1.Named.name} in your inventory.'.format(actor, target))
+    target.tell('{0.Named.Name} puts you in {1.Named.name}.'.format(actor, container))
     container.Container.store(target)
 
 
@@ -445,13 +457,13 @@ def drop(actor, selector):
         return
 
     if target.is_('Sticky') and not target.Sticky.roll_for_drop():
-        actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(target))
+        actor.tell('You try to drop {0.Named.name}, but it sticks to your hand.'.format(target))
         return
 
     actor.Container.drop(target)
-    actor.tell('You drop {0.name}.'.format(target))
-    actor.Spatial.emit('{0.Name} drops {1.name}.'.format(actor, target), exclude=target)
-    target.tell('{0.Name} drops you.'.format(actor))
+    actor.tell('You drop {0.Named.name}.'.format(target))
+    actor.Spatial.emit('{0.Named.Name} drops {1.Named.name}.'.format(actor, target), exclude=target)
+    target.tell('{0.Named.Name} drops you.'.format(actor))
 
 
 @ActionMode.action('^(?:w(?:alk)?|go) (?P<direction>.+)$')
@@ -489,8 +501,8 @@ def walk(actor, direction):
         return
 
     actor.tell('You travel {0}.'.format(direction))
-    actor.Spatial.emit('{0.Name} travels {1} to {2.name}.'.format(actor, direction, destination))
-    destination.Container.announce('{0.Name} arrives from {1.name}.'.format(actor, room))
+    actor.Spatial.emit('{0.Named.Name} travels {1} to {2.Named.name}.'.format(actor, direction, destination))
+    destination.Container.announce('{0.Named.Name} arrives from {1.Named.name}.'.format(actor, room))
     destination.Container.store(actor)
 
     actor.Spatial.tell_surroundings()
@@ -517,9 +529,9 @@ def enter(actor, selector):
         actor.tell("You can't enter that.")
         return
 
-    actor.tell('You enter {0.name}.'.format(container))
-    actor.Spatial.emit('{0.Name} enters {1.name}.'.format(actor, container))
-    container.Container.announce('{0.Name} arrives from {1.name}.'.format(actor, room))
+    actor.tell('You enter {0.Named.name}.'.format(container))
+    actor.Spatial.emit('{0.Named.Name} enters {1.Named.name}.'.format(actor, container))
+    container.Container.announce('{0.Named.Name} arrives from {1.Named.name}.'.format(actor, room))
     container.Container.store(actor)
 
     actor.Spatial.tell_surroundings()

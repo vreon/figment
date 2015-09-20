@@ -133,8 +133,6 @@ class Zone(object):
 
             for entity_dict in snapshot['entities']:
                 entity = Entity.from_dict({
-                    'name': entity_dict['name'],
-                    'desc': entity_dict['desc'],
                     'id': entity_dict['id'],
                     'hearing': entity_dict['hearing'],
                 }, self)
@@ -236,7 +234,7 @@ class Zone(object):
 
     def perform_command(self, entity_id, command):
         entity = self.get(entity_id)
-        log.debug('Processing: <%s, %s> %s' % (entity.id, entity.name, command))
+        log.debug('Processing: [%s] %s' % (entity.id, command))
         entity.perform(command)
 
     def perform_tick(self):
@@ -254,8 +252,8 @@ class Zone(object):
     def all(self):
         return self.entities.values()
 
-    def spawn(self, name, desc, components=[], **kwargs):
-        entity = Entity(name, desc, **kwargs)
+    def spawn(self, components=[], **kwargs):
+        entity = Entity(**kwargs)
         self.add(entity)
         if components:
             entity.components.add(components)
@@ -266,11 +264,11 @@ class Zone(object):
         self.remove(entity)
 
     def add(self, entity):
-        log.debug('Added entity: [%s] %s' % (entity.id, entity.name))
+        log.debug('Added entity: [%s]' % entity.id)
         self.entities[entity.id] = entity
         entity.zone = self
 
     def remove(self, entity):
-        log.debug('Removed entity: [%s] %s' % (entity.id, entity.name))
+        log.debug('Removed entity: [%s]' % entity.id)
         self.entities.pop(entity.id)
         entity.zone = None

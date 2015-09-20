@@ -15,13 +15,15 @@ if __name__ == '__main__':
 
     # For convenience
     def room(name, desc):
-        return zone.spawn(name, desc, [Spatial(), Container()])
+        return zone.spawn([Named(name, desc), Spatial(), Container()])
 
     def add_pigeon(room_, destination_ids):
         pigeon = zone.spawn(
-            'a pigeon',
-            'Hard to believe this thing descended from dinosaurs.',
             [
+                Named(
+                    'a pigeon',
+                    'Hard to believe this thing descended from dinosaurs.',
+                ),
                 Spatial(),
                 Carriable(),
                 Bird(noise='coo'),
@@ -34,8 +36,6 @@ if __name__ == '__main__':
 
     def make_exit(source, direction, destination):
         exit = zone.spawn(
-            'an exit',
-            'A portal from one location to another.',
             [Exit(direction=direction, destination_id=destination.id)],
         )
 
@@ -53,18 +53,32 @@ if __name__ == '__main__':
     log.info('Initializing zone.')
 
     admin = zone.spawn(
-        'Player' + str(random.randint(1000, 9999)),
-        'A fellow player.',
-        [Spatial(), Container(), Emotive(), Meta(), Admin()],
+        [
+            Named(
+                'Player' + str(random.randint(1000, 9999)),
+                'A fellow player.',
+            ),
+            Spatial(),
+            Container(),
+            Emotive(),
+            Meta(),
+            Admin()
+        ],
         hearing=True,
         id='admin',
         mode=ActionMode()
     )
 
     trinket = zone.spawn(
-        'a shiny trinket',
-        'A small metallic gizmo of some kind.',
-        [Spatial(), Carriable(), Important()],
+        [
+            Named(
+                'a shiny trinket',
+                'A small metallic gizmo of some kind.',
+            ),
+            Spatial(),
+            Carriable(),
+            Important()
+        ],
     )
     admin.Container.store(trinket)
 
@@ -82,7 +96,7 @@ if __name__ == '__main__':
         ),
     )
 
-    street_south = zone.spawn(
+    street_south = room(
         'The High Street - South Side',
         (
             'A street lined with shops extends away from you in both '
@@ -90,17 +104,20 @@ if __name__ == '__main__':
             'seating), above which is a large apartment building. To the east '
             'is the cafe, and directly south are the gentle green hills of '
             'High Street Park.'
-        ),
-        [Spatial(), Container()],
+        )
     )
 
     street_south.Container.store(admin)
     link(street_north, 'south', street_south, 'north')
 
     statue = zone.spawn(
-        'a large statue',
-        'A statue of the city founder, looking toward the horizon, rests on a large plinth.',
-        [Spatial()],
+        [
+            Named(
+                'a large statue',
+                'A statue of the city founder, looking toward the horizon, rests on a large plinth.',
+            ),
+            Spatial(),
+        ]
     )
     street_south.Container.store(statue)
 
@@ -191,10 +208,9 @@ if __name__ == '__main__':
         '...',
     )
 
-    apt_elevator = zone.spawn(
+    apt_elevator = room(
         'The Apartments - Elevator',
         "It's out of order for now.",
-        [Spatial(), Container()],
     )
 
     link(steakhouse_lobby, 'east', apt_1f_stairwell, 'west')
@@ -213,9 +229,15 @@ if __name__ == '__main__':
     ]]
 
     gift_shop_manager = zone.spawn(
-        'the gift shop manager',
-        '...',
-        [Spatial(), Emotive(), ShoosPests(direction='south')],
+        [
+            Named(
+                'the gift shop manager',
+                '...',
+            ),
+            Spatial(),
+            Emotive(),
+            ShoosPests(direction='south')
+        ],
         mode=ActionMode(),
     )
     gift_shop.Container.store(gift_shop_manager)
@@ -225,21 +247,38 @@ if __name__ == '__main__':
     add_pigeon(street_south, pigeon_destination_ids)
 
     box = zone.spawn(
-        'a cardboard box',
-        '...',
-        [Spatial(), Container(), Carriable(), Enterable()],
+        [
+            Named(
+                'a cardboard box',
+                '...',
+            ),
+            Spatial(),
+            Container(),
+            Carriable(),
+            Enterable(),
+        ]
     )
 
     ball = zone.spawn(
-        'a rubber ball',
-        '...',
-        [Spatial(), Carriable()],
+        [
+            Named(
+                'a rubber ball',
+                '...',
+            ),
+            Spatial(),
+            Carriable(),
+        ]
     )
 
     cactus = zone.spawn(
-        'a cactus',
-        '...',
-        [Spatial(), Carriable()],
+        [
+            Named(
+                'a cactus',
+                '...',
+            ),
+            Spatial(),
+            Carriable(),
+        ]
     )
     steakhouse_lobby.Container.store(box)
     box.Container.store(ball)

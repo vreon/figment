@@ -1,6 +1,7 @@
 from figment import Entity, Zone
 from tests.helpers import (
-    tell, saw, Visible, Colorful, BlackHole, EchoMode, ActionMode, look_at
+    tell, saw, Named, Visible, Colorful, BlackHole, EchoMode, ActionMode,
+    look_at
 )
 
 
@@ -12,17 +13,25 @@ class TestEntity(object):
 
     def setup(self):
         self.zone = z = Zone()
-        self.player = z.spawn(
-            'Player', 'A player stands here.', [Visible()], zone=z,
-            mode=ActionMode()
-        )
-        self.ball = z.spawn('a ball', 'A round rubber ball.', [
-            Visible(), Colorful(color='red')
-        ], zone=z)
-        self.bh = z.spawn('black hole', 'This text should never appear.', [
-            Visible(), Colorful(color='black'), BlackHole()
-        ], zone=z)
-        self.cow = z.spawn('a cow', 'A wild dairy cow.', [Visible()], zone=z)
+        self.player = z.spawn([
+            Named('Player', 'A player stands here.'),
+            Visible(),
+        ], mode=ActionMode())
+        self.ball = z.spawn([
+            Named('a ball', 'A round rubber ball.'),
+            Visible(),
+            Colorful(color='red'),
+        ])
+        self.bh = z.spawn([
+            Named('black hole', 'This text should never appear.'),
+            Visible(),
+            Colorful(color='black'),
+            BlackHole(),
+        ])
+        self.cow = z.spawn([
+            Named('a cow', 'A wild dairy cow.'),
+            Visible(),
+        ])
 
     def test_look_at(self):
         self.player.perform('look at %s' % self.ball.id)

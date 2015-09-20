@@ -14,7 +14,7 @@ def emote(actor, verb, plural=None, join=None, selector=None):
         return
 
     if not selector:
-        actor.Spatial.emit('{0.Name} {1}.'.format(actor, plural))
+        actor.Spatial.emit('{0.Named.Name} {1}.'.format(actor, plural))
         actor.tell('You {0}.'.format(verb))
         return
 
@@ -23,13 +23,13 @@ def emote(actor, verb, plural=None, join=None, selector=None):
         return
 
     if join:
-        actor.Spatial.emit('{0.Name} {1} {2} {3.name}.'.format(actor, plural, join, target), exclude=target)
-        actor.tell('You {0} {1} {2.name}.'.format(verb, join, target))
-        target.tell('{0.Name} {1} {2} you.'.format(actor, plural, join))
+        actor.Spatial.emit('{0.Named.Name} {1} {2} {3.Named.name}.'.format(actor, plural, join, target), exclude=target)
+        actor.tell('You {0} {1} {2.Named.name}.'.format(verb, join, target))
+        target.tell('{0.Named.Name} {1} {2} you.'.format(actor, plural, join))
     else:
-        actor.Spatial.emit('{0.Name} {1} {2.name}.'.format(actor, plural, target), exclude=target)
-        actor.tell('You {0} {1.name}.'.format(verb, target))
-        target.tell('{0.Name} {1} you.'.format(actor, plural))
+        actor.Spatial.emit('{0.Named.Name} {1} {2.Named.name}.'.format(actor, plural, target), exclude=target)
+        actor.tell('You {0} {1.Named.name}.'.format(verb, target))
+        target.tell('{0.Named.Name} {1} you.'.format(actor, plural))
 
 @ActionMode.action(r'^dance(?: with (?P<selector>.+))?$')
 def dance(actor, selector=None):

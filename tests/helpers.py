@@ -1,5 +1,6 @@
 import re
 from figment import Component, Mode
+from figment.utils import upper_first
 
 
 def tell(self, msg):
@@ -29,6 +30,30 @@ class Visible(Component):
     """
     A simplified position component.
     """
+
+
+class Named(Component):
+    """Holds human-readable identifying info for an entity."""
+    def __init__(self, name=None, desc=None):
+        self.name = name
+        self.desc = desc
+
+    @property
+    def Name(self):
+        return upper_first(self.name)
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'desc': self.desc,
+        }
+
+    @classmethod
+    def from_dict(cls, dict_):
+        return cls(
+            name=dict_['name'],
+            desc=dict_['desc'],
+        )
 
 
 class Colorful(Component):
@@ -101,10 +126,10 @@ def look_at(actor, selector):
         return
 
     if target.is_(BlackHole):
-        actor.tell("You're unable to look directly at {0.name}.".format(target))
+        actor.tell("You're unable to look directly at {0.Named.name}.".format(target))
         return
 
-    actor.tell(target.desc)
+    actor.tell(target.Named.desc)
 
 
 @ActionMode.action(r'^color(?: of)? (?P<selector>.+)')
@@ -115,10 +140,10 @@ def color_of(actor, selector):
         return
 
     if not target.is_(Colorful):
-        actor.tell("{0.Name} has no particular color.".format(target))
+        actor.tell("{0.Named.Name} has no particular color.".format(target))
         return
 
-    actor.tell('{0.Name} is {0.Colorful.color}.'.format(target))
+    actor.tell('{0.Named.Name} is {0.Colorful.color}.'.format(target))
 
 
 @ActionMode.action(r'^paint (?P<selector>.+) (?P<color>.+)')
@@ -129,11 +154,11 @@ def paint(actor, selector, color):
         return
 
     if not target.is_('Colorful'):
-        actor.tell("{0.Name} cannot be painted.".format(target))
+        actor.tell("{0.Named.Name} cannot be painted.".format(target))
         return
 
     if target.is_('BlackHole'):
         color = 'black'
 
     target.Colorful.color = color
-    actor.tell('{0.Name} is now {0.Colorful.color}.'.format(target))
+    actor.tell('{0.Named.Name} is now {0.Colorful.color}.'.format(target))

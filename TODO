@@ -21,9 +21,6 @@
         - managing __init__.py / magical component registration
             - manually register components with the zone on startup
             - does this mean the end of `figment run`?
-        - are name and desc _really_ required?
-            - can they be pushed into a metadata component without making
-              format strings too complicated?
         - entity IDs as random strings
             - just use integers instead
             - no "special" names like startroom/admin
