@@ -311,7 +311,7 @@ def look_in(actor, selector):
 
     actor.tell('Contents:')
 
-    contents = [e for e in target.Container.contents() if not e.is_(Invisible)]
+    contents = [e for e in target.Container.contents if not e.is_(Invisible)]
     if contents:
         for item in contents:
             actor.tell(indent('{0.Named.name}'.format(item)))
