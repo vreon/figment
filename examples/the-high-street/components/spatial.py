@@ -1,7 +1,7 @@
 import string
 from figment import Component, Entity
 from figment.utils import upper_first, indent
-from modes import ActionMode
+from modes import ActionMode, DisambiguationMode
 
 
 class Invisible(Component):
@@ -161,49 +161,34 @@ class Spatial(Component):
 
     def pick(self, selector, entity_set):
         """
-        Pick entities from a set by selector (name or ID). In most cases you
-        should use one of the higher-level pick_* functions.
+        Pick entities from a set by selector. In most cases you should use one
+        of the higher-level pick_* functions.
         """
-        if selector.lower() in ('self', 'me', 'myself'):
-            return set((self.entity,))
-
-        return set(
-            e for e in entity_set
-            if e.is_('Named') and selector.lower() in e.Named.name.lower()
-            and not e.is_(Invisible)
-        )
-
-    def pick_interactively(self, selector, entity_set, area='in that area'):
-        """
-        Possibly target an object, and possibly enter a disambiguation menu
-        """
-        matches = self.pick(selector, entity_set)
-        num_matches = len(matches)
-
-        if num_matches == 0:
-            self.entity.tell("There's no {0} {1}.".format(selector, area))
-        elif num_matches == 1:
-            return matches.pop()
+        if isinstance(selector, int):
+            for e in entity_set:
+                if e.id == selector:
+                    return set((e,))
         else:
-            self.entity.tell("Which '{0}' do you mean?".format(selector))
-            targets = []
-            for index, entity in enumerate(matches):
-                location = 'in inventory' if entity.Spatial.container == self.entity else 'nearby'
-                self.entity.tell(indent('{0}. {1.Named.name} ({2})'.format(index + 1, entity, location)))
-                targets.append(entity.id)
-            # raise AmbiguousSelector(selector, targets)
+            if selector.lower() in ('self', 'me', 'myself'):
+                return set((self.entity,))
+
+            return set(
+                e for e in entity_set
+                if (e.is_('Named') and selector.lower() in e.Named.name.lower())
+                and not e.is_(Invisible)
+            )
 
     def pick_nearby(self, selector):
-        return self.pick_interactively(selector, self.nearby(), area='nearby')
+        return self.pick(selector, self.nearby())
 
     def pick_inventory(self, selector):
-        return self.pick_interactively(selector, self.entity.Container.contents, area='in your inventory')
+        return self.pick(selector, self.entity.Container.contents)
 
     def pick_from(self, selector, container):
-        return self.pick_interactively(selector, container.Container.contents, area='in {0.Named.name}'.format(container))
+        return self.pick(selector, container.Container.contents)
 
     def pick_nearby_inventory(self, selector):
-        return self.pick_interactively(selector, self.entity.Container.contents | self.nearby(), area='nearby')
+        return self.pick(selector, self.entity.Container.contents | self.nearby())
 
     #########################
     # Communication
@@ -254,6 +239,30 @@ class Spatial(Component):
         self.entity.tell('\n'.join(messages))
 
 
+def unique_selection(actor, action_name, argument_name, selector, kwargs, choices, area='in the area'):
+    if not choices:
+        actor.tell("There's no {0} {1}.".format(selector, area))
+        return False
+
+    if len(choices) == 1:
+        return True
+
+    actor.mode = DisambiguationMode(
+        action_name,
+        argument_name,
+        kwargs,
+        [entity.id for entity in choices],
+    )
+
+    actor.tell("Which '{0}' do you mean?".format(selector))
+
+    for index, entity in enumerate(choices):
+        location = 'in inventory' if entity.Spatial.container == actor else 'nearby'
+        actor.tell(indent('{0}. {1.Named.name} ({2})'.format(index + 1, entity, location)))
+
+    return False
+
+
 #########################
 # Actions
 #########################
@@ -297,9 +306,12 @@ def look_in(actor, selector):
         actor.tell("You're unable to do that.")
         return
 
-    target = actor.Spatial.pick_nearby_inventory(selector)
-    if not target:
+    targets = actor.Spatial.pick_nearby_inventory(selector)
+
+    if not unique_selection(actor, 'look_in', 'selector', selector, {'selector': selector}, targets, 'nearby'):
         return
+
+    target = targets.pop()
 
     if not target.is_(Container):
         actor.tell("You can't look inside of that.")
@@ -329,9 +341,12 @@ def look_at(actor, selector):
         actor.tell("It's too dark to see anything here.")
         return
 
-    target = actor.Spatial.pick_nearby_inventory(selector)
-    if not target:
+    targets = actor.Spatial.pick_nearby_inventory(selector)
+
+    if not unique_selection(actor, 'look_at', 'selector', selector, {'selector': selector}, targets, 'nearby'):
         return
+
+    target = targets.pop()
 
     actor.tell(target.Named.desc)
     actor.Spatial.emit('{0.Named.Name} looks at {1.Named.name}.'.format(actor, target), exclude=target)
@@ -344,9 +359,12 @@ def get(actor, selector):
         actor.tell("You're unable to do that.")
         return
 
-    target = actor.Spatial.pick_nearby(selector)
-    if not target:
+    targets = actor.Spatial.pick_nearby(selector)
+
+    if not unique_selection(actor, 'get', 'selector', selector, {'selector': selector}, targets, 'nearby'):
         return
+
+    target = targets.pop()
 
     if target == actor:
         actor.tell("You can't put yourself in your inventory.")
@@ -368,13 +386,21 @@ def get(actor, selector):
 
 @ActionMode.action('^(?:get|take|pick up) (?P<target_selector>.+) from (?P<container_selector>.+)$')
 def get_from(actor, target_selector, container_selector):
+    kwargs = {
+        'target_selector': target_selector,
+        'container_selector': container_selector,
+    }
+
     if not actor.is_([Spatial, Container]):
         actor.tell("You're unable to hold items.")
         return
 
-    container = actor.Spatial.pick_nearby_inventory(container_selector)
-    if not container:
+    containers = actor.Spatial.pick_nearby_inventory(container_selector)
+
+    if not unique_selection(actor, 'get_from', 'container_selector', container_selector, kwargs, containers, 'nearby'):
         return
+
+    container = containers.pop()
 
     if container == actor:
         actor.tell("You can't get things from your inventory, they'd just go right back in!")
@@ -384,9 +410,12 @@ def get_from(actor, target_selector, container_selector):
         actor.tell("{0.Named.Name} can't hold items.".format(container))
         return
 
-    target = actor.Spatial.pick_from(target_selector, container)
-    if not target:
+    targets = actor.Spatial.pick_from(target_selector, container)
+
+    if not unique_selection(actor, 'get_from', 'target_selector', target_selector, kwargs, targets, 'in {0.Named.name}'.format(container)):
         return
+
+    target = targets.pop()
 
     if target == actor:
         actor.tell("You can't put yourself in your inventory.")
@@ -409,13 +438,21 @@ def get_from(actor, target_selector, container_selector):
 
 @ActionMode.action(r'^put (?P<target_selector>.+) (?:in(?:to|side(?: of)?)?) (?P<container_selector>.+)$')
 def put_in(actor, target_selector, container_selector):
+    kwargs = {
+        'target_selector': target_selector,
+        'container_selector': container_selector,
+    }
+
     if not actor.is_([Spatial, Container]):
         actor.tell("You're unable to hold things.")
         return
 
-    target = actor.Spatial.pick_nearby_inventory(target_selector)
-    if not target:
+    targets = actor.Spatial.pick_nearby_inventory(target_selector)
+
+    if not unique_selection(actor, 'put_in', 'target_selector', target_selector, kwargs, targets, 'nearby'):
         return
+
+    target = targets.pop()
 
     if not target.is_(Spatial):
         actor.tell("You can't put {0.Named.name} into anything.")
@@ -425,9 +462,12 @@ def put_in(actor, target_selector, container_selector):
         actor.tell("You shouldn't get rid of this; it's very important.")
         return
 
-    container = actor.Spatial.pick_nearby_inventory(container_selector)
-    if not container:
+    containers = actor.Spatial.pick_nearby_inventory(container_selector)
+
+    if not unique_selection(actor, 'put_in', 'container_selector', container_selector, kwargs, containers, 'nearby'):
         return
+
+    container = containers.pop()
 
     if not container.is_([Spatial, Container]):
         actor.tell("{0.Named.Name} can't hold things.".format(container))
@@ -446,9 +486,12 @@ def drop(actor, selector):
         actor.tell("You're unable to drop things.")
         return
 
-    target = actor.Spatial.pick_inventory(selector)
-    if not target:
+    targets = actor.Spatial.pick_inventory(selector)
+
+    if not unique_selection(actor, 'drop', 'selector', selector, {'selector': selector}, targets, 'in your inventory'):
         return
+
+    target = targets.pop()
 
     # TODO: other nearby stuff
 
@@ -521,9 +564,12 @@ def enter(actor, selector):
         actor.tell("You're unable to leave this place.")
         return
 
-    container = actor.Spatial.pick_nearby(selector)
-    if not container:
+    containers = actor.Spatial.pick_nearby(selector)
+
+    if not unique_selection(actor, 'enter', 'selector', selector, {'selector': selector}, containers, 'nearby'):
         return
+
+    container = containers.pop()
 
     if not container.is_([Spatial, Enterable, Container]):
         actor.tell("You can't enter that.")

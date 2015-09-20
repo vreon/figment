@@ -26,7 +26,6 @@
     - Continue dogfooding to find parts of API that suck
         - current usage of entity.perform assumes the entity is in ActionMode
             - engine: need an API for checking the mode of entities
-    - Disambiguation
     - Weapons and equipment
     - Conversations
     - Stacking items
