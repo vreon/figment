@@ -143,7 +143,3 @@ class Entity(object):
         """Send text to this entity."""
         if self.hearing:
             self.zone.redis.publish(self.messages_key, message)
-
-
-from figment.utils import upper_first
-from figment.component import Component
