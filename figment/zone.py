@@ -128,8 +128,22 @@ class Zone(object):
             # if self.config['persistence'].get('compressed'):
             #     snapshot = zlib.decompress(snapshot)
             snapshot = self.snapshot_serializer.unserialize(snapshot)
+
+            log.info('Creating entities...')
+
             for entity_dict in snapshot['entities']:
-                entity = Entity.from_dict(entity_dict, self)
+                entity = Entity.from_dict({
+                    'name': entity_dict['name'],
+                    'desc': entity_dict['desc'],
+                    'id': entity_dict['id'],
+                    'hearing': entity_dict['hearing'],
+                }, self)
+
+            log.info('Creating components...')
+
+            for entity_dict in snapshot['entities']:
+                entity = self.get(entity_dict['id'])
+                entity.attach_from_dict(entity_dict)
 
         return True
 

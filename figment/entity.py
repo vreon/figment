@@ -142,24 +142,25 @@ class Entity(object):
             hearing=dict_['hearing'],
         )
 
-        mode_dict = dict_['mode']
+        entity.zone = zone
+        entity.attach_from_dict(dict_)
+
+        return entity
+
+    def attach_from_dict(self, dict_):
+        mode_dict = dict_.get('mode', {})
         if mode_dict:
             mode_name = mode_dict.pop('__class__')
-            mode = zone.modes[mode_name].from_dict(mode_dict)
+            self.mode = self.zone.modes[mode_name].from_dict(mode_dict)
         else:
-            mode = None
-
-        entity.mode = mode
-        entity.zone = zone
+            self.mode = None
 
         components = []
         for component_name, component_dict in dict_.get('components', {}).items():
-            component = zone.components[component_name].from_dict(component_dict)
+            component = self.zone.components[component_name].from_dict(component_dict)
             components.append(component)
 
-        entity.components.add(components)
-
-        return entity
+        self.components.add(components)
 
     def is_(self, *args, **kwargs):
         return self.components.has(*args, **kwargs)
