@@ -120,7 +120,7 @@ class ActionMode(Mode):
 
 @ActionMode.action(r'^l(?:ook)?(?: at)? (?P<selector>.+)')
 def look_at(actor, selector):
-    target = actor.zone.get(selector)
+    target = actor.zone.get(int(selector))
     if not target:
         actor.tell('No such entity %r.' % selector)
         return
@@ -134,7 +134,7 @@ def look_at(actor, selector):
 
 @ActionMode.action(r'^color(?: of)? (?P<selector>.+)')
 def color_of(actor, selector):
-    target = actor.zone.get(selector)
+    target = actor.zone.get(int(selector))
     if not target:
         actor.tell('No such entity %r.' % selector)
         return
@@ -148,7 +148,7 @@ def color_of(actor, selector):
 
 @ActionMode.action(r'^paint (?P<selector>.+) (?P<color>.+)')
 def paint(actor, selector, color):
-    target = actor.zone.get(selector)
+    target = actor.zone.get(int(selector))
     if not target:
         actor.tell('No such entity %r.' % selector)
         return

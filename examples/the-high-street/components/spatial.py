@@ -169,7 +169,7 @@ class Spatial(Component):
 
         return set(
             e for e in entity_set
-            if ((e.is_('Named') and selector.lower() in e.Named.name.lower()) or selector == e.id)
+            if e.is_('Named') and selector.lower() in e.Named.name.lower()
             and not e.is_(Invisible)
         )
 

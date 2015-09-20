@@ -57,7 +57,7 @@ class ComponentStore(object):
 
 class Entity(object):
     def __init__(self, id=None, zone=None, hearing=False, mode=None):
-        self.id = id or Entity.create_id()
+        self.id = id
         self.mode = mode
         self.components = ComponentStore(self)
         self.zone = zone
@@ -78,10 +78,6 @@ class Entity(object):
     @property
     def ticking(self):
         return any(c.ticking for c in self.components)
-
-    @staticmethod
-    def create_id():
-        return ''.join(random.choice(string.ascii_letters) for i in xrange(12))
 
     @property
     def messages_key(self):

@@ -95,14 +95,14 @@ def cli():
         .arg('name', type=str, help='world name (must be a valid directory name)')
 
     cmd('listen', listen, help='connect to an entity\'s message stream')\
-        .arg('entity_id', type=str, help='ID of the target entity')
+        .arg('entity_id', type=int, help='ID of the target entity')
 
     cmd('command', command, help='run a command from the entity\'s perspective')\
-        .arg('entity_id', type=str, help='ID of the target entity')\
+        .arg('entity_id', type=int, help='ID of the target entity')\
         .arg('command', type=str, help='the command to perform')
 
     cmd('prompt', prompt, help='start an interactive prompt for performing commands')\
-        .arg('entity_id', type=str, help='ID of the target entity')
+        .arg('entity_id', type=int, help='ID of the target entity')
 
     cmd('run', run, help='run a Figment zone server')\
         .arg('-v', '--verbose', action='store_true', help='show verbose output')\

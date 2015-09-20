@@ -21,10 +21,6 @@
         - managing __init__.py / magical component registration
             - manually register components with the zone on startup
             - does this mean the end of `figment run`?
-        - entity IDs as random strings
-            - just use integers instead
-            - no "special" names like startroom/admin
-                - use a component instead
 
 1.0 blockers: examples
     - Continue dogfooding to find parts of API that suck

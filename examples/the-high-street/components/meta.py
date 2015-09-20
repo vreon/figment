@@ -52,6 +52,13 @@ def inspect(actor, entity_id):
         return
 
     entity_id = actor.Admin.aliases.get(entity_id, entity_id)
+
+    try:
+        entity_id = int(entity_id)
+    except ValueError:
+        actor.tell('Entity ID must be numeric.')
+        return
+
     entity = actor.zone.get(entity_id)
 
     if entity is None:
@@ -75,6 +82,13 @@ def detach(actor, entity_id, component_class_name, arguments=None):
         return
 
     entity_id = actor.Admin.aliases.get(entity_id, entity_id)
+
+    try:
+        entity_id = int(entity_id)
+    except ValueError:
+        actor.tell('Entity ID must be numeric.')
+        return
+
     entity = actor.zone.get(entity_id)
 
     if entity is None:
@@ -102,6 +116,13 @@ def attach(actor, entity_id, component_class_name, arguments=None):
         return
 
     entity_id = actor.Admin.aliases.get(entity_id, entity_id)
+
+    try:
+        entity_id = int(entity_id)
+    except ValueError:
+        actor.tell('Entity ID must be numeric.')
+        return
+
     entity = actor.zone.get(entity_id)
 
     if entity is None:
@@ -139,6 +160,13 @@ def set_attribute(actor, entity_id, attribute, value):
         return
 
     entity_id = actor.Admin.aliases.get(entity_id, entity_id)
+
+    try:
+        entity_id = int(entity_id)
+    except ValueError:
+        actor.tell('Entity ID must be numeric.')
+        return
+
     entity = actor.zone.get(entity_id)
 
     if entity is None:
@@ -182,6 +210,13 @@ def destroy(actor, entity_id):
         return
 
     entity_id = actor.Admin.aliases.get(entity_id, entity_id)
+
+    try:
+        entity_id = int(entity_id)
+    except ValueError:
+        actor.tell('Entity ID must be numeric.')
+        return
+
     entity = actor.zone.get(entity_id)
 
     if entity is None:
@@ -198,7 +233,15 @@ def add_alias(actor, alias, entity_id):
         actor.tell("You're unable to do that.")
         return
 
-    actor.Admin.aliases[alias] = actor.Admin.aliases.get(entity_id, entity_id)
+    entity_id = actor.Admin.aliases.get(entity_id, entity_id)
+
+    try:
+        entity_id = int(entity_id)
+    except ValueError:
+        actor.tell('Entity ID must be numeric.')
+        return
+
+    actor.Admin.aliases[alias] = entity_id
 
 
 @ActionMode.action(r'^!a(?:lias)? (rm|remove|del(ete)?|unset) (?P<alias>.+)$')

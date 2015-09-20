@@ -65,7 +65,6 @@ if __name__ == '__main__':
             Admin()
         ],
         hearing=True,
-        id='admin',
         mode=ActionMode()
     )
 

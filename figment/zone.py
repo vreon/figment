@@ -33,6 +33,7 @@ class Zone(object):
         self.tick_interval = 1
         self.running = False
         self.redis = None
+        self._max_id = 0
 
     @classmethod
     def from_config(cls, id, world_path):
@@ -52,6 +53,10 @@ class Zone(object):
     @property
     def incoming_key(self):
         return 'zone:%s:incoming' % self.id
+
+    def next_id(self):
+        self._max_id += 1
+        return self._max_id
 
     def load_config(self):
         base_path = os.path.abspath(os.path.expanduser(self.world_path))
@@ -136,6 +141,7 @@ class Zone(object):
                     'id': entity_dict['id'],
                     'hearing': entity_dict['hearing'],
                 }, self)
+                self._max_id = max(self._max_id, entity.id)
 
             log.info('Creating components...')
 
@@ -227,10 +233,10 @@ class Zone(object):
             self.perform_tick()
         else:
             entity_id, _, command = value.partition(' ')
-            self.perform_command(entity_id, command)
+            self.perform_command(int(entity_id), command)
 
     def enqueue_command(self, entity_id, command):
-        self.redis.rpush(self.incoming_key, ' '.join([entity_id, command]))
+        self.redis.rpush(self.incoming_key, ' '.join([str(entity_id), command]))
 
     def perform_command(self, entity_id, command):
         entity = self.get(entity_id)
@@ -264,9 +270,10 @@ class Zone(object):
         self.remove(entity)
 
     def add(self, entity):
-        log.debug('Added entity: [%s]' % entity.id)
-        self.entities[entity.id] = entity
+        entity.id = self.next_id()
         entity.zone = self
+        self.entities[entity.id] = entity
+        log.debug('Added entity: [%s]' % entity.id)
 
     def remove(self, entity):
         log.debug('Removed entity: [%s]' % entity.id)
