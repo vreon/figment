@@ -199,8 +199,8 @@ class Zone(object):
             log.critical(traceback.format_exc())
         except BaseException as e:
             pass
-
-        self.save_snapshot()
+        finally:
+            self.save_snapshot()
 
     def stop(self):
         self.running = False
