@@ -17,7 +17,7 @@ if __name__ == '__main__':
     def room(name, desc):
         return Entity(name, desc, [Spatial(), Container()], zone=zone)
 
-    def add_pigeon(room_, destinations):
+    def add_pigeon(room_, destination_ids):
         pigeon = Entity(
             'a pigeon',
             'Hard to believe this thing descended from dinosaurs.',
@@ -26,13 +26,31 @@ if __name__ == '__main__':
                 Carriable(),
                 Bird(noise='coo'),
                 Pest(),
-                Wandering(wanderlust=0.03, destinations=destinations)
+                Wandering(wanderlust=0.03, destination_ids=destination_ids)
             ],
             zone=zone,
             mode=ActionMode(),
         )
         room_.Container.store(pigeon)
 
+    def make_exit(source, direction, destination):
+        exit = Entity(
+            'an exit',
+            'A portal from one location to another.',
+            [Exit(direction=direction, destination_id=destination.id)],
+            zone=zone,
+        )
+
+        if not source.is_(Exitable):
+            source.components.add(Exitable())
+
+        source.Exitable.exit_ids.add(exit.id)
+        source.Exitable.exits.add(exit)
+
+    def link(source, direction_to, destination, direction_from=None):
+        make_exit(source, direction_to, destination)
+        if direction_from:
+            make_exit(destination, direction_from, source)
 
     log.info('Initializing zone.')
 
@@ -62,10 +80,9 @@ if __name__ == '__main__':
         'The High Street - North Side',
         (
             'A street lined with shops extends away from you in both '
-            'directions. An antique store and library are on the west side, '
-            'fitting neighbors. To the east is an upscale shoe store with '
-            'stone facade, and the brick Fire Station. The scent of coffee '
-            'wafts in on the breeze.'
+            'directions. The library lies to the west; to the east is an '
+            'upscale shoe store with stone facade, and the brick Fire Station. '
+            'The scent of coffee wafts in on the breeze.'
         ),
     )
 
@@ -73,17 +90,17 @@ if __name__ == '__main__':
         'The High Street - South Side',
         (
             'A street lined with shops extends away from you in both '
-            'directions. On the west side are the post office, tailor, and '
-            'Steakhouse (with outdoor seating). Raucous music and laughter '
-            'emanates from the tavern to the east.'
+            'directions. On the west side is the Steakhouse (with outdoor '
+            'seating), above which is a large apartment building. To the east '
+            'is the cafe, and directly south are the gentle green hills of '
+            'High Street Park.'
         ),
         [Spatial(), Container()],
-        id='startroom',
         zone=zone,
     )
 
     street_south.Container.store(admin)
-    street_north.Container.link('south', street_south, 'north')
+    link(street_north, 'south', street_south, 'north')
 
     statue = Entity(
         'a large statue',
@@ -95,86 +112,13 @@ if __name__ == '__main__':
 
     ### North side
 
-    # Police station
-
-    police_station = room(
-        'Police Station - Front Desk',
-        '...',
-    )
-    police_station.Container.link('south', street_north, 'northwest')
-
-    police_offices = room(
-        'Police Station - Offices',
-        '...',
-    )
-    police_offices.Container.link('south', police_station, 'north')
-
-    police_interview = room(
-        'Police Station - Interview Room',
-        '...',
-    )
-    police_interview.Container.link('east', police_offices, 'west')
-
-    police_locker_room = room(
-        'Police Station - Locker Room',
-        '...',
-    )
-    police_locker_room.Container.link('west', police_offices, 'east')
-
-    police_cells = room(
-        'Police Station - Holding Cells',
-        '...',
-    )
-    police_cells.Container.link('south', police_offices, 'north')
-
-    police_cell_a = Entity(
-        'Cell A',
-        '...',
-        [Spatial(), Container(), Enterable()],
-        zone=zone,
-    )
-    police_cell_b = Entity(
-        'Cell B',
-        '...',
-        [Spatial(), Container(), Enterable()],
-        zone=zone,
-    )
-    police_cell_c = Entity(
-        'Cell C',
-        '...',
-        [Spatial(), Container(), Enterable()],
-        zone=zone,
-    )
-    police_cell_a.Container.link('out', '..')
-    police_cell_b.Container.link('out', '..')
-    police_cell_c.Container.link('out', '..')
-    police_cells.Container.store(police_cell_a)
-    police_cells.Container.store(police_cell_b)
-    police_cells.Container.store(police_cell_c)
-
-    # Antique store
-
-    antique_store = room(
-        "Ye O' Antique Shoppe",
-        '...',
-    )
-    antique_store.Container.link('south', street_north, 'north')
-
     # Library
 
     library = room(
         'Public Library',
         '...',
     )
-    library.Container.link('south', street_north, 'northeast')
-
-    # Cafe
-
-    cafe = room(
-        "Baboman's Cafe",
-        '...',
-    )
-    cafe.Container.link('south', street_north, 'northwest')
+    link(library, 'southeast', street_north, 'northwest')
 
     # Museum
 
@@ -182,7 +126,7 @@ if __name__ == '__main__':
         'The Museum - Rotunda',
         '...',
     )
-    museum.Container.link('south', street_north, 'north')
+    link(museum, 'south', street_north, 'north')
 
     # Gift shop
 
@@ -190,7 +134,8 @@ if __name__ == '__main__':
         'The Museum - Gift Shop',
         '...',
     )
-    gift_shop.Container.link('south', street_north, 'northeast')
+    link(gift_shop, 'west', museum, 'east')
+    link(gift_shop, 'southwest', street_north, 'northeast')
 
     ### South side
 
@@ -200,11 +145,7 @@ if __name__ == '__main__':
         "Steakhouse",
         '...',
     )
-    steakhouse_lobby.Container.link('north', street_south, 'southwest')
-
-    # Tailor
-
-    # Post office
+    link(steakhouse_lobby, 'northeast', street_south, 'southwest')
 
     # Park
 
@@ -212,15 +153,15 @@ if __name__ == '__main__':
         'High Street Park',
         'A wide, grassy area.',
     )
-    park.Container.link('north', street_south, 'south')
+    link(park, 'north', street_south, 'south')
 
-    ### South side
+    # Cafe
 
-    # Tavern
-
-    ##### Tall buildings
-
-    ### South side
+    cafe = room(
+        "Baboman's Cafe",
+        '...',
+    )
+    link(cafe, 'northwest', street_south, 'southeast')
 
     # Apartments
 
@@ -263,18 +204,18 @@ if __name__ == '__main__':
         zone=zone,
     )
 
-    steakhouse_lobby.Container.link('east', apt_1f_stairwell, 'west')
-    steakhouse_lobby.Container.link('west', apt_elevator, 'east')
-    apt_1f_stairwell.Container.link('up', apt_2f_stairwell, 'down')
-    apt_2f_stairwell.Container.link('up', apt_3f_stairwell, 'down')
-    apt_3f_stairwell.Container.link('up', apt_4f_stairwell, 'down')
-    apt_2f_stairwell.Container.link('south', apt_2f, 'north')
-    apt_3f_stairwell.Container.link('south', apt_3f, 'north')
-    apt_4f_stairwell.Container.link('south', apt_4f, 'north')
+    link(steakhouse_lobby, 'east', apt_1f_stairwell, 'west')
+    link(steakhouse_lobby, 'west', apt_elevator, 'east')
+    link(apt_1f_stairwell, 'up', apt_2f_stairwell, 'down')
+    link(apt_2f_stairwell, 'up', apt_3f_stairwell, 'down')
+    link(apt_3f_stairwell, 'up', apt_4f_stairwell, 'down')
+    link(apt_2f_stairwell, 'south', apt_2f, 'north')
+    link(apt_3f_stairwell, 'south', apt_3f, 'north')
+    link(apt_4f_stairwell, 'south', apt_4f, 'north')
 
     ### Assorted NPCs
 
-    pigeon_destinations = [e.id for e in [
+    pigeon_destination_ids = [e.id for e in [
         street_north, street_south, gift_shop,
     ]]
 
@@ -287,14 +228,14 @@ if __name__ == '__main__':
     )
     gift_shop.Container.store(gift_shop_manager)
 
-    add_pigeon(street_north, pigeon_destinations)
-    add_pigeon(street_north, pigeon_destinations)
-    add_pigeon(street_south, pigeon_destinations)
+    add_pigeon(street_north, pigeon_destination_ids)
+    add_pigeon(street_north, pigeon_destination_ids)
+    add_pigeon(street_south, pigeon_destination_ids)
 
     box = Entity(
         'a cardboard box',
         '...',
-        [Spatial(), Container(), Carriable(), Enterable()], # TODO: is_open
+        [Spatial(), Container(), Carriable(), Enterable()],
         zone=zone,
     )
 

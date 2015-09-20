@@ -4,15 +4,24 @@ import random
 
 
 class Wandering(Component):
-    def __init__(self, wanderlust=0.01, destinations=[]):
+    def __init__(self, wanderlust=0.01, destination_ids=[]):
         self.wanderlust = wanderlust
-        self.destinations = destinations
+        self.destination_ids = destination_ids
+        self.destinations = []
 
     def to_dict(self):
         return {
             'wanderlust': self.wanderlust,
-            'destinations': self.destinations,
+            'destination_ids': self.destination_ids,
         }
+
+    def attach(self, entity):
+        super(Wandering, self).attach(entity)
+        self.destinations = [entity.zone.get(id) for id in self.destination_ids]
+
+    def detach(self):
+        self.destinations = []
+        super(Wandering, self).detach()
 
     def tick(self):
         if random.random() >= self.wanderlust:
@@ -23,13 +32,16 @@ class Wandering(Component):
 
         room = self.entity.Spatial.container
 
+        if not room.is_(spatial.Exitable):
+            return
+
         valid_exits = set()
-        for direction, entity in room.Container.exits().items():
-            if entity.id in self.destinations:
-                valid_exits.add(direction)
+        for exit in room.Exitable.exits:
+            if exit.Exit.destination in self.destinations:
+                valid_exits.add(exit)
 
         if not valid_exits:
             return
 
         direction = random.choice(list(valid_exits))
-        self.entity.perform(spatial.walk, direction=direction)
+        self.entity.perform(spatial.walk, direction=exit.Exit.direction)

@@ -3,17 +3,6 @@ from figment import Component, Entity
 from figment.utils import upper_first, indent
 from modes import ActionMode
 
-def to_id(entity_or_id):
-    if isinstance(entity_or_id, Entity):
-        return entity_or_id.id
-    return entity_or_id
-
-
-def to_entity(entity_or_id):
-    if isinstance(entity_or_id, Entity):
-        return entity_or_id
-    return Entity.get(entity_or_id)
-
 
 class Invisible(Component):
     pass
@@ -29,36 +18,34 @@ class Carriable(Component):
 
 class Container(Component):
     def __init__(self):
-        self._contents = set()
-        self._exits = {}
+        self.contents_ids = set()
 
     def to_dict(self):
         return {
-            'contents': list(self._contents),
-            'exits': self._exits,
+            'contents_ids': list(self.contents_ids),
         }
 
     @classmethod
     def from_dict(cls, dict_):
         self = cls()
-        self._contents = set(dict_['contents'])
-        self._exits = dict_['exits']
+        self.contents_ids = set(dict_['contents_ids'])
         return self
 
+    def attach(self, entity):
+        super(Container, self).attach(entity)
+        self.contents = set([entity.zone.get(id) for id in self.contents_ids])
+
     def detach(self):
-        self._contents = set()
-        self._exits = {}
+        self.contents = set()
         super(Container, self).detach()
 
     @staticmethod
     def move(entity, container):
-        old_container = entity.Spatial.container
-
-        if old_container:
-            old_container.Container._contents.remove(entity.id)
-
-        container.Container._contents.add(entity.id)
+        Container.unstore(entity)
+        container.Container.contents_ids.add(entity.id)
+        container.Container.contents.add(entity)
         entity.Spatial.container_id = container.id
+        entity.Spatial.container = container
 
     def store(self, entity):
         Container.move(entity, self.entity)
@@ -66,51 +53,82 @@ class Container(Component):
     def store_in(self, entity):
         Container.move(self.entity, entity)
 
-    def unstore(self, entity):
+    def drop(self, entity):
         Container.move(entity, self.entity.Spatial.container)
+
+    @staticmethod
+    def unstore(entity):
+        container = entity.Spatial.container
+        if container:
+            container.Container.contents_ids.remove(entity.id)
+            container.Container.contents.remove(entity)
+
+        entity.Spatial.container = None
+        entity.Spatial.container_id = None
 
     def announce(self, message):
         """Send text to this entity's contents."""
-        for listener in self.contents():
+        for listener in self.contents:
             listener.tell(message)
 
-    # TODO: This should be set at attach time
-    def contents(self):
-        return set(self.entity.zone.get(id) for id in self._contents)
 
-    # TODO: This should be set at attach time
-    def exits(self):
-        resolved_exits = {}
-        for name, selector in self._exits.items():
-            if selector == '.':
-                id = self.entity.id
-            elif selector == '..':
-                id = self.container_id
-            else:
-                id = selector
-            resolved_exits[name] = self.entity.zone.get(id)
-        return resolved_exits
+class Exitable(Component):
+    def __init__(self):
+        self.exit_ids = set()
+        self.exits = set()
 
-    def link(self, direction, destination, back_direction=None):
-        # NOTE: This depends on _to_id not transforming values like . or ..
-        destination_id = to_id(destination)
-        self._exits[direction] = destination_id
-        if back_direction and not destination in ('.', '..'):
-            destination = to_entity(destination)
-            destination.Container._exits[back_direction] = self.entity.id
+    def to_dict(self):
+        return {
+            'exit_ids': list(self.exit_ids),
+        }
 
-    def unlink(self, direction, destination, back_direction=None):
-        # NOTE: This depends on _to_id not transforming values like . or ..
-        destination_id = to_id(destination)
-        self._exits.pop(direction, None)
-        if back_direction and not destination in ('.', '..'):
-            destination = to_entity(destination)
-            destination.Container._exits.pop(back_direction, None)
+    @classmethod
+    def from_dict(cls, dict_):
+        self = cls()
+        self.exit_ids = set(dict_['exit_ids'])
+        return self
+
+    def attach(self, entity):
+        super(Exitable, self).attach(entity)
+        self.exits = set([entity.zone.get(id) for id in self.exit_ids])
+
+    def detach(self):
+        self.exits = set()
+        super(Exitable, self).detach()
+
+
+class Exit(Component):
+    def __init__(self, direction, destination_id):
+        self.direction = direction
+        self.destination_id = destination_id
+        self.destination = None
+
+    def to_dict(self):
+        return {
+            'direction': self.direction,
+            'destination_id': self.destination_id,
+        }
+
+    @classmethod
+    def from_dict(cls, dict_):
+        return cls(
+            direction=dict_['direction'],
+            destination_id=dict_['destination_id'],
+        )
+
+    def attach(self, entity):
+        super(Exit, self).attach(entity)
+        self.destination = entity.zone.get(self.destination_id)
+
+    def detach(self):
+        self.destination = None
+        super(Exit, self).detach()
 
 
 class Spatial(Component):
     def __init__(self, container_id=None):
         self.container_id = container_id
+        self.container = None
 
     def to_dict(self):
         return {
@@ -125,14 +143,10 @@ class Spatial(Component):
 
     def attach(self, entity):
         super(Spatial, self).attach(entity)
-        container = self.container
-        if container:
-            container.Container._contents.add(self.entity.id)
+        self.container = entity.zone.get(self.container_id)
 
     def detach(self):
-        container = self.container
-        if container:
-            container.Container._contents.remove(self.entity.id)
+        self.container = None
         super(Spatial, self).detach()
 
     #########################
@@ -140,7 +154,10 @@ class Spatial(Component):
     #########################
 
     def nearby(self):
-        return set(entity for entity in self.container.Container.contents() if not entity == self.entity)
+        return set(
+            entity for entity in self.container.Container.contents
+            if not entity == self.entity
+        )
 
     def pick(self, selector, entity_set):
         """
@@ -150,7 +167,11 @@ class Spatial(Component):
         if selector.lower() in ('self', 'me', 'myself'):
             return set((self.entity,))
 
-        return set(e for e in entity_set if (selector.lower() in e.name.lower() or selector == e.id) and not e.is_(Invisible))
+        return set(
+            e for e in entity_set
+            if (selector.lower() in e.name.lower() or selector == e.id)
+            and not e.is_(Invisible)
+        )
 
     def pick_interactively(self, selector, entity_set, area='in that area'):
         """
@@ -176,23 +197,13 @@ class Spatial(Component):
         return self.pick_interactively(selector, self.nearby(), area='nearby')
 
     def pick_inventory(self, selector):
-        return self.pick_interactively(selector, self.entity.Container.contents(), area='in your inventory')
+        return self.pick_interactively(selector, self.entity.Container.contents, area='in your inventory')
 
     def pick_from(self, selector, container):
-        return self.pick_interactively(selector, container.Container.contents(), area='in {0.name}'.format(container))
+        return self.pick_interactively(selector, container.Container.contents, area='in {0.name}'.format(container))
 
     def pick_nearby_inventory(self, selector):
-        return self.pick_interactively(selector, self.entity.Container.contents() | self.nearby(), area='nearby')
-
-    #########################
-    # Location, contents
-    #########################
-
-    # TODO: This should be set at attach time
-    @property
-    def container(self):
-        if self.container_id:
-            return self.entity.zone.get(self.container_id)
+        return self.pick_interactively(selector, self.entity.Container.contents | self.nearby(), area='nearby')
 
     #########################
     # Communication
@@ -215,11 +226,12 @@ class Spatial(Component):
 
         messages = [string.capwords(room.name), room.desc]
 
-        exits = room.Container.exits()
-        if exits:
-            messages.append('Exits:')
-            for direction, destination in exits.items():
-                messages.append(indent('{0}: {1}'.format(direction, destination.name)))
+        if room.is_(Exitable):
+            exits = room.Exitable.exits
+            if exits:
+                messages.append('Exits:')
+                for exit in exits:
+                    messages.append(indent('{0}: {1}'.format(exit.Exit.direction, exit.Exit.destination.name)))
 
         entities_nearby = [e for e in self.nearby() if not e.is_(Invisible)]
         if entities_nearby:
@@ -436,7 +448,7 @@ def drop(actor, selector):
         actor.tell('You try to drop {0.name}, but it sticks to your hand.'.format(target))
         return
 
-    actor.Container.unstore(target)
+    actor.Container.drop(target)
     actor.tell('You drop {0.name}.'.format(target))
     actor.Spatial.emit('{0.Name} drops {1.name}.'.format(actor, target), exclude=target)
     target.tell('{0.Name} drops you.'.format(actor))
@@ -455,20 +467,21 @@ def walk(actor, direction):
         actor.tell("You're unable to leave this place.")
         return
 
-    exits = room.Container.exits()
+    exits = []
+    if room.is_(Exitable):
+        exits = room.Exitable.exits
+
     if not exits:
         actor.tell("There don't seem to be any exits here.")
         return
 
-    for exit_name in exits:
-        if direction.lower() == exit_name.lower():
-            direction = exit_name
+    for exit in exits:
+        if direction.lower() == exit.Exit.direction.lower():
+            destination = exit.Exit.destination
             break
     else:
         actor.tell("You're unable to go that way.")
         return
-
-    destination = exits[direction]
 
     # Ensure the destination is still a container
     if not destination or not destination.is_([Spatial, Container]):
