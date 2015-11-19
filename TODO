@@ -21,12 +21,16 @@
         - managing __init__.py / magical component registration
             - manually register components with the zone on startup
             - does this mean the end of `figment run`?
+        - well-known entities
+            - need a way to query for entities (by component?)
+            - indexed = True: Component class attribute?
+                - overlaps with "ticking" somewhat...
 
 1.0 blockers: examples
     - Continue dogfooding to find parts of API that suck
         - current usage of entity.perform assumes the entity is in ActionMode
             - engine: need an API for checking the mode of entities
-    - Weapons and equipment
+    - Weapons and equipment (wield / wear)
     - Conversations
     - Stacking items
     - Combat
@@ -40,6 +44,7 @@
 1.0 blockers: docs
     - Use Sphinx, autodoc, possibly napoleon
     - Simple theme and logo :)
+        - Sunshiney font is nice (lowercase f)
     - Walk through building a simple world (TDD?)
     - Writing tests for your world
     - How to scale Figment
