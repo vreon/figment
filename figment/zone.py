@@ -273,9 +273,7 @@ class Zone(object):
         entity.id = self.next_id()
         entity.zone = self
         self.entities[entity.id] = entity
-        log.debug('Added entity: [%s]' % entity.id)
 
     def remove(self, entity):
-        log.debug('Removed entity: [%s]' % entity.id)
         self.entities.pop(entity.id)
         entity.zone = None
