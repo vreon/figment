@@ -1,7 +1,9 @@
 import string
+
 from figment import Component, Entity
 from figment.utils import upper_first, indent
-from modes import ActionMode, DisambiguationMode
+
+from theworldfoundry.modes import ActionMode, DisambiguationMode
 
 
 class Invisible(Component):
@@ -49,9 +51,6 @@ class Container(Component):
 
     def store(self, entity):
         Container.move(entity, self.entity)
-
-    def store_in(self, entity):
-        Container.move(self.entity, entity)
 
     def drop(self, entity):
         Container.move(entity, self.entity.Spatial.container)
@@ -148,6 +147,9 @@ class Spatial(Component):
     def detach(self):
         self.container = None
         super(Spatial, self).detach()
+
+    def store_in(self, entity):
+        Container.move(self.entity, entity)
 
     #########################
     # Selection
@@ -266,25 +268,6 @@ def unique_selection(actor, action_name, argument_name, selector, kwargs, choice
 #########################
 # Actions
 #########################
-
-@ActionMode.action(r'^s(?:ay)? (?P<message>.+)$')
-def say(actor, message):
-    if not actor.is_(Spatial):
-        actor.tell("You're unable to do that.")
-        return
-
-    message = upper_first(message.strip().replace('"', "'"))
-
-    if not message[-1] in ('.', '?', '!'):
-        message += '.'
-
-    for witness in actor.Spatial.nearby():
-        if witness.is_([Spatial, 'Psychic']):
-            witness.perform(Spatial.say, message=message)
-
-    actor.tell('You say: "{0}"'.format(message))
-    actor.Spatial.emit('{0.Named.Name} says: "{1}"'.format(actor, message))
-
 
 @ActionMode.action(r'^l(?:ook)?(?: around)?$')
 def look(actor):
@@ -456,6 +439,10 @@ def put_in(actor, target_selector, container_selector):
 
     if not target.is_(Spatial):
         actor.tell("You can't put {0.Named.name} into anything.")
+        return
+
+    if not target.is_([Carriable]):
+        actor.tell("That can't be carried.")
         return
 
     if target.is_('Important'):
@@ -630,3 +617,37 @@ def go_up(actor):
 @ActionMode.action('^d(?:own)?$')
 def go_down(actor):
     return actor.perform('go down')
+
+#########################
+# Dialogue actions
+#########################
+
+def dialogue(actor, second_person_verb, third_person_verb, message):
+    if not actor.is_(Spatial):
+        actor.tell("You're unable to do that.")
+        return
+
+    message = upper_first(message.strip().replace('"', "'"))
+
+    if not message[-1] in ('.', '?', '!'):
+        message += '.'
+
+    actor.tell('You {0}: "{1}"'.format(second_person_verb, message))
+    actor.Spatial.emit('{0.Named.Name} {1}: "{2}"'.format(actor, third_person_verb, message))
+
+
+@ActionMode.action(r'^s(?:ay)? (?P<message>.+)$')
+def say(actor, message):
+    dialogue(actor, 'say', 'says', message)
+
+@ActionMode.action(r'^shout (?P<message>.+)$')
+def shout(actor, message):
+    dialogue(actor, 'shout', 'shouts', message)
+
+@ActionMode.action(r'^sing (?P<message>.+)$')
+def sing(actor, message):
+    dialogue(actor, 'sing', 'sings', message)
+
+@ActionMode.action(r'^growl (?P<message>.+)$')
+def growl(actor, message):
+    dialogue(actor, 'growl', 'growls', message)

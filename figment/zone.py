@@ -178,8 +178,8 @@ class Zone(object):
     def load_modules(self):
         sys.path.append(self.world_path)
 
-        self.components = self._import_subclasses('components', Component)
-        self.modes = self._import_subclasses('modes', Mode)
+        self.components = self._import_subclasses(self.config['world']['components'], Component)
+        self.modes = self._import_subclasses(self.config['world']['modes'], Mode)
 
         log.debug('Loaded %s component(s) and %s mode(s).' % (
             len(self.components), len(self.modes)

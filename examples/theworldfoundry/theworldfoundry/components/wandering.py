@@ -1,6 +1,8 @@
-from figment import Component
-from components import spatial
 import random
+
+from figment import Component
+
+from theworldfoundry.components import spatial
 
 
 class Wandering(Component):

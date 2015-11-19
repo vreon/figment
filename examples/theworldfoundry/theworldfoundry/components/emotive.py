@@ -1,6 +1,7 @@
 from figment import Component
-from components import Spatial
-from modes import ActionMode
+
+from theworldfoundry.components import Spatial
+from theworldfoundry.modes import ActionMode
 
 class Emotive(Component):
     """Enables an entity to emote."""

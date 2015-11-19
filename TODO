@@ -64,6 +64,38 @@ Crazy ideas for later versions
     - Script components (Lua?)
     - Graphical example
 
+Example: The World Foundry
+    - Antechamber
+        - Newbie / private zone
+        - Created when you register
+        - Destroyed when you leave
+        - One-way exit to the foundry
+        - Some basic items to pick up, examine
+            - chaos key (to your apartment)
+            - loopback (use to return to the foundry)
+            - journal (you can write in it)
+            - misc junk, boxes, bags
+        - only opens up when you've picked up the important quest items
+    - The World Foundry
+        - A large institution devoted to the study of creating worlds
+        - Exhibits / classrooms / workshops
+    - The Inventorium
+        - Researches items / weapons / equipment
+        - Lots of little usable gadgets
+    - The Conversatory
+        - NPCs you can talk to
+        - Shopkeepers
+        - The Herald (an NPC who periodically cries out new topics of discussion)
+    - The Library
+        - Readable books / documentation
+        - Speaking out loud is forbidden (can only whisper to other people)
+    - The Sparring Grounds
+        - Train against inanimate objects, monsters, and other players
+        - Test weapons and spells
+    - Apeiron Apartments
+        - Create a personal pocket universe
+        - Worldbuilding commands are enabled for you within your space
+
 Related projects
     - Nice to have, but not blockers...
     - Websocket server

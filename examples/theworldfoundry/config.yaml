@@ -6,6 +6,9 @@ persistence:
     file: zones/{id}.json
     frequency: 60
     compressed: true
+world:
+  components: theworldfoundry.components
+  modes: theworldfoundry.modes
 zones:
     default:
         description: The default zone.

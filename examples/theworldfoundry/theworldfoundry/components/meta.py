@@ -1,7 +1,8 @@
 import json
 from figment import Component
 from figment.utils import indent
-from modes import ActionMode
+
+from theworldfoundry.modes import ActionMode
 
 class Meta(Component):
     """Enables an entity to use meta commands."""
