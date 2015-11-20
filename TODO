@@ -17,7 +17,6 @@
             - when component wants to reference entity, attach Referenced to it?
             - on detach, call other components' funcs with arbitrary args?
     - fix things that are clunky
-        - world "initialization script"
         - managing __init__.py / magical component registration
             - manually register components with the zone on startup
             - does this mean the end of `figment run`?

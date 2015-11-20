@@ -1,6 +1,6 @@
 from theworldfoundry.components import Dark
 
-def test_look(player):
+def test_look(player, courtyard):
     player.perform('look')
     assert player.saw('Antechamber')
     assert player.saw('columns')
