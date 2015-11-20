@@ -55,11 +55,6 @@ To create a world, you'll need to familiarize yourself with some terminology:
   of Entities. You can use Zones as server shards or to run different logical
   regions of the world at different tick speeds.
 
-Run `figment new <world-name>` to create a directory and basic structure for
-your world's code, then start implementing the pieces as needed. (That's kind
-of vague, I know; you'll likely need to consult the example worlds for what
-this is supposed to look like.)
-
 By extending Figment's base classes (particularly `Component` and `Mode`), you
 define the vocabulary unique to your world -- then construct your world's
 people, places, and things using that vocabulary.
@@ -68,6 +63,8 @@ While your available vocabulary of Components and Modes cannot yet be changed
 during runtime, they _can_ be dynamically applied to Entities (that's the whole
 point, after all!) so you can even do a good chunk of worldbuilding from within
 the world itself if you build the appropriate tools.
+
+Consult the example worlds to get an idea of how to structure yours.
 
 ### Running a server
 

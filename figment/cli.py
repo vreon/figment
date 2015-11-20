@@ -2,8 +2,6 @@ from __future__ import print_function
 import argparse
 import readline
 import logging
-import os
-import shutil
 import sys
 from functools import wraps
 
@@ -20,15 +18,6 @@ def keyboard_interactive(f):
         except (EOFError, KeyboardInterrupt):
             print()
     return wrapper
-
-
-def new(args):
-    skel_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        os.path.pardir,
-        'skel'
-    )
-    shutil.copytree(skel_path, args.name)
 
 
 def command(args):
