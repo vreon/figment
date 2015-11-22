@@ -31,7 +31,6 @@
             - engine: need an API for checking the mode of entities
     - Weapons and equipment (wield / wear)
     - Conversations
-    - Stacking items
     - Combat
     - Quests
     - Simple in-game editing tools
@@ -133,7 +132,6 @@ Notes and ideas
         - The High Street
             - names and capitalization
             - chairs, beds, vehicles(?)
-            - stacks of objects / inventory management / gold
             - equipment
             - holding items
                 - inventory is a closed container

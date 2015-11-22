@@ -43,7 +43,7 @@ def test_sing_witness(player, statue):
     assert player.saw('You sing: "The road goes ever on and on..."')
     assert statue.saw('Test Player sings: "The road goes ever on and on..."')
 
-@pytest.mark.xfail(reason='Not implemented yet')
+@pytest.mark.xfail(reason='not implemented yet')
 def test_whisper_to(player, statue, ghost):
     ghost.hearing = True
     statue.hearing = True

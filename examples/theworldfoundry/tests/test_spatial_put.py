@@ -4,7 +4,7 @@ def test_put_in(player, ball, box):
 
 def test_put_in_invalid(player, ball):
     player.perform('put ball in hoop')
-    assert player.saw("There's no hoop")
+    assert player.saw("You don't see any 'hoop' nearby")
 
 def test_put_in_noncontainer(player, ball, statue):
     player.perform('put ball in statue')

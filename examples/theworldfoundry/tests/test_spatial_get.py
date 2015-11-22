@@ -43,7 +43,7 @@ def test_get_from_too_deep(player, box, iron_box, ball):
     ball.Spatial.store_in(box)
     box.Spatial.store_in(iron_box)
     player.perform('get ball from box')
-    assert player.saw("There's no ball in an iron box")
+    assert player.saw("You don't see any 'ball' in an iron box")
     player.perform('get ball from cardboard box')
-    assert player.saw("There's no cardboard box nearby")
+    assert player.saw("You don't see any 'cardboard box' nearby")
 

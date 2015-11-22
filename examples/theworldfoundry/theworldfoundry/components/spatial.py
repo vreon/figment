@@ -18,6 +18,76 @@ class Carriable(Component):
     pass
 
 
+class Stackable(Component):
+    def __init__(self, key, quantity=1):
+        self.key = key
+        self.quantity = quantity
+
+    def to_dict(self):
+        return {
+            'key': self.key,
+            'quantity': self.quantity,
+        }
+
+    @classmethod
+    def from_dict(cls, dict_):
+        return cls(
+            key=dict_['key'],
+            quantity=dict_['quantity'],
+        )
+
+    def split_off(self, quantity):
+        clone = self.entity.zone.clone(self.entity)
+        clone.Spatial.container = None
+        clone.Stackable.quantity = quantity
+        self.quantity -= quantity
+
+        if self.quantity == 0:
+            # TODO: Is there a bug here? Probably
+            # (I bet the container keeps a reference to this defunct entity)
+            self.entity.zone.destroy(self.entity)
+
+        return clone
+
+    @classmethod
+    def consolidate(cls, entities):
+        total_quantity = sum([e.Stackable.quantity for e in entities])
+
+        for e in entities[1:]:
+            # TODO: Ahhh!! This should really be handled by destroy!
+            # (See TODO about entity lifecycle hooks)
+            if e.Spatial.container:
+                Container.unstore(e)
+
+            e.zone.destroy(e)
+
+        entities[0].Stackable.quantity = total_quantity
+
+        return entities[0]
+
+    def refine(self, fuzzy_quantity):
+        if fuzzy_quantity == 'all':
+            return self.quantity
+
+        try:
+            quantity = min(max(0, int(fuzzy_quantity)), self.quantity)
+            if quantity == 0:
+                raise ValueError
+        except ValueError:
+            return
+
+        return quantity
+
+    @classmethod
+    def convert(cls, fuzzy_quantity):
+        if fuzzy_quantity == 'all':
+            return
+
+        quantity = int(fuzzy_quantity)
+
+        return quantity
+
+
 class Container(Component):
     def __init__(self):
         self.contents_ids = set()
@@ -42,19 +112,36 @@ class Container(Component):
         super(Container, self).detach()
 
     @staticmethod
-    def move(entity, container):
+    def move(entity, container, quantity=None):
+        if quantity is not None and entity.is_(Stackable):
+            entity = entity.Stackable.split_off(quantity)
+
         Container.unstore(entity)
         container.Container.contents_ids.add(entity.id)
         container.Container.contents.add(entity)
         entity.Spatial.container_id = container.id
         entity.Spatial.container = container
 
-    def store(self, entity):
-        Container.move(entity, self.entity)
+        return entity
 
-    def drop(self, entity):
-        Container.move(entity, self.entity.Spatial.container)
+    def consolidate_contents(self):
+        stackables_by_key = {}
 
+        for entity in self.contents:
+            if entity.is_(Stackable):
+                stackables_by_key.setdefault(entity.Stackable.key, []).append(entity)
+
+        for key, entities in stackables_by_key.items():
+            if len(entities) > 1:
+                Stackable.consolidate(entities)
+
+    def store(self, entity, quantity=None):
+        return Container.move(entity, self.entity, quantity=quantity)
+
+    def drop(self, entity, quantity=None):
+        return Container.move(entity, self.entity.Spatial.container, quantity=quantity)
+
+    # TODO: This should be an instance method on Spatial
     @staticmethod
     def unstore(entity):
         container = entity.Spatial.container
@@ -161,7 +248,7 @@ class Spatial(Component):
             if not entity == self.entity
         )
 
-    def pick(self, selector, entity_set):
+    def pick(self, selector, entity_set, min_quantity=None):
         """
         Pick entities from a set by selector. In most cases you should use one
         of the higher-level pick_* functions.
@@ -178,19 +265,20 @@ class Spatial(Component):
                 e for e in entity_set
                 if (e.is_('Named') and selector.lower() in e.Named.name.lower())
                 and not e.is_(Invisible)
+                and (not min_quantity or min_quantity == 1 or (e.is_(Stackable) and e.Stackable.quantity >= min_quantity))
             )
 
-    def pick_nearby(self, selector):
-        return self.pick(selector, self.nearby())
+    def pick_nearby(self, selector, **kwargs):
+        return self.pick(selector, self.nearby(), **kwargs)
 
-    def pick_inventory(self, selector):
-        return self.pick(selector, self.entity.Container.contents)
+    def pick_inventory(self, selector, **kwargs):
+        return self.pick(selector, self.entity.Container.contents, **kwargs)
 
-    def pick_from(self, selector, container):
-        return self.pick(selector, container.Container.contents)
+    def pick_from(self, selector, container, **kwargs):
+        return self.pick(selector, container.Container.contents, **kwargs)
 
-    def pick_nearby_inventory(self, selector):
-        return self.pick(selector, self.entity.Container.contents | self.nearby())
+    def pick_nearby_inventory(self, selector, **kwargs):
+        return self.pick(selector, self.entity.Container.contents | self.nearby(), **kwargs)
 
     #########################
     # Communication
@@ -241,9 +329,12 @@ class Spatial(Component):
         self.entity.tell('\n'.join(messages))
 
 
-def unique_selection(actor, action_name, argument_name, selector, kwargs, choices, area='in the area'):
+def unique_selection(actor, action_name, argument_name, selector, kwargs, choices, area='in the area', quantity=None):
+    if quantity is None:
+        quantity = 'any'
+
     if not choices:
-        actor.tell("There's no {0} {1}.".format(selector, area))
+        actor.tell("You don't see {0} '{1}' {2}.".format(quantity, selector, area))
         return False
 
     if len(choices) == 1:
@@ -309,7 +400,8 @@ def look_in(actor, selector):
     contents = [e for e in target.Container.contents if not e.is_(Invisible)]
     if contents:
         for item in contents:
-            actor.tell(indent('{0.Named.name}'.format(item)))
+            # TODO FIXME: Assumes Named (see 'something unnamed' below)
+            actor.tell(indent(item.Named.name))
     else:
         actor.tell(indent('nothing'))
 
@@ -336,15 +428,18 @@ def look_at(actor, selector):
     target.tell('{0.Named.Name} looks at you.'.format(actor))
 
 
-@ActionMode.action('^(?:get|take|pick up) (?P<selector>.+)$')
-def get(actor, selector):
+@ActionMode.action(r'^(?:get|take|pick up)( (?P<quantity>(?:\d+|all)))? (?P<selector>.+)$')
+def get(actor, selector, quantity=None):
     if not actor.is_([Spatial, Container]):
         actor.tell("You're unable to do that.")
         return
 
-    targets = actor.Spatial.pick_nearby(selector)
+    if quantity:
+        quantity = Stackable.convert(quantity)
 
-    if not unique_selection(actor, 'get', 'selector', selector, {'selector': selector}, targets, 'nearby'):
+    targets = actor.Spatial.pick_nearby(selector, min_quantity=quantity)
+
+    if not unique_selection(actor, 'get', 'selector', selector, {'selector': selector}, targets, 'nearby', quantity=quantity):
         return
 
     target = targets.pop()
@@ -361,17 +456,29 @@ def get(actor, selector):
         actor.tell('{0.Named.Name} resists your attempt to grab it.'.format(target))
         return
 
+    if target.is_('Stackable') and quantity is not None:
+        quantity = target.Stackable.refine(quantity)
+
+        if not quantity:
+            actor.tell("You're unable to do that.")
+            return
+
+    target = actor.Container.store(target, quantity=quantity)
+
     actor.tell('You pick up {0.Named.name}.'.format(target))
     actor.Spatial.emit('{0.Named.Name} picks up {1.Named.name}.'.format(actor, target), exclude=target)
     target.tell('{0.Named.Name} picks you up.'.format(actor))
-    actor.Container.store(target)
+
+    if target.is_(Stackable):
+        actor.Container.consolidate_contents()
 
 
-@ActionMode.action('^(?:get|take|pick up) (?P<target_selector>.+) from (?P<container_selector>.+)$')
-def get_from(actor, target_selector, container_selector):
+@ActionMode.action('^(?:get|take|pick up)( (?P<quantity>(?:\d+|all)))? (?P<target_selector>.+) from (?P<container_selector>.+)$')
+def get_from(actor, target_selector, container_selector, quantity=None):
     kwargs = {
         'target_selector': target_selector,
         'container_selector': container_selector,
+        'quantity': quantity,
     }
 
     if not actor.is_([Spatial, Container]):
@@ -393,9 +500,12 @@ def get_from(actor, target_selector, container_selector):
         actor.tell("{0.Named.Name} can't hold items.".format(container))
         return
 
-    targets = actor.Spatial.pick_from(target_selector, container)
+    if quantity:
+        quantity = Stackable.convert(quantity)
 
-    if not unique_selection(actor, 'get_from', 'target_selector', target_selector, kwargs, targets, 'in {0.Named.name}'.format(container)):
+    targets = actor.Spatial.pick_from(target_selector, container, min_quantity=quantity)
+
+    if not unique_selection(actor, 'get_from', 'target_selector', target_selector, kwargs, targets, 'in {0.Named.name}'.format(container), quantity=quantity):
         return
 
     target = targets.pop()
@@ -412,27 +522,35 @@ def get_from(actor, target_selector, container_selector):
         actor.tell('{0.Named.Name} resists your attempt to grab it.'.format(target))
         return
 
+    target = actor.Container.store(target, quantity=quantity)
+
     actor.tell('You take {0.Named.name} from {1.Named.name}.'.format(target, container))
     actor.Spatial.emit('{0.Named.Name} takes {1.Named.name} from {2.Named.name}.'.format(actor, target, container), exclude=(target, container))
     container.tell('{0.Named.Name} takes {1.Named.name} from you.'.format(actor, target))
     target.tell('{0.Named.Name} takes you from {1.Named.name}.'.format(actor, container))
-    actor.Container.store(target)
+
+    if target.is_(Stackable):
+        actor.Container.consolidate_contents()
 
 
-@ActionMode.action(r'^put (?P<target_selector>.+) (?:in(?:to|side(?: of)?)?) (?P<container_selector>.+)$')
-def put_in(actor, target_selector, container_selector):
+@ActionMode.action(r'^put( (?P<quantity>(?:\d+|all)))? (?P<target_selector>.+) (?:in(?:to|side(?: of)?)?) (?P<container_selector>.+)$')
+def put_in(actor, target_selector, container_selector, quantity=None):
     kwargs = {
         'target_selector': target_selector,
         'container_selector': container_selector,
+        'quantity': quantity,
     }
 
     if not actor.is_([Spatial, Container]):
         actor.tell("You're unable to hold things.")
         return
 
-    targets = actor.Spatial.pick_nearby_inventory(target_selector)
+    if quantity:
+        quantity = Stackable.convert(quantity)
 
-    if not unique_selection(actor, 'put_in', 'target_selector', target_selector, kwargs, targets, 'nearby'):
+    targets = actor.Spatial.pick_nearby_inventory(target_selector, min_quantity=quantity)
+
+    if not unique_selection(actor, 'put_in', 'target_selector', target_selector, kwargs, targets, 'nearby', quantity=quantity):
         return
 
     target = targets.pop()
@@ -460,22 +578,36 @@ def put_in(actor, target_selector, container_selector):
         actor.tell("{0.Named.Name} can't hold things.".format(container))
         return
 
+    if target.is_('Stackable') and quantity is not None:
+        quantity = target.Stackable.refine(quantity)
+
+        if not quantity:
+            actor.tell("You're unable to do that.")
+            return
+
+    target = container.Container.store(target, quantity=quantity)
+
     actor.tell('You put {0.Named.name} in {1.Named.name}.'.format(target, container))
     actor.Spatial.emit('{0.Named.Name} puts {1.Named.name} in {2.Named.name}.'.format(actor, target, container), exclude=(target, container))
     container.tell('{0.Named.Name} puts {1.Named.name} in your inventory.'.format(actor, target))
     target.tell('{0.Named.Name} puts you in {1.Named.name}.'.format(actor, container))
-    container.Container.store(target)
+
+    if target.is_(Stackable):
+        container.Container.consolidate_contents()
 
 
-@ActionMode.action(r'^drop (?P<selector>.+)$')
-def drop(actor, selector):
+@ActionMode.action(r'^drop( (?P<quantity>(?:\d+|all)))? (?P<selector>.+)$')
+def drop(actor, selector, quantity=None):
     if not actor.is_(Spatial):
         actor.tell("You're unable to drop things.")
         return
 
-    targets = actor.Spatial.pick_inventory(selector)
+    if quantity:
+        quantity = Stackable.convert(quantity)
 
-    if not unique_selection(actor, 'drop', 'selector', selector, {'selector': selector}, targets, 'in your inventory'):
+    targets = actor.Spatial.pick_inventory(selector, min_quantity=quantity)
+
+    if not unique_selection(actor, 'drop', 'selector', selector, {'selector': selector}, targets, 'in your inventory', quantity=quantity):
         return
 
     target = targets.pop()
@@ -490,10 +622,21 @@ def drop(actor, selector):
         actor.tell('You try to drop {0.Named.name}, but it sticks to your hand.'.format(target))
         return
 
-    actor.Container.drop(target)
+    if target.is_('Stackable') and quantity is not None:
+        quantity = target.Stackable.refine(quantity)
+
+        if not quantity:
+            actor.tell("You're unable to do that.")
+            return
+
+    target = actor.Container.drop(target, quantity=quantity)
+
     actor.tell('You drop {0.Named.name}.'.format(target))
     actor.Spatial.emit('{0.Named.Name} drops {1.Named.name}.'.format(actor, target), exclude=target)
     target.tell('{0.Named.Name} drops you.'.format(actor))
+
+    if target.is_(Stackable):
+        actor.Spatial.container.Container.consolidate_contents()
 
 
 @ActionMode.action('^(?:w(?:alk)?|go) (?P<direction>.+)$')

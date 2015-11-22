@@ -198,3 +198,15 @@ def ghost(zone, player):
     ])
     player.Spatial.container.Container.store(ghost)
     return ghost
+
+
+@pytest.fixture()
+def gold(zone, player):
+    gold = zone.spawn([
+        Named('a gold coin', 'Shiny!'),
+        Spatial(),
+        Carriable(),
+        Stackable(key='GOLD_COIN', quantity=50),
+    ])
+    player.Spatial.container.Container.store(gold)
+    return gold

@@ -265,6 +265,10 @@ class Zone(object):
             entity.components.add(components)
         return entity
 
+    def clone(self, entity):
+        # TODO FIXME: This is fairly awful
+        return Entity.from_dict(entity.to_dict(), self)
+
     def destroy(self, entity):
         entity.components.purge()
         self.remove(entity)
