@@ -41,7 +41,7 @@ setup(
         'Topic :: Games/Entertainment',
     ],
     install_requires=[
-        'redis==2.10.3',
+        'redis==2.10.5',
         'termcolor==1.1.0',
     ],
     extras_require={

@@ -220,11 +220,15 @@ class Zone(object):
             tock = not tock
 
     def listen(self, entity_id):
-        pubsub = self.redis.pubsub()
-        pubsub.subscribe(Entity.messages_key_from_id(entity_id))
-        for message in pubsub.listen():
-            if message['type'] == 'message':
-                yield message['data']
+        subscription = self.subscribe(entity_id)
+        for message in subscription.listen():
+            yield message['data']
+
+    # TODO: Leaky abstraction :\
+    def subscribe(self, entity_id):
+        subscription = self.redis.pubsub(ignore_subscribe_messages=True)
+        subscription.subscribe(Entity.messages_key_from_id(entity_id))
+        return subscription
 
     def process_one_event(self):
         key, value = self.redis.blpop([self.tick_key, self.incoming_key])

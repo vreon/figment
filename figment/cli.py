@@ -1,47 +1,86 @@
 from __future__ import print_function
 import argparse
+from functools import wraps
 import readline
 import logging
+from time import sleep
+import threading
 import sys
-from functools import wraps
 
 from figment.zone import Zone
 from figment.logger import log
 
+PROMPT = '\033[32;1m> '
+RESET = '\033[m'
+CLEAR_LINE = '\033[2K'
 
-def keyboard_interactive(f):
-    """Gracefully handle Ctrl+C and Ctrl+D events."""
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        try:
-            f(*args, **kwargs)
-        except (EOFError, KeyboardInterrupt):
-            print()
-    return wrapper
+prompt_quit = False
 
 
-def command(args):
-    zone = Zone.from_config(args.zone, args.world)
-    zone.enqueue_command(args.entity_id, args.command)
-
-
-@keyboard_interactive
 def prompt(args):
+    global prompt_quit
+
     zone = Zone.from_config(args.zone, args.world)
-    command = raw_input('> ')
-    while command and not command == 'quit':
+
+    while True:
+        try:
+            command = raw_input(PROMPT)
+            if not command or command == 'quit':
+                raise EOFError()
+        except (EOFError, KeyboardInterrupt):
+            sys.stdout.write('\n')
+            sys.stdout.flush()
+            prompt_quit = True
+            break
+
         zone.enqueue_command(args.entity_id, command)
-        command = raw_input('> ')
+
+    sys.stdout.write('\033[m')
+    sys.stdout.flush()
 
 
-@keyboard_interactive
 def listen(args):
     zone = Zone.from_config(args.zone, args.world)
-    for message in zone.listen(args.entity_id):
-        print(message)
+    subscription = zone.subscribe(args.entity_id)
+
+    while True:
+        if prompt_quit:
+            break
+
+        message = subscription.get_message()
+        if not message:
+            sleep(0.01)
+            continue
+
+        lines = message['data'].split('\n')
+
+        for line in lines:
+            sys.stdout.write(''.join([CLEAR_LINE, '\r', RESET, line, '\n']))
+
+        sys.stdout.write(PROMPT)
+        sys.stdout.write(readline.get_line_buffer())
+        sys.stdout.flush()
 
 
-@keyboard_interactive
+def client(args):
+    prompt_thread = threading.Thread(target=lambda: prompt(args))
+    listen_thread = threading.Thread(target=lambda: listen(args))
+
+    prompt_thread.start()
+    listen_thread.start()
+
+    # TODO HACK: I clearly don't grok threaded exception handling :p
+
+    try:
+        prompt_thread.join()
+    except KeyboardInterrupt:
+        pass
+
+    try:
+        listen_thread.join()
+    except KeyboardInterrupt:
+        pass
+
 def run(args):
     if args.verbose or args.debug:
         log.setLevel(logging.DEBUG)
@@ -55,6 +94,8 @@ def run(args):
             zone.load_modules()
             zone.load_snapshot()
             zone.start()
+    except (EOFError, KeyboardInterrupt):
+        print()
     except Exception as e:
         if args.debug:
             import pdb
@@ -80,14 +121,7 @@ def cli():
         p.arg = lambda *a, **k: p.add_argument(*a, **k) and p
         return p
 
-    cmd('listen', listen, help='connect to an entity\'s message stream')\
-        .arg('entity_id', type=int, help='ID of the target entity')
-
-    cmd('command', command, help='run a command from the entity\'s perspective')\
-        .arg('entity_id', type=int, help='ID of the target entity')\
-        .arg('command', type=str, help='the command to perform')
-
-    cmd('prompt', prompt, help='start an interactive prompt for performing commands')\
+    cmd('prompt', client, help='start an interactive prompt for performing commands')\
         .arg('entity_id', type=int, help='ID of the target entity')
 
     cmd('run', run, help='run a Figment zone server')\
