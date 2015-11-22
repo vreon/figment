@@ -80,9 +80,6 @@ def cli():
         p.arg = lambda *a, **k: p.add_argument(*a, **k) and p
         return p
 
-    cmd('new', new, help='create a new world')\
-        .arg('name', type=str, help='world name (must be a valid directory name)')
-
     cmd('listen', listen, help='connect to an entity\'s message stream')\
         .arg('entity_id', type=int, help='ID of the target entity')
 
