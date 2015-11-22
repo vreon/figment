@@ -92,12 +92,9 @@ want to support (Websockets, IRC, Telnet, etc). Eventually, Figment will
 provide plugins for the most common client protocols.
 
 For now, assuming you have direct access to Redis, you can use the Figment CLI
-to spy on the message stream received by an entity, and to interactively issue
-commands as an entity. Using both of these streams simultaneously (in separate
-windows or a terminal multiplexer) results in a makeshift client:
+to interactively send and receive messages on behalf of an entity:
 
-    $ figment listen entity_id
-    $ figment prompt entity_id
+    $ figment prompt <entity_id>
 
 ## License
 
