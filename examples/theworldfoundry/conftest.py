@@ -27,7 +27,7 @@ def saw(entity, msg):
         if msg in mem:
             return True
 
-    raise WitnessError('%r not found in %r' % (msg, mems))
+    raise WitnessError('%r not found in:\n\n%s' % (msg, '\n'.join(mems)))
 
 
 def did_not_see(entity, msg):
@@ -36,7 +36,7 @@ def did_not_see(entity, msg):
     except WitnessError:
         return True
 
-    raise WitnessError('%r found in %r' % (msg, entity.memory))
+    raise WitnessError('%r found in:\n\n%s' % (msg, '\n'.join(entity.memory)))
 
 
 # I really wanted to call this "neuralyze"
