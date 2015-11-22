@@ -56,9 +56,7 @@ class Stackable(Component):
         for e in entities[1:]:
             # TODO: Ahhh!! This should really be handled by destroy!
             # (See TODO about entity lifecycle hooks)
-            if e.Spatial.container:
-                Container.unstore(e)
-
+            e.Spatial.unstore()
             e.zone.destroy(e)
 
         entities[0].Stackable.quantity = total_quantity
@@ -116,7 +114,7 @@ class Container(Component):
         if quantity is not None and entity.is_(Stackable):
             entity = entity.Stackable.split_off(quantity)
 
-        Container.unstore(entity)
+        entity.Spatial.unstore()
         container.Container.contents_ids.add(entity.id)
         container.Container.contents.add(entity)
         entity.Spatial.container_id = container.id
@@ -140,17 +138,6 @@ class Container(Component):
 
     def drop(self, entity, quantity=None):
         return Container.move(entity, self.entity.Spatial.container, quantity=quantity)
-
-    # TODO: This should be an instance method on Spatial
-    @staticmethod
-    def unstore(entity):
-        container = entity.Spatial.container
-        if container:
-            container.Container.contents_ids.remove(entity.id)
-            container.Container.contents.remove(entity)
-
-        entity.Spatial.container = None
-        entity.Spatial.container_id = None
 
     def announce(self, message):
         """Send text to this entity's contents."""
@@ -237,6 +224,15 @@ class Spatial(Component):
 
     def store_in(self, entity):
         Container.move(self.entity, entity)
+
+    def unstore(self):
+        container = self.container
+        if container:
+            container.Container.contents_ids.remove(self.entity.id)
+            container.Container.contents.remove(self.entity)
+
+        self.container = None
+        self.container_id = None
 
     #########################
     # Selection
