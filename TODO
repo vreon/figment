@@ -29,6 +29,8 @@
     - Continue dogfooding to find parts of API that suck
         - current usage of entity.perform assumes the entity is in ActionMode
             - engine: need an API for checking the mode of entities
+    - drop_from?
+    - put_from_in??
     - Weapons and equipment (wield / wear)
     - Conversations
     - Combat
