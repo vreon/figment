@@ -3,6 +3,7 @@ import argparse
 from functools import wraps
 import readline
 import logging
+import os
 from time import sleep
 import threading
 import sys
@@ -110,8 +111,8 @@ def run(args):
 def cli():
     parser = argparse.ArgumentParser(description='Manipulates a Figment world.')
 
-    parser.add_argument('-z', '--zone', type=str, default='default', help='name of the target zone')
-    parser.add_argument('-w', '--world', type=str, default='', help='path to the world')
+    parser.add_argument('-z', '--zone', type=str, default=os.environ.get('FIGMENT_ZONE', 'default'), help='name of the target zone')
+    parser.add_argument('-w', '--world', type=str, default=os.environ.get('FIGMENT_WORLD', ''), help='path to the world')
 
     subparsers = parser.add_subparsers()
 
