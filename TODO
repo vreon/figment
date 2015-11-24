@@ -39,10 +39,6 @@
     - Quests
     - Simple in-game editing tools
 
-1.0 blockers: tests
-    - Existing tests are too simple/limited
-    - Worlds need their own tests
-
 1.0 blockers: docs
     - Use Sphinx, autodoc, possibly napoleon
     - Simple theme and logo :)
