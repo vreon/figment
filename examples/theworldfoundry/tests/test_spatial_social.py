@@ -76,7 +76,7 @@ def test_emote_ambiguous(player, statue, ball, green_ball):
     assert statue.saw('Test Player points at a red ball.')
 
 @pytest.mark.xfail(reason='not implemented yet')
-def test_emote_with(player, statue, courtyard):
+def test_emote_at_exit(player, statue, courtyard):
     statue.hearing = True
     player.perform('point north')
     assert player.saw('You point north to The World Foundry - Courtyard.')
