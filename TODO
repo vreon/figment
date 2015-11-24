@@ -24,6 +24,8 @@
             - need a way to query for entities (by component?)
             - indexed = True: Component class attribute?
                 - overlaps with "ticking" somewhat...
+        - DisambiguationMode and unique_selection
+            - Should DisambiguationMode be named ChoiceMode?
 
 1.0 blockers: examples
     - Continue dogfooding to find parts of API that suck
