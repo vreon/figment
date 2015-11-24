@@ -65,8 +65,16 @@ def test_emote_with(player, statue):
     assert player.saw('You point at a statue.')
     assert statue.saw('Test Player points at you.')
 
-@pytest.mark.xfail(reason='targetting bug')
 def test_emote_ambiguous(player, statue, ball, green_ball):
+    statue.hearing = True
+    player.perform('poke ball')
+    assert player.saw('Which')
+    player.forget()
+    player.perform('1')
+    assert player.saw('You poke a red ball')
+    assert statue.saw('Test Player pokes a red ball.')
+
+def test_emote_ambiguous_with_join(player, statue, ball, green_ball):
     statue.hearing = True
     player.perform('point at ball')
     assert player.saw('Which')
