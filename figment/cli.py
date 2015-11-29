@@ -13,7 +13,7 @@ from figment.logger import log
 
 PROMPT = '\033[32;1m> '
 RESET = '\033[m'
-CLEAR_LINE = '\033[2K'
+ERASE_DOWN = '\033[J'
 
 prompt_quit = False
 
@@ -53,13 +53,10 @@ def listen(args):
             sleep(0.01)
             continue
 
-        lines = message['data'].split('\n')
-
-        for line in lines:
-            sys.stdout.write(''.join([CLEAR_LINE, '\r', RESET, line, '\n']))
-
-        sys.stdout.write(PROMPT)
-        sys.stdout.write(readline.get_line_buffer())
+        sys.stdout.write(''.join([
+            '\r', RESET, ERASE_DOWN, message['data'], '\n',
+            PROMPT, readline.get_line_buffer()
+        ]))
         sys.stdout.flush()
 
 
