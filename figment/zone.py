@@ -16,6 +16,7 @@ from figment.mode import Mode
 from figment.entity import Entity
 from figment.logger import log
 from figment.serializers import SERIALIZERS
+from figment.debug import DefaultRenderer
 
 
 def fatal(message):
@@ -29,6 +30,7 @@ class Zone(object):
         self.world_path = ''
         self.entities = {}
         self.components = {}
+        self.renderer_class = DefaultRenderer
         self.ticking_entities = set()
         self.tick_interval = 1
         self.running = False
@@ -103,6 +105,12 @@ class Zone(object):
             config['redis']['host'],
             config['redis']['port'],
         )
+
+        renderer_name = self.config['world'].get('renderer')
+        if renderer_name:
+            renderer_module_name, _, renderer_class_name = renderer_name.rpartition('.')
+            renderer_module = importlib.import_module(renderer_module_name)
+            self.renderer_class = getattr(renderer_module, renderer_class_name)
 
     @property
     def snapshot_path(self):

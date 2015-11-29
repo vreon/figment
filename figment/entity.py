@@ -2,6 +2,7 @@ import random
 import string
 import collections
 import inspect
+import json
 
 from figment.logger import log
 
@@ -142,4 +143,4 @@ class Entity(object):
     def tell(self, message):
         """Send text to this entity."""
         if self.hearing:
-            self.zone.redis.publish(self.messages_key, message)
+            self.zone.redis.publish(self.messages_key, json.dumps(message))

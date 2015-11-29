@@ -9,6 +9,7 @@ persistence:
 world:
   components: theworldfoundry.components
   modes: theworldfoundry.modes
+  renderer: theworldfoundry.debug.Renderer
 zones:
     default:
         description: The default zone.

@@ -1,13 +1,4 @@
 1.0 blockers: engine
-    - entity messages should be JSON, not text
-        - Subsumes "client hints"; they're the same thing
-        - Allows client to control rendering
-            - Enables color based on type, sounds, images
-        - Message structure defined by developers
-            - Enables inline colors
-        - Have to remove `figment listen` and `figment prompt`
-            - one, they have to be run on the same host as the world :\
-            - two, `listen` can't make assumptions about message format
     - remove the last vestiges of global state (are there any?)
     - remove reference cycles where possible
     - entity lifecycle hooks (?)

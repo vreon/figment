@@ -1,11 +1,14 @@
 from __future__ import print_function
 import argparse
 from functools import wraps
+import importlib
+import json
 import readline
 import logging
 import os
 from time import sleep
 import threading
+import subprocess
 import sys
 
 from figment.zone import Zone
@@ -43,6 +46,7 @@ def prompt(args):
 def listen(args):
     zone = Zone.from_config(args.zone, args.world)
     subscription = zone.subscribe(args.entity_id)
+    renderer = zone.renderer_class()
 
     while True:
         if prompt_quit:
@@ -53,8 +57,10 @@ def listen(args):
             sleep(0.01)
             continue
 
+        rendered_message = renderer.render(json.loads(message['data']))
+
         sys.stdout.write(''.join([
-            '\r', RESET, ERASE_DOWN, message['data'], '\n',
+            '\r', RESET, ERASE_DOWN, rendered_message, '\n',
             PROMPT, readline.get_line_buffer()
         ]))
         sys.stdout.flush()
