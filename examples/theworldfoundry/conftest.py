@@ -178,14 +178,15 @@ def pouch(zone, player):
 
 
 @pytest.fixture()
-def limo(zone, player):
+def limo(zone, player, antechamber):
     limo = zone.spawn([
         Named('a fancy limo', "It's electric!"),
         Spatial(),
         Container(),
         Enterable(),
     ])
-    player.Spatial.container.Container.store(limo)
+    connect(zone, antechamber, is_='out', of=limo)
+    antechamber.Container.store(limo)
     return limo
 
 
