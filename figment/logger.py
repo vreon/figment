@@ -4,6 +4,7 @@ from termcolor import colored
 FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 DATE_FORMAT = '%m-%d %H:%M:%S'
 
+
 class ColoredFormatter(logging.Formatter):
     COLORS = {
         'DEBUG': 'cyan',
@@ -25,6 +26,7 @@ class ColoredFormatter(logging.Formatter):
             self._level_color(record, '%8s' % record.levelname),
             str(record.message),
         ])
+
 
 def create_logger():
     log = logging.getLogger('figment')

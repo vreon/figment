@@ -1,6 +1,5 @@
 from __future__ import print_function
 import argparse
-from functools import wraps
 import json
 import readline
 import logging
@@ -83,6 +82,7 @@ def client(args):
     except KeyboardInterrupt:
         pass
 
+
 def run(args):
     if args.verbose or args.debug:
         log.setLevel(logging.DEBUG)
@@ -98,7 +98,7 @@ def run(args):
             zone.start()
     except (EOFError, KeyboardInterrupt):
         print()
-    except Exception as e:
+    except Exception:
         if args.debug:
             import pdb
             import sys

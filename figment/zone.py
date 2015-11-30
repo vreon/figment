@@ -3,7 +3,6 @@ import os
 import tempfile
 import shutil
 # import zlib
-import json
 import traceback
 import importlib
 import inspect
@@ -82,7 +81,7 @@ class Zone(object):
                 ','.join(s.extension for s in SERIALIZERS.values()), base_path
             ))
 
-        if not self.id in config['zones']:
+        if self.id not in config['zones']:
             fatal("Undefined zone '%s'" % self.id)
 
         tick_interval = config['zones'][self.id].get('tick', 1)

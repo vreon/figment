@@ -1,5 +1,3 @@
-import random
-import string
 import collections
 import inspect
 import json
@@ -45,7 +43,7 @@ class ComponentStore(object):
         for component_name in component_names:
             if inspect.isclass(component_name):
                 component_name = component_name.__name__
-            if not component_name in self.components:
+            if component_name not in self.components:
                 return False
         return True
 
