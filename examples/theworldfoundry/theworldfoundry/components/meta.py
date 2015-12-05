@@ -40,10 +40,9 @@ def query(actor, query=None):
         return
 
     for entity in actor.zone.all():
-        if query is None:
-            actor.tell('[{0.id}]'.format(entity))
-        elif entity.is_('Named') and query.lower() in entity.Named.name.lower():
-            actor.tell('[{0.id}] {0.Named.name}'.format(entity))
+        name = entity.Named.name if entity.is_('Named') else 'something unnamed'
+        if query is None or query.lower() in name.lower():
+            actor.tell('[{0.id}] {1}'.format(entity, name))
 
 
 @ActionMode.action(r'^!i(?:nspect)? (?P<entity_id>.+)$')
