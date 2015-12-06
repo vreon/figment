@@ -6,6 +6,8 @@ from theworldfoundry.components import spatial
 
 
 class Wandering(Component):
+    ticking = True
+
     def __init__(self, wanderlust=0.01, destination_ids=[]):
         self.wanderlust = wanderlust
         self.destination_ids = destination_ids

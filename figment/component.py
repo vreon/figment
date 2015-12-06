@@ -1,4 +1,6 @@
 class Component(object):
+    ticking = False
+
     def __init__(self):
         self.entity = None
 
@@ -15,6 +17,5 @@ class Component(object):
     def detach(self):
         self.entity = None
 
-    @property
-    def ticking(self):
-        return hasattr(self, 'tick')
+    def tick(self):
+        return

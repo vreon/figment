@@ -70,6 +70,15 @@ class BlackHole(Component):
     """A test component that affects how actions behave."""
 
 
+class Mooing(Component):
+    """Moos at everything every tick."""
+    ticking = True
+
+    def tick(self):
+        for entity in self.entity.zone.all():
+            entity.tell('Moo!')
+
+
 #############################################################################
 # Modes
 #############################################################################
@@ -189,6 +198,7 @@ class TestEntity(object):
         self.cow = z.spawn([
             Named('a cow', 'A wild dairy cow.'),
             Visible(),
+            Mooing(),
         ])
 
     def test_look_at(self):
@@ -237,3 +247,7 @@ class TestEntity(object):
         self.player.mode = EchoMode()
         self.player.perform('Echooo')
         assert self.player.saw('Echooo')
+
+    def test_tick(self):
+        self.player.zone.perform_tick()
+        assert self.player.saw('Moo!')
