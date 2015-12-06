@@ -17,6 +17,9 @@
                 - overlaps with "ticking" somewhat...
         - DisambiguationMode and unique_selection
             - Should DisambiguationMode be named ChoiceMode?
+    - tick needs a dt argument
+    - figment run needs a -d flag (run as daemon)
+        - Check out python-daemon on pypi
 
 1.0 blockers: examples
     - Continue dogfooding to find parts of API that suck
