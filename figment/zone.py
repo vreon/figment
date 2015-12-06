@@ -30,6 +30,7 @@ class Zone(object):
         self.entities = {}
         self.components = {}
         self.renderer_class = DefaultRenderer
+        self.entities_by_component_name = {}
         self.ticking_entities = set()
         self.tick_interval = 1
         self.running = False
@@ -268,6 +269,11 @@ class Zone(object):
 
     def all(self):
         return self.entities.values()
+
+    def find(self, component_name):
+        if inspect.isclass(component_name):
+            component_name = component_name.__name__
+        return self.entities_by_component_name.get(component_name, set())
 
     def spawn(self, components=[], **kwargs):
         entity = Entity(**kwargs)

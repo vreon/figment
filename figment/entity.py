@@ -15,9 +15,13 @@ class ComponentStore(object):
             components = [components]
 
         for component in components:
-            setattr(self.entity, component.__class__.__name__, component)
+            component_name = component.__class__.__name__
+            setattr(self.entity, component_name, component)
             component.attach(self.entity)
-            self.components[component.__class__.__name__] = component
+            self.components[component_name] = component
+
+            if self.entity.zone:
+                self.entity.zone.entities_by_component_name.setdefault(component_name, set()).add(self.entity)
 
         if self.entity.zone and self.entity.ticking:
             self.entity.zone.ticking_entities.add(self.entity)
@@ -32,6 +36,9 @@ class ComponentStore(object):
             getattr(self.entity, component_name).detach()
             delattr(self.entity, component_name)
             self.components.pop(component_name, None)
+
+            if self.entity.zone:
+                self.entity.zone.entities_by_component_name[component_name].remove(self.entity)
 
         if self.entity.zone and self.entity in self.entity.zone.ticking_entities and not self.entity.ticking:
             self.entity.zone.ticking_entities.remove(self.entity)

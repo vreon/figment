@@ -249,5 +249,9 @@ class TestEntity(object):
         assert self.player.saw('Echooo')
 
     def test_tick(self):
-        self.player.zone.perform_tick()
+        self.zone.perform_tick()
         assert self.player.saw('Moo!')
+
+    def test_find(self):
+        assert self.zone.find(Mooing) == set([self.cow])
+        assert self.zone.find('Mooing') == set([self.cow])
