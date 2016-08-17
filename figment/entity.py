@@ -85,14 +85,6 @@ class Entity(object):
     def ticking(self):
         return any(c.ticking for c in self.components)
 
-    @property
-    def messages_key(self):
-        return self.messages_key_from_id(self.id)
-
-    @classmethod
-    def messages_key_from_id(cls, id):
-        return 'entity:%s:messages' % id
-
     def to_dict(self):
         if self.mode:
             mode_dict = self.mode.to_dict()
@@ -148,4 +140,4 @@ class Entity(object):
     def tell(self, message):
         """Send text to this entity."""
         if self.hearing:
-            self.zone.redis.publish(self.messages_key, json.dumps(message))
+            self.zone.send_message(self.id, json.dumps(message))

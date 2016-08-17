@@ -56,6 +56,10 @@ class Zone(object):
     def incoming_key(self):
         return 'zone:%s:incoming' % self.id
 
+    @staticmethod
+    def messages_key(entity_id):
+        return 'entity:%s:messages' % entity_id
+
     def next_id(self):
         self._max_id += 1
         return self._max_id
@@ -227,6 +231,9 @@ class Zone(object):
             sleep(self.tick_interval)
             tock = not tock
 
+    def send_message(self, entity_id, message):
+        self.redis.publish(self.messages_key(entity_id), message)
+
     def listen(self, entity_id):
         subscription = self.subscribe(entity_id)
         for message in subscription.listen():
@@ -235,7 +242,7 @@ class Zone(object):
     # TODO: Leaky abstraction :\
     def subscribe(self, entity_id):
         subscription = self.redis.pubsub(ignore_subscribe_messages=True)
-        subscription.subscribe(Entity.messages_key_from_id(entity_id))
+        subscription.subscribe(self.messages_key(entity_id))
         return subscription
 
     def process_one_event(self):
