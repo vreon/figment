@@ -111,7 +111,7 @@ class ActionMode(Mode):
 
             # If multiple patterns match this command, pick the longest one
             if matches:
-                matching_patterns = matches.keys()
+                matching_patterns = list(matches.keys())
                 matching_patterns.sort(key=len, reverse=True)
                 action, kwargs = matches[matching_patterns[0]]
 
