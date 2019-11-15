@@ -1,1 +1,1 @@
-from action import ActionMode, DisambiguationMode
+from .action import ActionMode, DisambiguationMode

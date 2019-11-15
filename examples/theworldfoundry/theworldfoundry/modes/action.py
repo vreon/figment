@@ -12,19 +12,19 @@ class DisambiguationMode(Mode):
 
     def to_dict(self):
         return {
-            'action_name': self.action_name,
-            'argument_name': self.argument_name,
-            'kwargs': self.kwargs,
-            'choices': self.choices,
+            "action_name": self.action_name,
+            "argument_name": self.argument_name,
+            "kwargs": self.kwargs,
+            "choices": self.choices,
         }
 
     @classmethod
     def from_dict(cls, dict_):
         return cls(
-            dict_['action_name'],
-            dict_['argument_name'],
-            dict_['kwargs'],
-            dict_['choices'],
+            dict_["action_name"],
+            dict_["argument_name"],
+            dict_["kwargs"],
+            dict_["choices"],
         )
 
     def perform(self, entity, command_or_index):
@@ -53,6 +53,7 @@ class ActionMode(Mode):
             cls.ACTIONS_BY_REGEX[regex] = func
             cls.ACTIONS_BY_NAME[func.__name__] = func
             return func
+
         return register
 
     def perform(self, entity, command_or_action, **kwargs):
@@ -61,7 +62,7 @@ class ActionMode(Mode):
         if callable(command_or_action):
             action = command_or_action
         else:
-            command = ' '.join(command_or_action.strip().split())
+            command = " ".join(command_or_action.strip().split())
             matches = {}
             for pattern, matched_action in ActionMode.ACTIONS_BY_REGEX.items():
                 match = re.match(pattern, command)
@@ -70,12 +71,12 @@ class ActionMode(Mode):
 
             # If multiple patterns match this command, pick the longest one
             if matches:
-                matching_patterns = matches.keys()
+                matching_patterns = list(matches.keys())
                 matching_patterns.sort(key=len, reverse=True)
                 action, kwargs = matches[matching_patterns[0]]
 
         if not action:
-            entity.tell('Unknown command.')
+            entity.tell("Unknown command.")
             return
 
         action(entity, **kwargs)

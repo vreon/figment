@@ -6,6 +6,7 @@ from theworldfoundry.components import *
 from theworldfoundry.modes import *
 from tests.utils import room, connect, make_player
 
+
 class WitnessError(Exception):
     pass
 
@@ -27,7 +28,7 @@ def saw(entity, msg):
         if msg in mem:
             return True
 
-    raise WitnessError('%r not found in:\n\n%s' % (msg, '\n'.join(mems)))
+    raise WitnessError("%r not found in:\n\n%s" % (msg, "\n".join(mems)))
 
 
 def did_not_see(entity, msg):
@@ -36,7 +37,7 @@ def did_not_see(entity, msg):
     except WitnessError:
         return True
 
-    raise WitnessError('%r found in:\n\n%s' % (msg, '\n'.join(entity.memory)))
+    raise WitnessError("%r found in:\n\n%s" % (msg, "\n".join(entity.memory)))
 
 
 # I really wanted to call this "neuralyze"
@@ -65,7 +66,7 @@ def intercept(request):
 
 @pytest.fixture()
 def zone():
-    zone = Zone.from_config('default', '')
+    zone = Zone.from_config("default", "")
     zone.load_modules()
     return zone
 
@@ -74,7 +75,7 @@ def zone():
 def antechamber(zone):
     return room(
         zone,
-        'The World Foundry - Antechamber',
+        "The World Foundry - Antechamber",
         """
         A small, comfortable room bordered by red velvet drapes, marble
         columns, and many-hued banners of indeterminate origin.
@@ -84,7 +85,7 @@ def antechamber(zone):
 
         Beyond the pedestal in the center of the room is an arched oaken door,
         which leads out into the Courtyard.
-        """
+        """,
     )
 
 
@@ -92,13 +93,13 @@ def antechamber(zone):
 def courtyard(zone, antechamber):
     courtyard = room(
         zone,
-        'The World Foundry - Courtyard (South Side)',
+        "The World Foundry - Courtyard (South Side)",
         """
         A wide-open green space in front of the Library, criss-crossed with a
         network of walking paths.
-        """
+        """,
     )
-    connect(zone, courtyard, is_='north', of=antechamber, returning='south')
+    connect(zone, courtyard, is_="north", of=antechamber, returning="south")
     return courtyard
 
 
@@ -111,103 +112,89 @@ def player(zone, antechamber):
 
 @pytest.fixture()
 def ball(zone, player):
-    ball = zone.spawn([
-        Named('a red ball', 'A small red ball.'),
-        Spatial(),
-        Carriable(),
-    ])
+    ball = zone.spawn(
+        [Named("a red ball", "A small red ball."), Spatial(), Carriable()]
+    )
     player.Spatial.container.Container.store(ball)
     return ball
 
 
 @pytest.fixture()
 def green_ball(zone, player):
-    green_ball = zone.spawn([
-        Named('a green ball', 'A small green ball.'),
-        Spatial(),
-        Carriable(),
-    ])
+    green_ball = zone.spawn(
+        [Named("a green ball", "A small green ball."), Spatial(), Carriable()]
+    )
     player.Spatial.container.Container.store(green_ball)
     return green_ball
 
 
 @pytest.fixture()
 def statue(zone, player):
-    statue = zone.spawn([
-        Named('a statue', 'An august marble statue.'),
-        Spatial(),
-    ])
+    statue = zone.spawn([Named("a statue", "An august marble statue."), Spatial()])
     player.Spatial.container.Container.store(statue)
     return statue
 
 
 @pytest.fixture()
 def box(zone, player):
-    box = zone.spawn([
-        Named('a cardboard box', "It's been through a few moves."),
-        Spatial(),
-        Container(),
-        Carriable(),
-    ])
+    box = zone.spawn(
+        [
+            Named("a cardboard box", "It's been through a few moves."),
+            Spatial(),
+            Container(),
+            Carriable(),
+        ]
+    )
     player.Spatial.container.Container.store(box)
     return box
 
 
 @pytest.fixture()
 def iron_box(zone, player):
-    iron_box = zone.spawn([
-        Named('an iron box', "Looks sturdy!"),
-        Spatial(),
-        Container(),
-        Carriable(),
-    ])
+    iron_box = zone.spawn(
+        [Named("an iron box", "Looks sturdy!"), Spatial(), Container(), Carriable()]
+    )
     player.Spatial.container.Container.store(iron_box)
     return iron_box
 
 
 @pytest.fixture()
 def pouch(zone, player):
-    pouch = zone.spawn([
-        Named('a pouch', "Leather, I guess?"),
-        Spatial(),
-        Container(),
-        Carriable(),
-    ])
+    pouch = zone.spawn(
+        [Named("a pouch", "Leather, I guess?"), Spatial(), Container(), Carriable()]
+    )
     player.Spatial.container.Container.store(pouch)
     return pouch
 
 
 @pytest.fixture()
 def limo(zone, player, antechamber):
-    limo = zone.spawn([
-        Named('a fancy limo', "It's electric!"),
-        Spatial(),
-        Container(),
-        Enterable(),
-    ])
-    connect(zone, antechamber, is_='out', of=limo)
+    limo = zone.spawn(
+        [Named("a fancy limo", "It's electric!"), Spatial(), Container(), Enterable()]
+    )
+    connect(zone, antechamber, is_="out", of=limo)
     antechamber.Container.store(limo)
     return limo
 
 
 @pytest.fixture()
 def ghost(zone, player):
-    ghost = zone.spawn([
-        Named('a ghost', "I-i-it's a g-g-ggg-g-g--"),
-        Spatial(),
-        Invisible(),
-    ])
+    ghost = zone.spawn(
+        [Named("a ghost", "I-i-it's a g-g-ggg-g-g--"), Spatial(), Invisible()]
+    )
     player.Spatial.container.Container.store(ghost)
     return ghost
 
 
 @pytest.fixture()
 def gold(zone, player):
-    gold = zone.spawn([
-        Named('a gold coin', 'Shiny!'),
-        Spatial(),
-        Carriable(),
-        Stackable(key='GOLD_COIN', quantity=50),
-    ])
+    gold = zone.spawn(
+        [
+            Named("a gold coin", "Shiny!"),
+            Spatial(),
+            Carriable(),
+            Stackable(key="GOLD_COIN", quantity=50),
+        ]
+    )
     player.Spatial.container.Container.store(gold)
     return gold

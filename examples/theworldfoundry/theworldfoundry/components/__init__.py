@@ -1,4 +1,13 @@
-from .spatial import Spatial, Container, Exitable, Exit, Invisible, Enterable, Carriable, Stackable
+from .spatial import (
+    Spatial,
+    Container,
+    Exitable,
+    Exit,
+    Invisible,
+    Enterable,
+    Carriable,
+    Stackable,
+)
 from .dark import Dark
 from .emotive import Emotive
 from .sticky import Sticky

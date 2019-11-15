@@ -1,4 +1,3 @@
-from __future__ import print_function
 import argparse
 import json
 import readline
@@ -11,9 +10,9 @@ import sys
 from figment.zone import Zone
 from figment.logger import log
 
-PROMPT = '\033[32;1m> '
-RESET = '\033[m'
-ERASE_DOWN = '\033[J'
+PROMPT = "\033[32;1m> "
+RESET = "\033[m"
+ERASE_DOWN = "\033[J"
 
 prompt_quit = False
 
@@ -25,18 +24,18 @@ def prompt(args):
 
     while True:
         try:
-            command = raw_input(PROMPT)
-            if not command or command == 'quit':
+            command = input(PROMPT)
+            if not command or command == "quit":
                 raise EOFError()
         except (EOFError, KeyboardInterrupt):
-            sys.stdout.write('\n')
+            sys.stdout.write("\n")
             sys.stdout.flush()
             prompt_quit = True
             break
 
         zone.enqueue_command(args.entity_id, command)
 
-    sys.stdout.write('\033[m')
+    sys.stdout.write("\033[m")
     sys.stdout.flush()
 
 
@@ -54,12 +53,21 @@ def listen(args):
             sleep(0.01)
             continue
 
-        rendered_message = renderer.render(json.loads(message['data']))
+        rendered_message = renderer.render(json.loads(message["data"]))
 
-        sys.stdout.write(''.join([
-            '\r', RESET, ERASE_DOWN, rendered_message, '\n',
-            PROMPT, readline.get_line_buffer()
-        ]))
+        sys.stdout.write(
+            "".join(
+                [
+                    "\r",
+                    RESET,
+                    ERASE_DOWN,
+                    rendered_message,
+                    "\n",
+                    PROMPT,
+                    readline.get_line_buffer(),
+                ]
+            )
+        )
         sys.stdout.flush()
 
 
@@ -103,6 +111,7 @@ def run(args):
             import pdb
             import sys
             import traceback
+
             log.critical(traceback.format_exc())
             pdb.post_mortem(sys.exc_info()[2])
         else:
@@ -110,10 +119,22 @@ def run(args):
 
 
 def cli():
-    parser = argparse.ArgumentParser(description='Manipulates a Figment world.')
+    parser = argparse.ArgumentParser(description="Manipulates a Figment world.")
 
-    parser.add_argument('-z', '--zone', type=str, default=os.environ.get('FIGMENT_ZONE', 'default'), help='name of the target zone')
-    parser.add_argument('-w', '--world', type=str, default=os.environ.get('FIGMENT_WORLD', ''), help='path to the world')
+    parser.add_argument(
+        "-z",
+        "--zone",
+        type=str,
+        default=os.environ.get("FIGMENT_ZONE", "default"),
+        help="name of the target zone",
+    )
+    parser.add_argument(
+        "-w",
+        "--world",
+        type=str,
+        default=os.environ.get("FIGMENT_WORLD", ""),
+        help="path to the world",
+    )
 
     subparsers = parser.add_subparsers()
 
@@ -123,13 +144,15 @@ def cli():
         p.arg = lambda *a, **k: p.add_argument(*a, **k) and p
         return p
 
-    cmd('prompt', client, help='start an interactive prompt for performing commands')\
-        .arg('entity_id', type=int, help='ID of the target entity')
+    cmd(
+        "prompt", client, help="start an interactive prompt for performing commands"
+    ).arg("entity_id", type=int, help="ID of the target entity")
 
-    cmd('run', run, help='run a Figment zone server')\
-        .arg('-v', '--verbose', action='store_true', help='show verbose output')\
-        .arg('-d', '--debug', action='store_true', help='run pdb if Figment crashes')\
-        .arg('-t', '--ticker', action='store_true', help='run as a tick event generator')
+    cmd("run", run, help="run a Figment zone server").arg(
+        "-v", "--verbose", action="store_true", help="show verbose output"
+    ).arg("-d", "--debug", action="store_true", help="run pdb if Figment crashes").arg(
+        "-t", "--ticker", action="store_true", help="run as a tick event generator"
+    )
 
     if len(sys.argv) == 1:
         parser.print_help()

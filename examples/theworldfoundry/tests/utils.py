@@ -1,20 +1,24 @@
 import inspect
 
-from theworldfoundry.components import Named, Spatial, Container, Exit, Exitable, Emotive, Meta, Admin
+from theworldfoundry.components import (
+    Named,
+    Spatial,
+    Container,
+    Exit,
+    Exitable,
+    Emotive,
+    Meta,
+    Admin,
+)
 from theworldfoundry.modes import ActionMode
 
+
 def room(zone, name, desc):
-    return zone.spawn([
-        Named(name, inspect.cleandoc(desc)),
-        Spatial(),
-        Container()
-    ])
+    return zone.spawn([Named(name, inspect.cleandoc(desc)), Spatial(), Container()])
 
 
 def make_exit(zone, source, direction, destination):
-    exit = zone.spawn(
-        [Exit(direction=direction, destination_id=destination.id)],
-    )
+    exit = zone.spawn([Exit(direction=direction, destination_id=destination.id)])
 
     if not source.is_(Exitable):
         source.components.add(Exitable())
@@ -33,18 +37,15 @@ def connect(zone, destination, is_, of, returning=None):
 def make_player(zone):
     player = zone.spawn(
         [
-            Named(
-                'Test Player',
-                'A player who is here for testing purposes.',
-            ),
+            Named("Test Player", "A player who is here for testing purposes."),
             Spatial(),
             Container(),
             Emotive(),
             Meta(),
-            Admin()
+            Admin(),
         ],
         hearing=True,
-        mode=ActionMode()
+        mode=ActionMode(),
     )
 
     return player

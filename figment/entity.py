@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 import inspect
 import json
 
@@ -11,7 +11,7 @@ class ComponentStore(object):
         self.components = {}
 
     def add(self, components):
-        if not isinstance(components, collections.Iterable):
+        if not isinstance(components, collections.abc.Iterable):
             components = [components]
 
         for component in components:
@@ -21,13 +21,17 @@ class ComponentStore(object):
             self.components[component_name] = component
 
             if self.entity.zone:
-                self.entity.zone.entities_by_component_name.setdefault(component_name, set()).add(self.entity)
+                self.entity.zone.entities_by_component_name.setdefault(
+                    component_name, set()
+                ).add(self.entity)
 
         if self.entity.zone and self.entity.ticking:
             self.entity.zone.ticking_entities.add(self.entity)
 
     def remove(self, component_names):
-        if isinstance(component_names, str) or not isinstance(component_names, collections.Iterable):
+        if isinstance(component_names, str) or not isinstance(
+            component_names, collections.abc.Iterable
+        ):
             component_names = [component_names]
 
         for component_name in component_names:
@@ -38,13 +42,21 @@ class ComponentStore(object):
             self.components.pop(component_name, None)
 
             if self.entity.zone:
-                self.entity.zone.entities_by_component_name[component_name].remove(self.entity)
+                self.entity.zone.entities_by_component_name[component_name].remove(
+                    self.entity
+                )
 
-        if self.entity.zone and self.entity in self.entity.zone.ticking_entities and not self.entity.ticking:
+        if (
+            self.entity.zone
+            and self.entity in self.entity.zone.ticking_entities
+            and not self.entity.ticking
+        ):
             self.entity.zone.ticking_entities.remove(self.entity)
 
     def has(self, component_names):
-        if isinstance(component_names, str) or not isinstance(component_names, collections.Iterable):
+        if isinstance(component_names, str) or not isinstance(
+            component_names, collections.abc.Iterable
+        ):
             component_names = [component_names]
 
         for component_name in component_names:
@@ -55,7 +67,7 @@ class ComponentStore(object):
         return True
 
     def purge(self):
-        self.remove(self.components.keys())
+        self.remove(list(self.components.keys()))
 
     def __iter__(self):
         return self.components.values().__iter__()
@@ -88,39 +100,36 @@ class Entity(object):
     def to_dict(self):
         if self.mode:
             mode_dict = self.mode.to_dict()
-            mode_dict['__class__'] = self.mode.__class__.__name__
+            mode_dict["__class__"] = self.mode.__class__.__name__
         else:
             mode_dict = None
 
         return {
-            'id': self.id,
-            'mode': mode_dict,
-            'hearing': self.hearing,
-            'components': dict(
+            "id": self.id,
+            "mode": mode_dict,
+            "hearing": self.hearing,
+            "components": dict(
                 (c.__class__.__name__, c.to_dict()) for c in self.components
-            )
+            ),
         }
 
     @classmethod
     def from_dict(cls, dict_, zone):
-        entity = cls(
-            id=dict_['id'],
-            hearing=dict_['hearing'],
-        )
+        entity = cls(id=dict_["id"], hearing=dict_["hearing"])
         zone.add(entity)
         entity.attach_from_dict(dict_)
         return entity
 
     def attach_from_dict(self, dict_):
-        mode_dict = dict_.get('mode', {})
+        mode_dict = dict_.get("mode", {})
         if mode_dict:
-            mode_name = mode_dict.pop('__class__')
+            mode_name = mode_dict.pop("__class__")
             self.mode = self.zone.modes[mode_name].from_dict(mode_dict)
         else:
             self.mode = None
 
         components = []
-        for component_name, component_dict in dict_.get('components', {}).items():
+        for component_name, component_dict in dict_.get("components", {}).items():
             component = self.zone.components[component_name].from_dict(component_dict)
             components.append(component)
 
@@ -133,9 +142,10 @@ class Entity(object):
         if self.mode:
             self.mode.perform(self, *args, **kwargs)
         else:
-            log.warn('Entity [%s] tried to perform %r, but it has no mode' % (
-                self.id, (args, kwargs)
-            ))
+            log.warn(
+                "Entity [%s] tried to perform %r, but it has no mode"
+                % (self.id, (args, kwargs))
+            )
 
     def tell(self, message):
         """Send text to this entity."""

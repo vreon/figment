@@ -21,34 +21,35 @@ class Serializer(object):
 
 
 class JSONSerializer(Serializer):
-    extension = 'json'
+    extension = "json"
 
     @staticmethod
     def serialize(data):
         import json
-        return json.dumps(data)
+
+        return json.dumps(data).encode("utf-8")
 
     @staticmethod
     def unserialize(data):
         import json
+
         return json.loads(data)
 
 
 class YAMLSerializer(Serializer):
-    extension = 'yaml'
+    extension = "yaml"
 
     @staticmethod
     def serialize(data):
         import yaml
-        return yaml.dump(data)
+
+        return yaml.dump(data, default_flow_style=False, encoding="utf-8")
 
     @staticmethod
     def unserialize(data):
         import yaml
+
         return yaml.safe_load(data)
 
 
-SERIALIZERS = {
-    'json': JSONSerializer,
-    'yaml': YAMLSerializer,
-}
+SERIALIZERS = {"json": JSONSerializer, "yaml": YAMLSerializer}

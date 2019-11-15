@@ -14,10 +14,7 @@ class Wandering(Component):
         self.destinations = []
 
     def to_dict(self):
-        return {
-            'wanderlust': self.wanderlust,
-            'destination_ids': self.destination_ids,
-        }
+        return {"wanderlust": self.wanderlust, "destination_ids": self.destination_ids}
 
     def attach(self, entity):
         super(Wandering, self).attach(entity)
