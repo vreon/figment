@@ -1,4 +1,4 @@
-class Mode(object):
+class Mode:
     @classmethod
     def from_dict(cls, dict_):
         return cls()

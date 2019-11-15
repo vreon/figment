@@ -173,7 +173,7 @@ def paint(actor, selector, color):
     actor.tell("{0.Named.Name} is now {0.Colorful.color}.".format(target))
 
 
-class TestEntity(object):
+class TestEntity:
     @classmethod
     def setup_class(cls):
         Entity.tell = tell

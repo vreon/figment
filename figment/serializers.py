@@ -8,7 +8,7 @@ Defines a unified interface for saving and loading stuff from strings.
 # TODO: Unify serialize/unserialize errors so they can be caught by the caller
 
 
-class Serializer(object):
+class Serializer:
     extension = None
 
     @staticmethod

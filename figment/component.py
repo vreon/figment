@@ -1,4 +1,4 @@
-class Component(object):
+class Component:
     ticking = False
 
     def __init__(self):

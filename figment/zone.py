@@ -24,7 +24,7 @@ def fatal(message):
     sys.exit(1)
 
 
-class Zone(object):
+class Zone:
     def __init__(self):
         self.id = None
         self.world_path = ""

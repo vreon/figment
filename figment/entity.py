@@ -5,7 +5,7 @@ import json
 from figment.logger import log
 
 
-class ComponentStore(object):
+class ComponentStore:
     def __init__(self, entity):
         self.entity = entity
         self.components = {}
@@ -73,7 +73,7 @@ class ComponentStore(object):
         return self.components.values().__iter__()
 
 
-class Entity(object):
+class Entity:
     def __init__(self, id=None, zone=None, hearing=False, mode=None):
         self.id = id
         self.mode = mode

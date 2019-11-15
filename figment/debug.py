@@ -1,7 +1,7 @@
 import json
 
 
-class Renderer(object):
+class Renderer:
     def render(self, message):
         raise NotImplementedError
 
